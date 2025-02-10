@@ -92,6 +92,29 @@ FIRECRAWL_API_KEY=
 ARCADE_API_KEY=
 ```
 
+If you plan to post to LinkedIn as an organization (rather than as yourself), you'll also need to set:
+
+```bash
+# Get the organization ID from the URL of the company page when you're logged in as an admin.
+# For example, if the URL is `https://www.linkedin.com/company/12345678/admin/dashboard/`, the organization ID would be `12345678`.
+POST_TO_LINKEDIN_ORGANIZATION=true
+LINKEDIN_ORGANIZATION_ID=
+```
+
+### Install LangGraph CLI
+
+```bash
+pip install langgraph-cli
+```
+
+Then run the following command to check the CLI is installed:
+
+```bash
+langgraph --version
+```
+
+Click [here](https://langchain-ai.github.io/langgraph/cloud/reference/cli/) to read the full download instructions for the LangGraph CLI.
+
 ### Start the LangGraph server:
 
 To start the LangGraph server, run this script:
@@ -185,6 +208,15 @@ Then, you will need to set these environment variables in your `.env` file:
 - `LINKEDIN_USER_ID` - The ID/email of the LinkedIn account you want to use to post to LinkedIn.
 
 Make sure you have the `USE_ARCADE_AUTH` environment variable set to `true` to have the graph use Arcade authentication.
+
+If you plan to post to LinkedIn as an organization (rather than as yourself), you'll also need to set:
+
+```bash
+# Get the organization ID from the URL of the company page when you're logged in as an admin.
+# For example, if the URL is `https://www.linkedin.com/company/12345678/admin/dashboard/`, the organization ID would be `12345678`.
+LINKEDIN_ORGANIZATION_ID=
+POST_TO_LINKEDIN_ORGANIZATION=true
+```
 
 > Note:
 >
