@@ -8,16 +8,15 @@ This repository contains an 'agent' which can take in a URL, and generate a Twit
 
 - [Quickstart](#quickstart)
   - [Environment variables](#set-environment-variables)
-  - [LangGraph Server](#set-environment-variables)
+  - [LangGraph Server](#start-the-langgraph-server)
 - [Full setup](#advanced-setup)
   - [Environment variables](#set-environment-variables-1)
-  - [LangGraph Server](#install-langgraph-cli-1)
   - [Authentication](#setup-authentication)
   - [Supabase](#setup-supabase)
   - [Slack](#setup-slack)
   - [GitHub](#setup-github)
 - [Usage](#usage)
-  - [Generate Demo Post](#generate-demo-post)
+  - [Generate Post](#generate-post)
   - [Setup Crons](#setup-crons)
   - [Prebuilt Scripts](#prebuilt-scripts)
 - [Setup Agent Inbox](#setup-agent-inbox)
@@ -80,8 +79,8 @@ Once done, ensure you have the following environment variables set:
 
 ```bash
 # For LangSmith tracing (optional)
-LANGCHAIN_API_KEY=
-LANGCHAIN_TRACING_V2=true
+LANGSMITH_API_KEY=
+LANGSMITH_TRACING_V2=true
 
 # For LLM generations
 ANTHROPIC_API_KEY=
@@ -93,45 +92,29 @@ FIRECRAWL_API_KEY=
 ARCADE_API_KEY=
 ```
 
-### Install LangGraph CLI
-
-```bash
-pip install langgraph-cli
-```
-
-Then run the following command to check the CLI is installed:
-
-```bash
-langgraph --version
-```
-
-Click [here](https://langchain-ai.github.io/langgraph/cloud/reference/cli/) to read the full download instructions for the LangGraph CLI.
-
 ### Start the LangGraph server:
 
-First, make sure you have Docker installed and running. You can check this by running the following command:
+To start the LangGraph server, run this script:
 
 ```bash
-docker ps
+yarn langgraph:in_mem:up
 ```
 
-Then, run the following command to start the LangGraph server: (ensure you either have the `LANGGRAPH_API_KEY` exposed in your path, or include it inline when you run the command)
+Under the hood, this will execute the following command:
 
 ```bash
-yarn langgraph:up
+npx @langchain/langgraph-cli dev --port 54367
 ```
 
-or
+Your first time running this command (or if a new version has been released for the `@langchain/langgraph-cli` package), it will ask you to accept an install for the CLI. Hit `y` to accept.
 
-```bash
-LANGCHAIN_API_KEY="lsv2_pt_..." yarn langgraph:up
-```
-
-The first time you run this command, it will take a few minutes to start up. Once it's ready, you can execute the following command to generate a demo post:
+Once the server is ready, you can execute the following command to generate a post:
 
 ```bash
 yarn generate_post
 ```
+
+You may also modify this script to pass different URLs to generate posts for other content.
 
 This will kick off a new run to generate a post on a [LangChain blog post](https://blog.langchain.dev/customers-appfolio/).
 
@@ -182,20 +165,6 @@ Copy the values of the full env example file `.env.full.example` to `.env`, then
 ```bash
 cp .env.full.example .env
 ```
-
-### Install LangGraph CLI
-
-```bash
-pip install langgraph-cli
-```
-
-Then run the following command to check the CLI is installed:
-
-```bash
-langgraph --version
-```
-
-Click [here](https://langchain-ai.github.io/langgraph/cloud/reference/cli/) to read the full download instructions for the LangGraph CLI.
 
 ### Setup authentication
 
@@ -319,24 +288,19 @@ Ensure this is set as `GITHUB_TOKEN` in your `.env` file.
 
 # Usage
 
-## Generate Demo Post
+## Generate Post
 
-Once this is done, start your graph server by running: (ensure you either have the `LANGGRAPH_API_KEY` exposed in your path, or include it inline when you run the command)
-
-```bash
-yarn langgraph:up
-```
-
-or
+Once all the setup steps have been completed, start your graph server by running:
 
 ```bash
-LANGCHAIN_API_KEY="lsv2_pt_..." yarn langgraph:up
+yarn langgraph:in_mem:up
 ```
 
-The first time you run this command, it will take a few minutes to start up. Once it's ready, you can execute the following command to generate a demo post:
+The first time running this command (or if a new version has been released for the `@langchain/langgraph-cli` package), it will ask you to accept an install for the CLI. Hit `y` to accept.
 
-After the graph is ready, you can run the following command to generate a demo post:
-(before doing this, you should edit the file so that the text only mode is set to false: `[TEXT_ONLY_MODE]: false`)
+Once the server is ready, you can execute the following command to generate a post:
+
+(before doing this, you should edit the file so that the text only mode is set to false: `[TEXT_ONLY_MODE]: false` if using advanced setup mode)
 
 ```bash
 yarn generate_post
@@ -345,6 +309,8 @@ yarn generate_post
 This will kick off a new run to generate a post on a [LangChain blog post](https://blog.langchain.dev/customers-appfolio/).
 
 To view the output, either inspect it in LangSmith, or use [the Agent Inbox](#setup-agent-inbox).
+
+You may also modify this script to pass different URLs to generate posts for other content.
 
 ## Setup Crons
 
