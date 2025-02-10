@@ -129,8 +129,7 @@ Under the hood, this will execute the following command:
 npx @langchain/langgraph-cli dev --port 54367
 ```
 
-> Note:
->
+> [!NOTE]
 > The first time running this command (or if a new version of `@langchain/langgraph-cli` has been released), it will ask you to accept an install for the CLI. Enter `y` to accept.
 
 Once the server is ready, you can execute the following command to generate a post:
@@ -220,8 +219,7 @@ LINKEDIN_ORGANIZATION_ID=
 POST_TO_LINKEDIN_ORGANIZATION=true
 ```
 
-> Note:
->
+> [!NOTE]
 > If you want to upload media to Twitter, you will still need to set up your own Twitter developer account (below) in addition to using Arcade.
 >
 > If you are only planning to read/write text posts on Twitter, you can use Arcade without any additional setup.
@@ -270,8 +268,7 @@ You'll need to follow these instructions if you plan on posting to LinkedIn and 
 4. Inside the [authorization server file (./src/clients/auth-server.ts)](./src/clients/auth-server.ts), ensure the `w_organization_social` scope is enabled inside the scopes string in the `/auth/linkedin` route. Once done, the scopes string should look like this: `openid profile email w_member_social w_organization_social`
 5. Get the organization ID from the URL of the company page when you're logged in as an admin and set it as the `LINKEDIN_ORGANIZATION_ID` environment variable. For example, if the URL is `https://www.linkedin.com/company/12345678/admin/dashboard/`, the organization ID would be `12345678`.
 
-> NOTE
->
+> [!NOTE]
 > If you plan on only posting from the company account, you can set the `POST_TO_LINKEDIN_ORGANIZATION` to `"true"` in your `.env` file. If you want to choose dynamically, you can set this to `true`/`false` in the configurable fields (`postToLinkedInOrganization`) when invoking the `generate_post` graph.
 >
 > This value will take precedence over the `POST_TO_LINKEDIN_ORGANIZATION` environment variable.
@@ -330,8 +327,7 @@ Once all the setup steps have been completed, start your graph server by running
 yarn langgraph:in_mem:up
 ```
 
-> Note:
->
+> [!NOTE]
 > The first time running this command (or if a new version of `@langchain/langgraph-cli` has been released), it will ask you to accept an install for the CLI. Enter `y` to accept.
 
 Once the server is ready, you can execute the following command to generate a post:
