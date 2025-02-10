@@ -129,7 +129,9 @@ Under the hood, this will execute the following command:
 npx @langchain/langgraph-cli dev --port 54367
 ```
 
-Your first time running this command (or if a new version has been released for the `@langchain/langgraph-cli` package), it will ask you to accept an install for the CLI. Hit `y` to accept.
+> Note:
+>
+> The first time running this command (or if a new version of `@langchain/langgraph-cli` has been released), it will ask you to accept an install for the CLI. Enter `y` to accept.
 
 Once the server is ready, you can execute the following command to generate a post:
 
@@ -328,7 +330,9 @@ Once all the setup steps have been completed, start your graph server by running
 yarn langgraph:in_mem:up
 ```
 
-The first time running this command (or if a new version has been released for the `@langchain/langgraph-cli` package), it will ask you to accept an install for the CLI. Hit `y` to accept.
+> Note:
+>
+> The first time running this command (or if a new version of `@langchain/langgraph-cli` has been released), it will ask you to accept an install for the CLI. Enter `y` to accept.
 
 Once the server is ready, you can execute the following command to generate a post:
 
