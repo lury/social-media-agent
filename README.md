@@ -8,16 +8,15 @@ This repository contains an 'agent' which can take in a URL, and generate a Twit
 
 - [Quickstart](#quickstart)
   - [Environment variables](#set-environment-variables)
-  - [LangGraph Server](#set-environment-variables)
+  - [LangGraph Server](#start-the-langgraph-server)
 - [Full setup](#advanced-setup)
   - [Environment variables](#set-environment-variables-1)
-  - [LangGraph Server](#install-langgraph-cli-1)
   - [Authentication](#setup-authentication)
   - [Supabase](#setup-supabase)
   - [Slack](#setup-slack)
   - [GitHub](#setup-github)
 - [Usage](#usage)
-  - [Generate Demo Post](#generate-demo-post)
+  - [Generate Post](#generate-post)
   - [Setup Crons](#setup-crons)
   - [Prebuilt Scripts](#prebuilt-scripts)
 - [Setup Agent Inbox](#setup-agent-inbox)
@@ -29,7 +28,7 @@ This repository contains an 'agent' which can take in a URL, and generate a Twit
 
 # Quickstart
 
-> [!NOTE]
+> [!TIP]
 > 🎥 For a visual guide, check out our [step-by-step video tutorial](https://youtu.be/TmTl5FMgkCQ) that walks you through the account setup process and project configuration.
 
 This quickstart covers how to setup the Social Media Agent in a basic setup mode. This is the quickest way to get up and running, however it will lack some of the features of the full setup mode. See [here](#advanced-setup) for the full setup guide.
@@ -80,8 +79,8 @@ Once done, ensure you have the following environment variables set:
 
 ```bash
 # For LangSmith tracing (optional)
-LANGCHAIN_API_KEY=
-LANGCHAIN_TRACING_V2=true
+LANGSMITH_API_KEY=
+LANGSMITH_TRACING_V2=true
 
 # For LLM generations
 ANTHROPIC_API_KEY=
@@ -118,35 +117,34 @@ Click [here](https://langchain-ai.github.io/langgraph/cloud/reference/cli/) to r
 
 ### Start the LangGraph server:
 
-First, make sure you have Docker installed and running. You can check this by running the following command:
+To start the LangGraph server, run this script:
 
 ```bash
-docker ps
+yarn langgraph:in_mem:up
 ```
 
-Then, run the following command to start the LangGraph server: (ensure you either have the `LANGGRAPH_API_KEY` exposed in your path, or include it inline when you run the command)
+Under the hood, this will execute the following command:
 
 ```bash
-yarn langgraph:up
+npx @langchain/langgraph-cli dev --port 54367
 ```
 
-or
+> [!NOTE]
+> The first time running this command (or if a new version of `@langchain/langgraph-cli` has been released), it will ask you to accept an install for the CLI. Enter `y` to accept.
 
-```bash
-LANGCHAIN_API_KEY="lsv2_pt_..." yarn langgraph:up
-```
-
-The first time you run this command, it will take a few minutes to start up. Once it's ready, you can execute the following command to generate a demo post:
+Once the server is ready, you can execute the following command to generate a post:
 
 ```bash
 yarn generate_post
 ```
 
+You may also modify this script to pass different URLs to generate posts for other content.
+
 This will kick off a new run to generate a post on a [LangChain blog post](https://blog.langchain.dev/customers-appfolio/).
 
 To view the output, either inspect it in LangSmith, or use Agent Inbox.
 
-> [!NOTE]
+> [!TIP]
 > Follow these steps to setup & configure the Agent Inbox: [Setup Agent Inbox Guide](#setup-agent-inbox)
 
 # Advanced Setup
@@ -192,20 +190,6 @@ Copy the values of the full env example file `.env.full.example` to `.env`, then
 cp .env.full.example .env
 ```
 
-### Install LangGraph CLI
-
-```bash
-pip install langgraph-cli
-```
-
-Then run the following command to check the CLI is installed:
-
-```bash
-langgraph --version
-```
-
-Click [here](https://langchain-ai.github.io/langgraph/cloud/reference/cli/) to read the full download instructions for the LangGraph CLI.
-
 ### Setup authentication
 
 The agent needs your authorization to read and write to social media platforms. There are two ways to authorize the agent:
@@ -235,8 +219,7 @@ LINKEDIN_ORGANIZATION_ID=
 POST_TO_LINKEDIN_ORGANIZATION=true
 ```
 
-> Note:
->
+> [!NOTE]
 > If you want to upload media to Twitter, you will still need to set up your own Twitter developer account (below) in addition to using Arcade.
 >
 > If you are only planning to read/write text posts on Twitter, you can use Arcade without any additional setup.
@@ -285,8 +268,7 @@ You'll need to follow these instructions if you plan on posting to LinkedIn and 
 4. Inside the [authorization server file (./src/clients/auth-server.ts)](./src/clients/auth-server.ts), ensure the `w_organization_social` scope is enabled inside the scopes string in the `/auth/linkedin` route. Once done, the scopes string should look like this: `openid profile email w_member_social w_organization_social`
 5. Get the organization ID from the URL of the company page when you're logged in as an admin and set it as the `LINKEDIN_ORGANIZATION_ID` environment variable. For example, if the URL is `https://www.linkedin.com/company/12345678/admin/dashboard/`, the organization ID would be `12345678`.
 
-> NOTE
->
+> [!NOTE]
 > If you plan on only posting from the company account, you can set the `POST_TO_LINKEDIN_ORGANIZATION` to `"true"` in your `.env` file. If you want to choose dynamically, you can set this to `true`/`false` in the configurable fields (`postToLinkedInOrganization`) when invoking the `generate_post` graph.
 >
 > This value will take precedence over the `POST_TO_LINKEDIN_ORGANIZATION` environment variable.
@@ -337,24 +319,20 @@ Ensure this is set as `GITHUB_TOKEN` in your `.env` file.
 
 # Usage
 
-## Generate Demo Post
+## Generate Post
 
-Once this is done, start your graph server by running: (ensure you either have the `LANGGRAPH_API_KEY` exposed in your path, or include it inline when you run the command)
-
-```bash
-yarn langgraph:up
-```
-
-or
+Once all the setup steps have been completed, start your graph server by running:
 
 ```bash
-LANGCHAIN_API_KEY="lsv2_pt_..." yarn langgraph:up
+yarn langgraph:in_mem:up
 ```
 
-The first time you run this command, it will take a few minutes to start up. Once it's ready, you can execute the following command to generate a demo post:
+> [!NOTE]
+> The first time running this command (or if a new version of `@langchain/langgraph-cli` has been released), it will ask you to accept an install for the CLI. Enter `y` to accept.
 
-After the graph is ready, you can run the following command to generate a demo post:
-(before doing this, you should edit the file so that the text only mode is set to false: `[TEXT_ONLY_MODE]: false`)
+Once the server is ready, you can execute the following command to generate a post:
+
+(before doing this, you should edit the file so that the text only mode is set to false: `[TEXT_ONLY_MODE]: false` if using advanced setup mode)
 
 ```bash
 yarn generate_post
@@ -363,6 +341,8 @@ yarn generate_post
 This will kick off a new run to generate a post on a [LangChain blog post](https://blog.langchain.dev/customers-appfolio/).
 
 To view the output, either inspect it in LangSmith, or use [the Agent Inbox](#setup-agent-inbox).
+
+You may also modify this script to pass different URLs to generate posts for other content.
 
 ## Setup Crons
 
