@@ -28,7 +28,7 @@ This repository contains an 'agent' which can take in a URL, and generate a Twit
 
 # Quickstart
 
-> [!NOTE]
+> [!TIP]
 > 🎥 For a visual guide, check out our [step-by-step video tutorial](https://youtu.be/TmTl5FMgkCQ) that walks you through the account setup process and project configuration.
 
 This quickstart covers how to setup the Social Media Agent in a basic setup mode. This is the quickest way to get up and running, however it will lack some of the features of the full setup mode. See [here](#advanced-setup) for the full setup guide.
@@ -144,7 +144,7 @@ This will kick off a new run to generate a post on a [LangChain blog post](https
 
 To view the output, either inspect it in LangSmith, or use Agent Inbox.
 
-> [!NOTE]
+> [!TIP]
 > Follow these steps to setup & configure the Agent Inbox: [Setup Agent Inbox Guide](#setup-agent-inbox)
 
 # Advanced Setup
