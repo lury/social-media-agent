@@ -15,7 +15,7 @@ import { humanNode } from "./nodes/human-node/index.js";
 import { rewritePost } from "./nodes/rewrite-post.js";
 import { schedulePost } from "./nodes/schedule-post/index.js";
 import { condensePost } from "./nodes/condense-post.js";
-import { isTextOnly, removeUrls } from "../utils.js";
+import { getUrlType, isTextOnly, removeUrls } from "../utils.js";
 import { verifyLinksGraph } from "../verify-links/verify-links-graph.js";
 import { authSocialsPassthrough } from "./nodes/auth-socials.js";
 import { findImagesGraph } from "../find-images/find-images-graph.js";
@@ -66,7 +66,11 @@ function condenseOrHumanConditionalEdge(
 function generateReportOrEndConditionalEdge(
   state: typeof GeneratePostAnnotation.State,
 ): "generateContentReport" | typeof END {
-  if (state.pageContents?.length) {
+  // Only generate a post if it has relevant links, and at least one is not Twitter.
+  const hasExternalLinks =
+    !!state.relevantLinks?.length &&
+    state.relevantLinks?.some((l) => getUrlType(l) !== "twitter");
+  if (state.pageContents?.length && hasExternalLinks) {
     return "generateContentReport";
   }
   return END;
