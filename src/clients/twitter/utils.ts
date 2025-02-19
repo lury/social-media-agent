@@ -95,8 +95,6 @@ export async function resolveAndReplaceTweetTextLinks(
     }
   }
 
-  console.log("Found cleanedUrls:", cleanedUrls);
-
   return {
     content: updatedContent,
     externalUrls: cleanedUrls

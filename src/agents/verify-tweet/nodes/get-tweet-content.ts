@@ -94,7 +94,6 @@ function getFullTweetText(
 export async function getTweetContent(
   state: typeof VerifyTweetAnnotation.State,
 ) {
-  console.log("\n\nGetting tweet content for link:", state.link, "\n\n");
   const tweetId = extractTweetId(state.link);
   if (!tweetId) {
     console.error("Failed to extract tweet ID from link:", state.link);
@@ -131,7 +130,6 @@ export async function getTweetContent(
   const { content, externalUrls } =
     await resolveAndReplaceTweetTextLinks(tweetContentText);
 
-  console.log("Returned external URLs:", externalUrls);
   const shouldExclude = shouldExcludeTweetContent(externalUrls);
   if (shouldExclude) {
     return {};

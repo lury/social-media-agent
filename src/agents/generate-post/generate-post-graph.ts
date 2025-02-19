@@ -72,7 +72,7 @@ function condenseOrHumanConditionalEdge(
  * @param config The LangGraph config to get the store from.
  * @returns {Promise<boolean>} `true` if any of the URLs in the array are already stored in the post subject URLs store. `false` otherwise.
  */
-async function checkIfUrlIsPreviouslyUsed(
+async function checkIfUrlsArePreviouslyUsed(
   urls: string[],
   config: LangGraphRunnableConfig,
 ) {
@@ -86,7 +86,7 @@ async function generateReportOrEndConditionalEdge(
   state: typeof GeneratePostAnnotation.State,
   config: LangGraphRunnableConfig,
 ): Promise<"generateContentReport" | typeof END> {
-  const urlsAlreadyUsed = await checkIfUrlIsPreviouslyUsed(
+  const urlsAlreadyUsed = await checkIfUrlsArePreviouslyUsed(
     [...(state.relevantLinks ?? []), ...state.links],
     config,
   );
