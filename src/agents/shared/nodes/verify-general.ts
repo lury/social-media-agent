@@ -40,6 +40,24 @@ type UrlContents = {
   imageUrls?: string[];
 };
 
+function shouldExcludeContent(url: string): boolean {
+  const useLangChainPrompts = process.env.USE_LANGCHAIN_PROMPTS === "true";
+  if (!useLangChainPrompts) {
+    return false;
+  }
+  const langChainUrls = [
+    "langchain.com",
+    "langchain.dev",
+    "langchain-ai.github.io",
+  ];
+  // We don't want to generate posts on LangChain website content.
+  if (langChainUrls.some((lcUrl) => url.includes(lcUrl))) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function getUrlContents(url: string): Promise<UrlContents> {
   const loader = new FireCrawlLoader({
     url,
@@ -108,6 +126,11 @@ export async function verifyGeneralContent(
   state: typeof VerifyContentAnnotation.State,
   _config: LangGraphRunnableConfig,
 ): Promise<Partial<CurateDataState>> {
+  const shouldExclude = shouldExcludeContent(state.link);
+  if (shouldExclude) {
+    return {};
+  }
+
   const urlContents = await new RunnableLambda<string, UrlContents>({
     func: getUrlContents,
   })

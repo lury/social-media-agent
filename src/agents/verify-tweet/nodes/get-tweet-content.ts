@@ -4,6 +4,16 @@ import { TwitterClient } from "../../../clients/twitter/client.js";
 import { resolveAndReplaceTweetTextLinks } from "../../../clients/twitter/utils.js";
 import { TweetV2SingleResult } from "twitter-api-v2";
 
+function shouldExcludeTweet(externalUrls: string[]): boolean {
+  const useLangChainPrompts = process.env.USE_LANGCHAIN_PROMPTS === "true";
+  if (!useLangChainPrompts) {
+    return false;
+  }
+
+  // If there are no external URLs, then we should exclude the tweet. Return true.
+  return externalUrls.length === 0;
+}
+
 export async function getTweetContent(
   state: typeof VerifyTweetAnnotation.State,
 ) {
@@ -39,48 +49,6 @@ export async function getTweetContent(
     tweetContent = await twitterClient.getTweet(tweetId);
   } catch (e: any) {
     console.error("Failed to get tweet content", e);
-    // TODO: IMPLEMENT DELAYING RUNS ONCE GOTO GRAPH HAS BEEN IMPLEMENTED IN LANGGRAPH SDK
-    // const graphDelayed = config.configurable?.graphDelayed;
-    // if (graphDelayed) {
-    //   // Graph already has been delayed. Do not attempt to delay again.
-    //   throw new Error(
-    //     "Failed to fetch tweet. Graph already delayed." + e.message,
-    //   );
-    // }
-
-    // const { thread_id, assistant_id, run_id, ...restOfConfigurable } =
-    //   config.configurable || {};
-    // if (!thread_id || !assistant_id || !run_id) {
-    //   console.warn(
-    //     "Can not delay run because one of thread_id, assistant_id, run_id is missing.",
-    //     {
-    //       thread_id,
-    //       assistant_id,
-    //       run_id,
-    //     },
-    //   );
-    //   throw new Error(
-    //     "Failed to fetch tweet. One of thread_id, assistant_id, run_id is missing." +
-    //       `thread_id: ${thread_id}, assistant_id: ${assistant_id}, run_id: ${run_id}` +
-    //       "Error message:" +
-    //       e.message,
-    //   );
-    // }
-    // await delayRun({
-    //   seconds: 60 * 15, // 15 min delay for Twitter API rate limits
-    //   resumeNode: "verifyTweetSubGraph",
-    //   threadId: thread_id,
-    //   assistantId: assistant_id,
-    //   runId: run_id,
-    //   state: {
-    //     // Since we're resuming from the start of the subgraph, only pass the input the subgraph expects.
-    //     link: state.link,
-    //   },
-    //   configurable: {
-    //     ...restOfConfigurable,
-    //     graphDelayed: true,
-    //   },
-    // });
     return {};
   }
 
@@ -102,6 +70,11 @@ export async function getTweetContent(
 
   const { content, externalUrls } =
     await resolveAndReplaceTweetTextLinks(tweetContentText);
+
+  const shouldExclude = shouldExcludeTweet(externalUrls);
+  if (shouldExclude) {
+    return {};
+  }
 
   if (!externalUrls.length) {
     return {

@@ -20,6 +20,7 @@ import { verifyLinksGraph } from "../verify-links/verify-links-graph.js";
 import { authSocialsPassthrough } from "./nodes/auth-socials.js";
 import { findImagesGraph } from "../find-images/find-images-graph.js";
 import { updateScheduledDate } from "../shared/nodes/update-scheduled-date.js";
+import { checkRelevancy } from "./nodes/check-relevancy.js";
 
 function routeAfterGeneratingReport(
   state: typeof GeneratePostAnnotation.State,
@@ -76,6 +77,12 @@ function generateReportOrEndConditionalEdge(
   return END;
 }
 
+function routeAfterCheckingRelevancy(
+  state: typeof GeneratePostAnnotation.State,
+): "findImagesSubGraph" | "humanNode" | typeof END {
+  return "findImagesSubGraph";
+}
+
 const generatePostBuilder = new StateGraph(
   { stateSchema: GeneratePostAnnotation, input: GeneratePostInputAnnotation },
   GeneratePostConfigurableAnnotation,
@@ -100,6 +107,8 @@ const generatePostBuilder = new StateGraph(
   .addNode("findImagesSubGraph", findImagesGraph)
   // Updated the scheduled date from the natural language response from the user.
   .addNode("updateScheduleDate", updateScheduledDate)
+  // Check how relevant/high quality the post is, and whether or not to post it.
+  .addNode("checkRelevancy", checkRelevancy)
 
   // Start node
   .addEdge(START, "authSocialsPassthrough")
@@ -130,8 +139,13 @@ const generatePostBuilder = new StateGraph(
   // has been generated because the image validator requires the post content.
   .addConditionalEdges("condensePost", condenseOrHumanConditionalEdge, [
     "condensePost",
+    "checkRelevancy",
+  ])
+
+  .addConditionalEdges("checkRelevancy", routeAfterCheckingRelevancy, [
     "findImagesSubGraph",
     "humanNode",
+    END,
   ])
 
   // After finding images, we are done and can interrupt for the human to respond.

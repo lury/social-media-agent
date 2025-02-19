@@ -137,7 +137,17 @@ interface VerifyGitHubContentParams {
   config: LangGraphRunnableConfig;
 }
 
-export async function verifyGitHubContentIsRelevant({
+function shouldExcludeContent(link: string): boolean {
+  const useLangChainPrompts = process.env.USE_LANGCHAIN_PROMPTS === "true";
+  if (!useLangChainPrompts) {
+    return false;
+  }
+  const langChainGitHubOrg = "github.com/langchain-ai/";
+  // Do not generate posts on LangChain repos.
+  return link.includes(langChainGitHubOrg);
+}
+
+async function verifyGitHubContentIsRelevant({
   contents,
   fileType,
   dependencyFiles,
@@ -193,6 +203,14 @@ export async function verifyGitHubContent(
   state: typeof VerifyContentAnnotation.State,
   config: LangGraphRunnableConfig,
 ): Promise<VerifyGitHubContentReturn> {
+  const shouldExclude = shouldExcludeContent(state.link);
+  if (shouldExclude) {
+    return {
+      relevantLinks: [],
+      pageContents: [],
+    };
+  }
+
   const contentsAndType = await getGitHubContentsAndTypeFromUrl(state.link);
   if (!contentsAndType) {
     console.warn("No contents found for GitHub URL", state.link);
