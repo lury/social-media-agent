@@ -51,17 +51,12 @@ function rewriteOrEndConditionalEdge(
 
 function condenseOrHumanConditionalEdge(
   state: typeof GeneratePostAnnotation.State,
-  config: LangGraphRunnableConfig,
-): "condensePost" | "findImagesSubGraph" | "humanNode" {
+): "condensePost" | "checkRelevancy" {
   const cleanedPost = removeUrls(state.post || "");
   if (cleanedPost.length > 280 && state.condenseCount <= 3) {
     return "condensePost";
   }
-  const isTextOnlyMode = isTextOnly(config);
-  if (isTextOnlyMode) {
-    return "humanNode";
-  }
-  return "findImagesSubGraph";
+  return "checkRelevancy";
 }
 
 function generateReportOrEndConditionalEdge(
@@ -79,7 +74,15 @@ function generateReportOrEndConditionalEdge(
 
 function routeAfterCheckingRelevancy(
   state: typeof GeneratePostAnnotation.State,
+  config: LangGraphRunnableConfig,
 ): "findImagesSubGraph" | "humanNode" | typeof END {
+  if (state.next === END) {
+    return END;
+  }
+  const isTextOnlyMode = isTextOnly(config);
+  if (isTextOnlyMode) {
+    return "humanNode";
+  }
   return "findImagesSubGraph";
 }
 
@@ -131,8 +134,7 @@ const generatePostBuilder = new StateGraph(
   // and if so, condense it. Otherwise, route to the human node.
   .addConditionalEdges("generatePost", condenseOrHumanConditionalEdge, [
     "condensePost",
-    "findImagesSubGraph",
-    "humanNode",
+    "checkRelevancy",
   ])
   // After condensing the post, we should verify again that the content is below the character limit.
   // Once the post is below the character limit, we can find & filter images. This needs to happen after the post
