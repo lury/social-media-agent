@@ -11,6 +11,7 @@ import {
   getOwnerRepoFromUrl,
 } from "../../../utils/github-repo-contents.js";
 import { Octokit } from "@octokit/rest";
+import { shouldExcludeGitHubContent } from "../../should-exclude.js";
 
 function getOctokit() {
   const token = process.env.GITHUB_TOKEN;
@@ -137,7 +138,7 @@ interface VerifyGitHubContentParams {
   config: LangGraphRunnableConfig;
 }
 
-export async function verifyGitHubContentIsRelevant({
+async function verifyGitHubContentIsRelevant({
   contents,
   fileType,
   dependencyFiles,
@@ -193,6 +194,14 @@ export async function verifyGitHubContent(
   state: typeof VerifyContentAnnotation.State,
   config: LangGraphRunnableConfig,
 ): Promise<VerifyGitHubContentReturn> {
+  const shouldExclude = shouldExcludeGitHubContent(state.link);
+  if (shouldExclude) {
+    return {
+      relevantLinks: [],
+      pageContents: [],
+    };
+  }
+
   const contentsAndType = await getGitHubContentsAndTypeFromUrl(state.link);
   if (!contentsAndType) {
     console.warn("No contents found for GitHub URL", state.link);

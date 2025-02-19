@@ -15,11 +15,12 @@ import { humanNode } from "./nodes/human-node/index.js";
 import { rewritePost } from "./nodes/rewrite-post.js";
 import { schedulePost } from "./nodes/schedule-post/index.js";
 import { condensePost } from "./nodes/condense-post.js";
-import { getUrlType, isTextOnly, removeUrls } from "../utils.js";
+import { isTextOnly, removeUrls } from "../utils.js";
 import { verifyLinksGraph } from "../verify-links/verify-links-graph.js";
 import { authSocialsPassthrough } from "./nodes/auth-socials.js";
 import { findImagesGraph } from "../find-images/find-images-graph.js";
 import { updateScheduledDate } from "../shared/nodes/update-scheduled-date.js";
+import { getPostSubjectUrls } from "../shared/stores/post-subject-urls.js";
 
 function routeAfterGeneratingReport(
   state: typeof GeneratePostAnnotation.State,
@@ -51,11 +52,12 @@ function rewriteOrEndConditionalEdge(
 function condenseOrHumanConditionalEdge(
   state: typeof GeneratePostAnnotation.State,
   config: LangGraphRunnableConfig,
-): "condensePost" | "findImagesSubGraph" | "humanNode" {
+): "condensePost" | "humanNode" | "findImagesSubGraph" {
   const cleanedPost = removeUrls(state.post || "");
   if (cleanedPost.length > 280 && state.condenseCount <= 3) {
     return "condensePost";
   }
+
   const isTextOnlyMode = isTextOnly(config);
   if (isTextOnlyMode) {
     return "humanNode";
@@ -63,17 +65,39 @@ function condenseOrHumanConditionalEdge(
   return "findImagesSubGraph";
 }
 
-function generateReportOrEndConditionalEdge(
+/**
+ * Checks if any of the URLs in the array are already stored in the post subject URLs store.
+ * If so, it returns `true` and the post should NOT be generated.
+ * @param urls The array of URLs to check. These are all of the input & extracted relevant URLs.
+ * @param config The LangGraph config to get the store from.
+ * @returns {Promise<boolean>} `true` if any of the URLs in the array are already stored in the post subject URLs store. `false` otherwise.
+ */
+async function checkIfUrlsArePreviouslyUsed(
+  urls: string[],
+  config: LangGraphRunnableConfig,
+) {
+  const existingUrls = await getPostSubjectUrls(config);
+  return urls.some((url) =>
+    existingUrls.some((existingUrl) => url === existingUrl),
+  );
+}
+
+async function generateReportOrEndConditionalEdge(
   state: typeof GeneratePostAnnotation.State,
-): "generateContentReport" | typeof END {
-  // Only generate a post if it has relevant links, and at least one is not Twitter.
-  const hasExternalLinks =
-    !!state.relevantLinks?.length &&
-    state.relevantLinks?.some((l) => getUrlType(l) !== "twitter");
-  if (state.pageContents?.length && hasExternalLinks) {
-    return "generateContentReport";
+  config: LangGraphRunnableConfig,
+): Promise<"generateContentReport" | typeof END> {
+  const urlsAlreadyUsed = await checkIfUrlsArePreviouslyUsed(
+    [...(state.relevantLinks ?? []), ...state.links],
+    config,
+  );
+
+  // End early if the URLs have already been used, or if there are no
+  // page contents extracted from any of the URLs.
+  if (urlsAlreadyUsed || !state.pageContents?.length) {
+    return END;
   }
-  return END;
+
+  return "generateContentReport";
 }
 
 const generatePostBuilder = new StateGraph(

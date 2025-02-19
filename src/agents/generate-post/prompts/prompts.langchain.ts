@@ -113,4 +113,4 @@ export const POST_CONTENT_RULES = `- Focus your post on what the content covers,
 - Limit the use of emojis to the post header, and optionally in the call to action.
 - NEVER use hashtags in the post.
 - ALWAYS use present tense to make announcements feel immediate (e.g., "Microsoft just launched..." instead of "Microsoft launches...").
-- ALWAYS include the link to the content being promoted in the call to action section of the post.`;
+- ALWAYS include at least one link to the content being promoted in the call to action section of the post.`;

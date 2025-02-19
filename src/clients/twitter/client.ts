@@ -10,7 +10,6 @@ import {
   TwitterApiReadWrite,
 } from "twitter-api-v2";
 import { AuthorizeUserResponse } from "../types.js";
-import { getThreadTweets, isTweetSelfReply } from "./utils.js";
 
 const BASE_FETCH_TWEET_OPTIONS: Partial<TweetV2PaginableListParams> = {
   "tweet.fields": [
@@ -485,26 +484,22 @@ export class TwitterClient {
    * Retrieves all tweets in a thread starting from a given tweet ID.
    * A thread is defined as a series of tweets where the author replies to their own tweets.
    *
-   * @param {string} tweetId - The ID of the initial tweet in the thread
-   * @param {string} authorId - The ID of the author who created the thread
-   * @returns {Promise<TweetV2[]>} An array of tweets in chronological order.
+   * @param {string} id - The ID of the initial tweet in the thread
+   * @param {string} authorIdOrUsername - The ID or username of the author who created the thread
+   * @returns {Promise<TweetV2[]>} An array of tweets in chronological order. This does NOT include the initial tweet, only the replies.
    */
-  async getThreadFromId(initialTweet: TweetV2): Promise<TweetV2[]> {
-    const authorId = initialTweet.author_id;
-    if (!initialTweet.author_id) {
-      throw new Error(
-        "Failed to get tweet author from input:" + JSON.stringify(initialTweet),
-      );
-    }
-
+  async getThreadReplies(
+    id: string,
+    authorIdOrUsername: string,
+  ): Promise<TweetV2[]> {
     const fetchTweetOptions: Partial<Tweetv2FieldsParams> =
       BASE_FETCH_TWEET_OPTIONS;
 
-    const thread: TweetV2[] = [initialTweet];
+    const thread: TweetV2[] = [];
 
     // Search for replies by the same author, to the same author. This must result in a thread, or the author is replying to themselves.
     const replies = await this.twitterClient.v2.search(
-      `conversation_id:${initialTweet.id} from:${authorId} to:${authorId}`,
+      `conversation_id:${id} from:${authorIdOrUsername} to:${authorIdOrUsername}`,
       {
         ...fetchTweetOptions,
         max_results: 15, // Limit to 15 replies as most threads will not be longer than this.
@@ -514,19 +509,13 @@ export class TwitterClient {
     if (!replies.data || !replies.data.data) {
       return thread;
     }
-    // Filter replies to only include those that form a thread (author replying to themselves)
-    const threadReplies = replies.data.data.filter((tweet) =>
-      isTweetSelfReply(tweet, authorId as string),
-    );
 
-    if (threadReplies.length === 0) return thread;
-
-    const formattedThreads: TweetV2[] = threadReplies.sort((a, b) => {
+    const formattedThreads: TweetV2[] = replies.data.data.sort((a, b) => {
       return (
         new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
       );
     });
 
-    return getThreadTweets(initialTweet, formattedThreads);
+    return formattedThreads;
   }
 }
