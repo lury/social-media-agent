@@ -7,9 +7,11 @@ import { HumanMessage } from "@langchain/core/messages";
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyContentAnnotation } from "../shared-state.js";
 import {
+  getChannelInfo,
   getVideoThumbnailUrl,
   getYouTubeVideoDuration,
 } from "./youtube.utils.js";
+import { shouldExcludeYouTubeContent } from "../../should-exclude.js";
 
 type VerifyYouTubeContentReturn = {
   relevantLinks: (typeof GeneratePostAnnotation.State)["relevantLinks"];
@@ -54,7 +56,7 @@ const RELEVANCY_SCHEMA = z
   })
   .describe("The relevancy of the content to your company's products.");
 
-export async function generateVideoSummary(url: string): Promise<string> {
+async function generateVideoSummary(url: string): Promise<string> {
   const model = new ChatVertexAI({
     model: "gemini-1.5-flash",
     temperature: 0,
@@ -88,7 +90,7 @@ export async function generateVideoSummary(url: string): Promise<string> {
   return summaryResult.content as string;
 }
 
-export async function verifyYouTubeContentIsRelevant(
+async function verifyYouTubeContentIsRelevant(
   summary: string,
 ): Promise<boolean> {
   const relevancyModel = new ChatAnthropic({
@@ -122,10 +124,20 @@ export async function verifyYouTubeContent(
   state: typeof VerifyContentAnnotation.State,
   _config: LangGraphRunnableConfig,
 ): Promise<VerifyYouTubeContentReturn> {
-  const [videoDurationS, videoThumbnail] = await Promise.all([
+  const [videoDurationS, videoThumbnail, channelInfo] = await Promise.all([
     getYouTubeVideoDuration(state.link),
     getVideoThumbnailUrl(state.link),
+    getChannelInfo(state.link),
   ]);
+
+  const shouldExclude = shouldExcludeYouTubeContent(channelInfo.channelName);
+  if (shouldExclude) {
+    return {
+      relevantLinks: [],
+      pageContents: [],
+    };
+  }
+
   if (videoDurationS === undefined) {
     // TODO: Handle this better
     throw new Error("Failed to get video duration");

@@ -1,7 +1,7 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { GeneratePostAnnotation } from "../generate-post-state.js";
 import { parseGeneration } from "./geterate-post/utils.js";
-import { removeUrls } from "../../utils.js";
+import { filterLinksForPostContent, removeUrls } from "../../utils.js";
 import {
   REFLECTIONS_PROMPT,
   getReflectionsPrompt,
@@ -17,10 +17,11 @@ You wrote this marketing report on the content which you used to write the origi
 {report}
 </report>
 
-And the content has the following link that should ALWAYS be included in the final post:
-<link>
-{link}
-</link>
+Here are the relevant links used to create the report. At least ONE should be included in the condensed post.
+The links do NOT contribute to the post's length. They are temporarily removed from the post before the length is calculated, and re-added afterwards.
+<links>
+{links}
+</links>
 
 You should not be worried by the length of the link, as that will be shortened before posting. Only focus on condensing the length of the post content itself.
 
@@ -81,7 +82,7 @@ export async function condensePost(
     "{report}",
     state.report,
   )
-    .replace("{link}", state.relevantLinks[0])
+    .replace("{links}", filterLinksForPostContent(state.relevantLinks))
     .replace("{originalPostLength}", originalPostLength)
     .replace("{reflectionsPrompt}", reflectionsPrompt);
 

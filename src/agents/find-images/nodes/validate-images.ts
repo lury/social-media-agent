@@ -1,6 +1,6 @@
 import { ChatVertexAI } from "@langchain/google-vertexai-web";
 import { FindImagesAnnotation } from "../find-images-graph.js";
-import { chunkArray } from "../../utils.js";
+import { chunkArray, imageUrlToBuffer, isValidUrl } from "../../utils.js";
 import { getImageMessageContents } from "../utils.js";
 
 const VALIDATE_IMAGES_PROMPT = `You are an advanced AI assistant tasked with validating image options for a social media post.
@@ -58,6 +58,73 @@ export function parseResult(result: string): number[] {
 
 const YOUTUBE_THUMBNAIL_URL = "https://i.ytimg.com/";
 
+function removeProtectedUrls(imageOptions: string[]): string[] {
+  return imageOptions.filter(
+    (fileUri) =>
+      (!process.env.SUPABASE_URL ||
+        !fileUri.startsWith(process.env.SUPABASE_URL)) &&
+      !fileUri.startsWith(YOUTUBE_THUMBNAIL_URL),
+  );
+}
+
+function getProtectedUrls(imageOptions: string[]): string[] {
+  return imageOptions.filter(
+    (fileUri) =>
+      (process.env.SUPABASE_URL &&
+        fileUri.startsWith(process.env.SUPABASE_URL)) ||
+      fileUri.startsWith(YOUTUBE_THUMBNAIL_URL),
+  );
+}
+
+async function filterImageUrls(imageOptions: string[]): Promise<{
+  imageOptions: string[];
+  returnEarly: boolean;
+}> {
+  const imagesWithoutProtected = imageOptions?.length
+    ? removeProtectedUrls(imageOptions)
+    : [];
+
+  if (!imagesWithoutProtected?.length) {
+    return {
+      imageOptions,
+      returnEarly: true,
+    };
+  }
+
+  const validImageUrlPromises = imagesWithoutProtected.filter(
+    async (imgUrl) => {
+      if (!isValidUrl(imgUrl)) return false;
+
+      try {
+        // Use this as a way to validate the image exists
+        const { contentType } = await imageUrlToBuffer(imgUrl);
+        if (contentType.startsWith("image/")) {
+          return true;
+        }
+      } catch (_) {
+        // no-op
+      }
+      return false;
+    },
+  );
+
+  const validImageUrls = await Promise.all(validImageUrlPromises);
+  if (!validImageUrls.length) {
+    const protectedImageUrls = imageOptions?.length
+      ? getProtectedUrls(imageOptions)
+      : [];
+    return {
+      imageOptions: [...protectedImageUrls],
+      returnEarly: true,
+    };
+  }
+
+  return {
+    imageOptions: validImageUrls,
+    returnEarly: false,
+  };
+}
+
 export async function validateImages(
   state: typeof FindImagesAnnotation.State,
 ): Promise<{
@@ -70,21 +137,17 @@ export async function validateImages(
     temperature: 0,
   });
 
-  const imagesWithoutProtected = imageOptions?.filter(
-    (fileUri) =>
-      (!process.env.SUPABASE_URL ||
-        !fileUri.startsWith(process.env.SUPABASE_URL)) &&
-      !fileUri.startsWith(YOUTUBE_THUMBNAIL_URL),
-  );
+  const { imageOptions: imagesWithoutProtected, returnEarly } =
+    await filterImageUrls(imageOptions ?? []);
 
-  if (imagesWithoutProtected?.length === 0) {
+  if (returnEarly || !imagesWithoutProtected?.length) {
     return {
-      imageOptions,
+      imageOptions: imagesWithoutProtected,
     };
   }
 
   // Split images into chunks of 10
-  const imageChunks = chunkArray(imagesWithoutProtected || [], 10);
+  const imageChunks = chunkArray(imagesWithoutProtected, 10);
   let allIrrelevantIndices: number[] = [];
   let baseIndex = 0;
 

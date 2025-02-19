@@ -12,6 +12,10 @@ import { validateTweetContent } from "./nodes/validate-tweet.js";
  * It creates a `Send` for each link, which will invoke a node specific to that website.
  */
 function routeTweetUrls(state: typeof VerifyTweetAnnotation.State) {
+  if (!state.tweetContent?.length) {
+    return END;
+  }
+
   if (!state.tweetContentUrls.length) {
     return "validateTweet";
   }
@@ -62,6 +66,7 @@ const verifyTweetBuilder = new StateGraph(VerifyTweetAnnotation)
     "verifyGeneralContent",
     "verifyGitHubContent",
     "validateTweet",
+    END,
   ])
 
   // After verifying the different content types, we should validate them in combination with the Tweet content.

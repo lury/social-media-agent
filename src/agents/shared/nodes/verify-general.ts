@@ -8,6 +8,7 @@ import { RunnableLambda } from "@langchain/core/runnables";
 import { getPageText } from "../../utils.js";
 import { getImagesFromFireCrawlMetadata } from "../../../utils/firecrawl.js";
 import { CurateDataState } from "../../curate-data/state.js";
+import { shouldExcludeGeneralContent } from "../../should-exclude.js";
 
 const RELEVANCY_SCHEMA = z
   .object({
@@ -108,6 +109,11 @@ export async function verifyGeneralContent(
   state: typeof VerifyContentAnnotation.State,
   _config: LangGraphRunnableConfig,
 ): Promise<Partial<CurateDataState>> {
+  const shouldExclude = shouldExcludeGeneralContent(state.link);
+  if (shouldExclude) {
+    return {};
+  }
+
   const urlContents = await new RunnableLambda<string, UrlContents>({
     func: getUrlContents,
   })

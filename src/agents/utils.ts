@@ -546,3 +546,18 @@ export function getAfterSecondsFromLinks(
     };
   });
 }
+
+/**
+ * Filters an array of URLs by type. Excludes any Twitter & Reddit URLs, then returns the filtered list joined by two newlines.
+ * This is used when getting the list of links which may be included in the post content.
+ *
+ * @param links - Array of URLs to filter
+ * @returns A joined string of the filtered URLs
+ */
+export function filterLinksForPostContent(links: string[]): string {
+  const blacklistedTypes = ["twitter", "reddit"];
+  const filteredLinks = links.filter(
+    (l) => !blacklistedTypes.includes(getUrlType(l) ?? ""),
+  );
+  return filteredLinks.join("\n\n");
+}

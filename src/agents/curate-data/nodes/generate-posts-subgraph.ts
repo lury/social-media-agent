@@ -50,51 +50,18 @@ async function saveIngestedData(
   ]);
 }
 
-export async function generatePostsSubgraph(
+async function sendSlackNotification(
   state: CurateDataState,
   config: LangGraphRunnableConfig,
-): Promise<Partial<CurateDataState>> {
-  const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
+) {
+  if (!process.env.SLACK_CHANNEL_ID || !process.env.SLACK_TOKEN) {
+    return;
+  }
 
-  const client = new Client({
-    apiUrl: `http://localhost:${process.env.PORT}`,
+  const slackClient = new SlackClient({
+    channelId: process.env.SLACK_CHANNEL_ID,
+    token: process.env.SLACK_TOKEN,
   });
-
-  const twitterURLs = state.rawTweets.flatMap((t) =>
-    t.author_id ? [getTweetLink(t.author_id, t.id)] : [],
-  );
-  const redditURLs = state.rawRedditPosts.map((p) => p.post.url);
-  const afterSecondsList = getAfterSecondsFromLinks(
-    [...twitterURLs, ...redditURLs, ...state.rawTrendingRepos],
-    {
-      baseDelaySeconds: 60,
-    },
-  );
-
-  const threadRunIds: ThreadRunId[] = [];
-
-  for (const { link, afterSeconds } of afterSecondsList) {
-    const { thread_id } = await client.threads.create();
-    const { run_id } = await client.runs.create(thread_id, "generate_post", {
-      input: {
-        links: [link],
-      },
-      config: {
-        configurable: {
-          [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
-        },
-      },
-      afterSeconds,
-    });
-    threadRunIds.push({ thread_id, run_id });
-  }
-
-  let slackClient: SlackClient | undefined = undefined;
-  if (process.env.SLACK_CHANNEL_ID && process.env.SLACK_CHANNEL_ID) {
-    slackClient = new SlackClient({
-      channelId: process.env.SLACK_CHANNEL_ID,
-    });
-  }
 
   try {
     await saveIngestedData(state, config);
@@ -120,6 +87,54 @@ Thread ID: *${config.configurable?.thread_id || "not found"}*
       `);
     }
   }
+}
+
+function getAfterSeconds(state: CurateDataState) {
+  const twitterURLs = state.rawTweets.flatMap((t) =>
+    t.author_id ? [getTweetLink(t.author_id, t.id)] : [],
+  );
+  const redditURLs = state.rawRedditPosts.map((p) => p.post.url);
+  const afterSecondsList = getAfterSecondsFromLinks(
+    [...twitterURLs, ...redditURLs, ...state.rawTrendingRepos],
+    {
+      baseDelaySeconds: 60,
+    },
+  );
+
+  return afterSecondsList;
+}
+
+export async function generatePostsSubgraph(
+  state: CurateDataState,
+  config: LangGraphRunnableConfig,
+): Promise<Partial<CurateDataState>> {
+  const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
+
+  const client = new Client({
+    apiUrl: `http://localhost:${process.env.PORT}`,
+  });
+
+  const afterSecondsList = getAfterSeconds(state);
+
+  const threadRunIds: ThreadRunId[] = [];
+
+  for (const { link, afterSeconds } of afterSecondsList) {
+    const { thread_id } = await client.threads.create();
+    const { run_id } = await client.runs.create(thread_id, "generate_post", {
+      input: {
+        links: [link],
+      },
+      config: {
+        configurable: {
+          [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
+        },
+      },
+      afterSeconds,
+    });
+    threadRunIds.push({ thread_id, run_id });
+  }
+
+  await sendSlackNotification(state, config);
 
   return {
     threadRunIds,

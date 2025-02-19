@@ -138,3 +138,45 @@ export async function getVideoThumbnailUrl(
     undefined
   );
 }
+
+/**
+ * Gets information about the channel that posted a YouTube video.
+ * @param videoUrl The URL of the YouTube video
+ * @returns An object containing the channel's name and ID
+ * @throws Error if the video URL is invalid or if there's an error fetching the channel info
+ */
+export async function getChannelInfo(
+  videoUrl: string,
+): Promise<{ channelName: string; channelId: string }> {
+  const youtubeClient = getYouTubeClientFromUrl();
+  const videoId = getVideoID(videoUrl);
+  if (!videoId) {
+    throw new Error(`Invalid YouTube URL: ${videoUrl}`);
+  }
+
+  const response = await youtubeClient.videos.list({
+    part: ["snippet"],
+    id: [videoId],
+  });
+
+  if (!response.data.items || response.data.items.length === 0) {
+    throw new Error(`No video found for ID: ${videoId}`);
+  }
+
+  const snippet = response.data.items[0].snippet;
+  if (!snippet) {
+    throw new Error(`No snippet information found for video: ${videoId}`);
+  }
+
+  const channelName = snippet.channelTitle;
+  const channelId = snippet.channelId;
+
+  if (!channelName || !channelId) {
+    throw new Error(`Could not find channel information for video: ${videoId}`);
+  }
+
+  return {
+    channelName,
+    channelId,
+  };
+}

@@ -8,6 +8,7 @@ import {
   parseDateResponse,
 } from "../../../../utils/date.js";
 import { routeResponse } from "../../../shared/nodes/route-response.js";
+import { savePostSubjectUrls } from "../../../shared/stores/post-subject-urls.js";
 
 interface ConstructDescriptionArgs {
   unknownResponseDescription: string;
@@ -159,6 +160,12 @@ export async function humanNode(
       isTextOnlyMode,
     }),
   };
+
+  // Save ALL links used to generate this post so that they are not used to generate future posts (duplicates).
+  await savePostSubjectUrls(
+    [...(state.relevantLinks ?? []), ...state.links],
+    config,
+  );
 
   const response = interrupt<HumanInterrupt[], HumanResponse[]>([
     interruptValue,
