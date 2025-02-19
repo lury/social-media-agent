@@ -11,6 +11,7 @@ import {
   getOwnerRepoFromUrl,
 } from "../../../utils/github-repo-contents.js";
 import { Octokit } from "@octokit/rest";
+import { shouldExcludeGitHubContent } from "../../should-exclude.js";
 
 function getOctokit() {
   const token = process.env.GITHUB_TOKEN;
@@ -137,16 +138,6 @@ interface VerifyGitHubContentParams {
   config: LangGraphRunnableConfig;
 }
 
-function shouldExcludeContent(link: string): boolean {
-  const useLangChainPrompts = process.env.USE_LANGCHAIN_PROMPTS === "true";
-  if (!useLangChainPrompts) {
-    return false;
-  }
-  const langChainGitHubOrg = "github.com/langchain-ai/";
-  // Do not generate posts on LangChain repos.
-  return link.includes(langChainGitHubOrg);
-}
-
 async function verifyGitHubContentIsRelevant({
   contents,
   fileType,
@@ -203,7 +194,7 @@ export async function verifyGitHubContent(
   state: typeof VerifyContentAnnotation.State,
   config: LangGraphRunnableConfig,
 ): Promise<VerifyGitHubContentReturn> {
-  const shouldExclude = shouldExcludeContent(state.link);
+  const shouldExclude = shouldExcludeGitHubContent(state.link);
   if (shouldExclude) {
     return {
       relevantLinks: [],

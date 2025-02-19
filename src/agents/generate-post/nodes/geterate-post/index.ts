@@ -25,7 +25,7 @@ export async function generatePost(
     temperature: 0.5,
   });
 
-  const prompt = formatPrompt(state.report, state.relevantLinks[0]);
+  const prompt = formatPrompt(state.report, state.relevantLinks);
 
   const reflections = await getReflectionsPrompt(config);
   const reflectionsPrompt = REFLECTIONS_PROMPT.replace(

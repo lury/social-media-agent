@@ -68,10 +68,6 @@ export const CurateDataAnnotation = Annotation.Root({
    * General URLs to scrape content from.
    */
   generalUrls: Annotation<string[]>,
-  /**
-   * The next node to route to.
-   */
-  next: Annotation<string | undefined>,
 });
 
 export const CurateDataConfigurableAnnotation = Annotation.Root({

@@ -20,7 +20,6 @@ import { verifyLinksGraph } from "../verify-links/verify-links-graph.js";
 import { authSocialsPassthrough } from "./nodes/auth-socials.js";
 import { findImagesGraph } from "../find-images/find-images-graph.js";
 import { updateScheduledDate } from "../shared/nodes/update-scheduled-date.js";
-import { checkRelevancy } from "./nodes/check-relevancy.js";
 import { getPostSubjectUrls } from "../shared/stores/post-subject-urls.js";
 
 function routeAfterGeneratingReport(
@@ -52,12 +51,18 @@ function rewriteOrEndConditionalEdge(
 
 function condenseOrHumanConditionalEdge(
   state: typeof GeneratePostAnnotation.State,
-): "condensePost" | "checkRelevancy" {
+  config: LangGraphRunnableConfig,
+): "condensePost" | "humanNode" | "findImagesSubGraph" {
   const cleanedPost = removeUrls(state.post || "");
   if (cleanedPost.length > 280 && state.condenseCount <= 3) {
     return "condensePost";
   }
-  return "checkRelevancy";
+
+  const isTextOnlyMode = isTextOnly(config);
+  if (isTextOnlyMode) {
+    return "humanNode";
+  }
+  return "findImagesSubGraph";
 }
 
 /**
@@ -95,20 +100,6 @@ async function generateReportOrEndConditionalEdge(
   return "generateContentReport";
 }
 
-function routeAfterCheckingRelevancy(
-  state: typeof GeneratePostAnnotation.State,
-  config: LangGraphRunnableConfig,
-): "findImagesSubGraph" | "humanNode" | typeof END {
-  if (state.next === END) {
-    return END;
-  }
-  const isTextOnlyMode = isTextOnly(config);
-  if (isTextOnlyMode) {
-    return "humanNode";
-  }
-  return "findImagesSubGraph";
-}
-
 const generatePostBuilder = new StateGraph(
   { stateSchema: GeneratePostAnnotation, input: GeneratePostInputAnnotation },
   GeneratePostConfigurableAnnotation,
@@ -133,8 +124,6 @@ const generatePostBuilder = new StateGraph(
   .addNode("findImagesSubGraph", findImagesGraph)
   // Updated the scheduled date from the natural language response from the user.
   .addNode("updateScheduleDate", updateScheduledDate)
-  // Check how relevant/high quality the post is, and whether or not to post it.
-  .addNode("checkRelevancy", checkRelevancy)
 
   // Start node
   .addEdge(START, "authSocialsPassthrough")
@@ -157,20 +146,16 @@ const generatePostBuilder = new StateGraph(
   // and if so, condense it. Otherwise, route to the human node.
   .addConditionalEdges("generatePost", condenseOrHumanConditionalEdge, [
     "condensePost",
-    "checkRelevancy",
+    "findImagesSubGraph",
+    "humanNode",
   ])
   // After condensing the post, we should verify again that the content is below the character limit.
   // Once the post is below the character limit, we can find & filter images. This needs to happen after the post
   // has been generated because the image validator requires the post content.
   .addConditionalEdges("condensePost", condenseOrHumanConditionalEdge, [
     "condensePost",
-    "checkRelevancy",
-  ])
-
-  .addConditionalEdges("checkRelevancy", routeAfterCheckingRelevancy, [
     "findImagesSubGraph",
     "humanNode",
-    END,
   ])
 
   // After finding images, we are done and can interrupt for the human to respond.

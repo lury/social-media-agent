@@ -11,6 +11,7 @@ import {
   getVideoThumbnailUrl,
   getYouTubeVideoDuration,
 } from "./youtube.utils.js";
+import { shouldExcludeYouTubeContent } from "../../should-exclude.js";
 
 type VerifyYouTubeContentReturn = {
   relevantLinks: (typeof GeneratePostAnnotation.State)["relevantLinks"];
@@ -116,15 +117,6 @@ async function verifyYouTubeContentIsRelevant(
   return relevant;
 }
 
-function shouldExcludeContent(channelName: string): boolean {
-  const useLangChainPrompts = process.env.USE_LANGCHAIN_PROMPTS === "true";
-  if (!useLangChainPrompts) {
-    return false;
-  }
-
-  return channelName.toLowerCase() === "langchain";
-}
-
 /**
  * Verifies the content provided is relevant to your company's products.
  */
@@ -138,7 +130,7 @@ export async function verifyYouTubeContent(
     getChannelInfo(state.link),
   ]);
 
-  const shouldExclude = shouldExcludeContent(channelInfo.channelName);
+  const shouldExclude = shouldExcludeYouTubeContent(channelInfo.channelName);
   if (shouldExclude) {
     return {
       relevantLinks: [],

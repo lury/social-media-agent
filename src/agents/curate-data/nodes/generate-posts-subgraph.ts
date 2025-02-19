@@ -1,10 +1,7 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { CurateDataState } from "../state.js";
 import { getTweetLink } from "../../../clients/twitter/utils.js";
-import {
-  CHECK_RELEVANCY,
-  POST_TO_LINKEDIN_ORGANIZATION,
-} from "../../generate-post/constants.js";
+import { POST_TO_LINKEDIN_ORGANIZATION } from "../../generate-post/constants.js";
 import {
   getAfterSecondsFromLinks,
   shouldPostToLinkedInOrg,
@@ -130,7 +127,6 @@ export async function generatePostsSubgraph(
       config: {
         configurable: {
           [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
-          [CHECK_RELEVANCY]: true,
         },
       },
       afterSeconds,
