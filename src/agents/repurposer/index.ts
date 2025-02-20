@@ -7,16 +7,21 @@ import {
 import { extractContent } from "./nodes/extract-content/index.js";
 import { generateCampaignPlan } from "./nodes/generate-campaign-plan.js";
 import { generatePosts } from "./nodes/generate-posts.js";
-import { humanNode } from "./nodes/human-node.js";
+import { humanNode } from "./nodes/human-node/index.js";
 import { rewritePosts } from "./nodes/rewrite-posts.js";
 import { schedulePosts } from "./nodes/schedule-posts.js";
 import { generateReportGraph } from "../generate-report/index.js";
 
 function routeFromHumanNode(
   state: RepurposerState,
-): "rewritePosts" | "schedulePosts" | typeof END {
-  if (state.next === "rewritePosts" && state.humanResponse) {
+): "rewritePosts" | "schedulePosts" | "humanNode" | typeof END {
+  if (state.next === "rewritePosts" && state.userResponse) {
     return "rewritePosts";
+  }
+
+  if (state.next === "unknownResponse") {
+    // TODO: Implement unknown response
+    return "humanNode";
   }
 
   return state.next;
@@ -32,7 +37,6 @@ const repurposerBuilder = new StateGraph({
   .addNode("generatePosts", generatePosts)
   .addNode("humanNode", humanNode)
   .addNode("rewritePosts", rewritePosts)
-  // .addNode("updateScheduleDate", updateScheduledDate)
   .addNode("schedulePosts", schedulePosts)
 
   .addEdge(START, "extractContent")
@@ -43,6 +47,7 @@ const repurposerBuilder = new StateGraph({
   .addConditionalEdges("humanNode", routeFromHumanNode, [
     "rewritePosts",
     "schedulePosts",
+    "humanNode",
     END,
   ])
   .addEdge("rewritePosts", "humanNode")

@@ -1,7 +1,7 @@
 import { Annotation, END } from "@langchain/langgraph";
-import { IngestDataAnnotation } from "../ingest-data/ingest-data-state.js";
+import { DateType } from "../types.js";
 
-type RepurposedPost = {
+export type RepurposedPost = {
   /**
    * The content of the specific post.
    */
@@ -12,7 +12,7 @@ type RepurposedPost = {
   index: number;
 };
 
-type AdditionalContext = {
+export type AdditionalContext = {
   /**
    * The string content from the link.
    */
@@ -22,6 +22,8 @@ type AdditionalContext = {
    */
   link: string;
 };
+
+export type Image = { imageUrl: string; mimeType: string; index: number };
 
 export const RepurposerGraphAnnotation = Annotation.Root({
   /**
@@ -66,6 +68,10 @@ export const RepurposerGraphAnnotation = Annotation.Root({
     default: () => [],
   }),
   /**
+   * The image options extracted from the original/additional contexts.
+   */
+  imageOptions: Annotation<string[]>(),
+  /**
    * The generated campaign plan to generate posts from.
    */
   campaignPlan: Annotation<string>,
@@ -76,11 +82,26 @@ export const RepurposerGraphAnnotation = Annotation.Root({
   /**
    * A human response if the user submitted feedback after the interrupt.
    */
-  humanResponse: Annotation<string | undefined>(),
+  userResponse: Annotation<string | undefined>(),
   /**
    * The next node to execute.
    */
-  next: Annotation<"rewritePosts" | "schedulePosts" | typeof END>(),
+  next: Annotation<
+    "rewritePosts" | "schedulePosts" | "unknownResponse" | typeof END
+  >(),
+  /**
+   * The images to use for the posts. Each 'index' field in the images corresponds to the 'index' field in the posts.
+   */
+  images: Annotation<Image[]>({
+    reducer: (state, update) => state.concat(update),
+    default: () => [],
+  }),
+  /**
+   * The date to schedule the posts for. Only one priority level can be specified.
+   * If a date is specified, every post will be posted on that date.
+   * (this is only intended to be used for testing/single posts)
+   */
+  scheduleDate: Annotation<DateType | undefined>(),
 });
 
 export type RepurposerState = typeof RepurposerGraphAnnotation.State;
