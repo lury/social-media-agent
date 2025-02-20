@@ -1,4 +1,4 @@
-import { Annotation } from "@langchain/langgraph";
+import { Annotation, END } from "@langchain/langgraph";
 import { IngestDataAnnotation } from "../ingest-data/ingest-data-state.js";
 
 type RepurposedPost = {
@@ -79,6 +79,14 @@ export const RepurposerGraphAnnotation = Annotation.Root({
    * The generated posts for LinkedIn/Twitter.
    */
   posts: Annotation<RepurposedPost[]>,
+  /**
+   * A human response if the user submitted feedback after the interrupt.
+   */
+  humanResponse: Annotation<string | undefined>(),
+  /**
+   * The next node to execute.
+   */
+  next: Annotation<"rewritePosts" | "schedulePosts" | typeof END>(),
 });
 
 export type RepurposerState = typeof RepurposerGraphAnnotation.State;

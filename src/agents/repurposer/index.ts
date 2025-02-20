@@ -14,7 +14,13 @@ import { generateReportGraph } from "../generate-report/index.js";
 
 function routeFromHumanNode(
   state: RepurposerState,
-): "rewritePosts" | "schedulePosts" | typeof END {}
+): "rewritePosts" | "schedulePosts" | typeof END {
+  if (state.next === "rewritePosts" && state.humanResponse) {
+    return "rewritePosts";
+  }
+
+  return state.next;
+}
 
 const repurposerBuilder = new StateGraph({
   stateSchema: RepurposerGraphAnnotation,
