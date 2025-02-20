@@ -1,8 +1,19 @@
 import { RepurposerState } from "../../types.js";
-import { extractOriginalPostContent } from "./original-content.js";
+import { getUrlContents } from "./get-url-contents.js";
 
 export async function extractContent(
   state: RepurposerState,
 ): Promise<Partial<RepurposerState>> {
-  const originalContent = await extractOriginalPostContent(state.originalLink);
+  const originalContent = await getUrlContents(state.originalLink);
+
+  const additionalContextPromises = state.contextLinks.map(async (link) => ({
+    content: await getUrlContents(link),
+    link,
+  }));
+  const additionalContexts = await Promise.all(additionalContextPromises);
+
+  return {
+    originalContent,
+    additionalContexts,
+  };
 }

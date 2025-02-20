@@ -96,9 +96,9 @@ async function getTwitterContent(url: string): Promise<string> {
 }
 
 /**
- * Extracts the original post content. This can be either a blog post, tweet, or YouTube video.
+ * Extracts the contents from a given URL. This can be either a blog post, tweet, or YouTube video.
  */
-export async function extractOriginalPostContent(url: string): Promise<string> {
+export async function getUrlContents(url: string): Promise<string> {
   const type = getUrlType(url);
   let postContent = "";
   if (type === "general") {

@@ -12,15 +12,35 @@ type RepurposedPost = {
   index: number;
 };
 
+type AdditionalContext = {
+  /**
+   * The string content from the link.
+   */
+  content: string;
+  /**
+   * The link from which the content was extracted.
+   */
+  link: string;
+};
+
 export const RepurposerGraphAnnotation = Annotation.Root({
   /**
    * The link to the original post/content the new campaign is based on.
    */
   originalLink: Annotation<string>,
   /**
+   * The original content input as a string. Contains all extracted/scraped
+   * content from the original link.
+   */
+  originalContent: Annotation<string>,
+  /**
    * The links to use to generate a series of posts.
    */
   contextLinks: Annotation<string[]>,
+  /**
+   * The additional context to use for generating posts.
+   */
+  additionalContexts: Annotation<AdditionalContext[]>,
   /**
    * The quality level of the content. This dictates how many posts
    * to generate.
