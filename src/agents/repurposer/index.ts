@@ -4,13 +4,13 @@ import {
   RepurposerInputAnnotation,
   RepurposerState,
 } from "./types.js";
-import { generateReport } from "./nodes/generate-report.js";
 import { extractContent } from "./nodes/extract-content/index.js";
 import { generateCampaignPlan } from "./nodes/generate-campaign-plan.js";
 import { generatePosts } from "./nodes/generate-posts.js";
 import { humanNode } from "./nodes/human-node.js";
 import { rewritePosts } from "./nodes/rewrite-posts.js";
 import { schedulePosts } from "./nodes/schedule-posts.js";
+import { generateReportGraph } from "../generate-report/index.js";
 
 function routeFromHumanNode(
   state: RepurposerState,
@@ -21,7 +21,7 @@ const repurposerBuilder = new StateGraph({
   input: RepurposerInputAnnotation,
 })
   .addNode("extractContent", extractContent)
-  .addNode("generateReport", generateReport)
+  .addNode("generateReport", generateReportGraph)
   .addNode("generateCampaignPlan", generateCampaignPlan)
   .addNode("generatePosts", generatePosts)
   .addNode("humanNode", humanNode)

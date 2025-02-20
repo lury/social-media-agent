@@ -23,6 +23,12 @@ type AdditionalContext = {
   link: string;
 };
 
+export type CampaignPlan = {
+  header: string;
+  details: string;
+  index: number;
+};
+
 export const RepurposerGraphAnnotation = Annotation.Root({
   /**
    * The link to the original post/content the new campaign is based on.
@@ -42,6 +48,11 @@ export const RepurposerGraphAnnotation = Annotation.Root({
    */
   additionalContexts: Annotation<AdditionalContext[]>,
   /**
+   * The pageContents field is required as it's the input to the generateReportGraph.
+   * It will contain a string, combining the above originalContent and additionalContexts.
+   */
+  pageContents: Annotation<string[]>,
+  /**
    * The quality level of the content. This dictates how many posts
    * to generate.
    * Should be 1-4.
@@ -51,7 +62,19 @@ export const RepurposerGraphAnnotation = Annotation.Root({
    * The report generated on the content of the message. Used
    * as context for generating the post.
    */
-  report: IngestDataAnnotation.spec.report,
+  reports: Annotation<
+    Array<{
+      report: string;
+      keyDetails: string;
+    }>
+  >({
+    reducer: (state, update) => state.concat(update),
+    default: () => [],
+  }),
+  /**
+   * The generated campaign plan to generate posts from.
+   */
+  campaignPlan: Annotation<CampaignPlan[]>,
   /**
    * The generated posts for LinkedIn/Twitter.
    */
