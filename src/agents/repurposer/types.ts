@@ -112,9 +112,9 @@ export const RepurposerInputAnnotation = Annotation.Root({
    */
   originalLink: Annotation<string>,
   /**
-   * The links to use to generate a series of posts.
+   * The links to additional contexts to use for generating the new posts.
    */
-  contextLinks: Annotation<string[]>,
+  contextLinks: Annotation<string[] | undefined>,
   /**
    * The quality level of the content. This dictates how many posts
    * to generate.

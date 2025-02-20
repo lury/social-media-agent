@@ -1,53 +1,13 @@
 import { VerifyTweetAnnotation } from "../verify-tweet-state.js";
-import { extractTweetId, imageUrlToBuffer } from "../../utils.js";
+import { extractTweetId } from "../../utils.js";
 import {
   getFullThreadText,
+  getMediaUrls,
   resolveAndReplaceTweetTextLinks,
 } from "../../../clients/twitter/utils.js";
 import { TweetV2, TweetV2SingleResult } from "twitter-api-v2";
 import { shouldExcludeTweetContent } from "../../should-exclude.js";
 import { getTwitterClient } from "../../../clients/twitter/client.js";
-
-async function getMediaUrls(
-  parentTweet: TweetV2SingleResult,
-  threadReplies: TweetV2[],
-): Promise<string[]> {
-  const mediaUrls: string[] = [];
-
-  if (parentTweet.includes?.media?.length) {
-    const parentMediaUrls = parentTweet.includes?.media
-      .filter((m) => (m.url && m.type === "photo") || m.type.includes("gif"))
-      .flatMap((m) => (m.url ? [m.url] : []));
-    mediaUrls.push(...parentMediaUrls);
-  }
-
-  const threadMediaKeys = threadReplies
-    .flatMap((r) => r.attachments?.media_keys)
-    .filter((m): m is string => !!m);
-  const threadMediaUrlPromises = threadMediaKeys.map(async (k) => {
-    const imgUrl = `https://pbs.twimg.com/media/${k}?format=jpg`;
-    try {
-      const { contentType } = await imageUrlToBuffer(imgUrl);
-      if (contentType.startsWith("image/")) {
-        return imgUrl;
-      }
-    } catch (e) {
-      console.error(
-        `Failed to get content type for Twitter media URL: ${imgUrl}\n`,
-        e,
-      );
-    }
-
-    return undefined;
-  });
-
-  const threadMediaUrls = (await Promise.all(threadMediaUrlPromises)).filter(
-    (m): m is string => !!m,
-  );
-  mediaUrls.push(...threadMediaUrls);
-
-  return mediaUrls;
-}
 
 export async function getTweetContent(
   state: typeof VerifyTweetAnnotation.State,

@@ -1,5 +1,5 @@
 import { TweetV2, TweetV2SingleResult } from "twitter-api-v2";
-import { extractUrls } from "../../agents/utils.js";
+import { extractUrls, imageUrlToBuffer } from "../../agents/utils.js";
 import { TweetV2WithURLs } from "../../agents/curate-data/types.js";
 
 /**
@@ -95,13 +95,17 @@ export async function resolveAndReplaceTweetTextLinks(
     }
   }
 
-  return {
-    content: updatedContent,
-    externalUrls: cleanedUrls
+  const externalUrlsSet = new Set(
+    cleanedUrls
       .filter(
         (url): url is { resolved: string; original: string } => !!url.resolved,
       )
       .map((url) => url.resolved),
+  );
+
+  return {
+    content: updatedContent,
+    externalUrls: Array.from(externalUrlsSet),
   };
 }
 
@@ -187,4 +191,45 @@ export function getFullThreadText(
   });
 
   return tweetContentText;
+}
+
+export async function getMediaUrls(
+  parentTweet: TweetV2SingleResult,
+  threadReplies: TweetV2[],
+): Promise<string[]> {
+  const mediaUrls: string[] = [];
+
+  if (parentTweet.includes?.media?.length) {
+    const parentMediaUrls = parentTweet.includes?.media
+      .filter((m) => (m.url && m.type === "photo") || m.type.includes("gif"))
+      .flatMap((m) => (m.url ? [m.url] : []));
+    mediaUrls.push(...parentMediaUrls);
+  }
+
+  const threadMediaKeys = threadReplies
+    .flatMap((r) => r.attachments?.media_keys)
+    .filter((m): m is string => !!m);
+  const threadMediaUrlPromises = threadMediaKeys.map(async (k) => {
+    const imgUrl = `https://pbs.twimg.com/media/${k}?format=jpg`;
+    try {
+      const { contentType } = await imageUrlToBuffer(imgUrl);
+      if (contentType.startsWith("image/")) {
+        return imgUrl;
+      }
+    } catch (e) {
+      console.error(
+        `Failed to get content type for Twitter media URL: ${imgUrl}\n`,
+        e,
+      );
+    }
+
+    return undefined;
+  });
+
+  const threadMediaUrls = (await Promise.all(threadMediaUrlPromises)).filter(
+    (m): m is string => !!m,
+  );
+  mediaUrls.push(...threadMediaUrls);
+
+  return mediaUrls;
 }

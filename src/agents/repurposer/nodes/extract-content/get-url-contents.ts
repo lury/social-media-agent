@@ -1,14 +1,19 @@
 import { TweetV2, TweetV2SingleResult } from "twitter-api-v2";
 import { getTwitterClient } from "../../../../clients/twitter/client.js";
-import { extractTweetId, getUrlType } from "../../../utils.js";
+import { extractTweetId, extractUrls, getUrlType } from "../../../utils.js";
 import { FireCrawlLoader } from "@langchain/community/document_loaders/web/firecrawl";
 import {
   getFullThreadText,
+  getMediaUrls,
   resolveAndReplaceTweetTextLinks,
 } from "../../../../clients/twitter/utils.js";
 import { getVideoSummary } from "../../../shared/youtube/video-summary.js";
+import { getImagesFromFireCrawlMetadata } from "../../../../utils/firecrawl.js";
 
-async function getGeneralContent(url: string): Promise<string> {
+async function getGeneralContent(url: string): Promise<{
+  contents: string;
+  imageUrls: string[];
+}> {
   try {
     const loader = new FireCrawlLoader({
       url,
@@ -20,30 +25,44 @@ async function getGeneralContent(url: string): Promise<string> {
 
     const docs = await loader.load();
 
-    return `<webpage-content url="${url}">\n${docs[0].pageContent}\n</webpage-content>`;
-  } catch (e) {
-    console.log(`Failed to fetch content from ${url}.`, e);
-  }
+    const metadataImageUrls = docs.flatMap(
+      (d) => getImagesFromFireCrawlMetadata(d.metadata) || [],
+    );
+    const imageUrlsFromText = extractUrls(docs[0].pageContent);
 
-  return "";
+    return {
+      contents: `<webpage-content url="${url}">\n${docs[0].pageContent}\n</webpage-content>`,
+      imageUrls: Array.from(
+        new Set([...metadataImageUrls, ...imageUrlsFromText]),
+      ),
+    };
+  } catch (e) {
+    throw new Error(`Failed to fetch content from ${url}.` + e);
+  }
 }
 
-async function getYouTubeContent(url: string): Promise<string> {
+async function getYouTubeContent(url: string): Promise<{
+  contents: string;
+  imageUrls: string[];
+}> {
   try {
-    const { summary } = await getVideoSummary(url);
-    return `<youtube-video-summary>\n${summary}</youtube-video-summary>`;
+    const { summary, thumbnail } = await getVideoSummary(url);
+    return {
+      contents: `<youtube-video-summary>\n${summary}</youtube-video-summary>`,
+      imageUrls: thumbnail ? [thumbnail] : [],
+    };
   } catch (e) {
-    console.error(`Failed to get YouTube summary for URL ${url}`, e);
+    throw new Error(`Failed to get YouTube summary for URL ${url}` + e);
   }
-
-  return "";
 }
 
-async function getTwitterContent(url: string): Promise<string> {
+async function getTwitterContent(url: string): Promise<{
+  contents: string;
+  imageUrls: string[];
+}> {
   const tweetId = extractTweetId(url);
   if (!tweetId) {
-    console.error("Failed to extract tweet ID from link:", url);
-    return "";
+    throw new Error("Failed to extract tweet ID from link:" + url);
   }
 
   const twitterClient = await getTwitterClient();
@@ -55,8 +74,7 @@ async function getTwitterContent(url: string): Promise<string> {
       throw new Error("No tweet content returned from Twitter API.");
     }
   } catch (e: any) {
-    console.error("Failed to get tweet content", e);
-    return "";
+    throw new Error(`Failed to get tweet content from ${url}.` + e);
   }
 
   const threadReplies: TweetV2[] = [];
@@ -69,6 +87,7 @@ async function getTwitterContent(url: string): Promise<string> {
     );
   }
 
+  const mediaUrls = await getMediaUrls(tweetContent, threadReplies);
   const tweetContentText = getFullThreadText(tweetContent, threadReplies);
 
   const { content, externalUrls } =
@@ -76,37 +95,50 @@ async function getTwitterContent(url: string): Promise<string> {
 
   const externalUrlPromises = externalUrls.map(async (url) => {
     const type = getUrlType(url);
-    if (type === "general") {
-      return getGeneralContent(url);
-    } else if (type === "youtube") {
-      return getYouTubeContent(url);
+
+    try {
+      if (type === "general") {
+        return getGeneralContent(url);
+      } else if (type === "youtube") {
+        return getYouTubeContent(url);
+      }
+    } catch (e) {
+      console.error(`Failed to get content from ${url} extracted in Tweet.`, e);
     }
+
     return "";
   });
   const externalUrlsContent = await Promise.all(externalUrlPromises);
 
-  return `<twitter-thread>
+  return {
+    contents: `<twitter-thread>
   <post>
     ${content}
   </post>
   <external-urls-content>
     ${externalUrlsContent.map((c, idx) => `<external-content index="${idx}">\n${c}\n</external-content>`).join("\n")}
   </external-urls-content>
-</twitter-thread>`;
+</twitter-thread>`,
+    imageUrls: mediaUrls,
+  };
 }
 
 /**
  * Extracts the contents from a given URL. This can be either a blog post, tweet, or YouTube video.
  */
-export async function getUrlContents(url: string): Promise<string> {
+export async function getUrlContents(url: string): Promise<{
+  contents: string;
+  imageUrls: string[];
+}> {
   const type = getUrlType(url);
-  let postContent = "";
+
   if (type === "general") {
-    postContent = await getGeneralContent(url);
+    return getGeneralContent(url);
   } else if (type === "youtube") {
-    postContent = await getYouTubeContent(url);
+    return getYouTubeContent(url);
   } else if (type === "twitter") {
-    postContent = await getTwitterContent(url);
+    return getTwitterContent(url);
   }
-  return postContent;
+
+  throw new Error(`Unsupported URL type: ${type}`);
 }
