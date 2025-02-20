@@ -23,12 +23,6 @@ type AdditionalContext = {
   link: string;
 };
 
-export type CampaignPlan = {
-  header: string;
-  details: string;
-  index: number;
-};
-
 export const RepurposerGraphAnnotation = Annotation.Root({
   /**
    * The link to the original post/content the new campaign is based on.
@@ -74,7 +68,7 @@ export const RepurposerGraphAnnotation = Annotation.Root({
   /**
    * The generated campaign plan to generate posts from.
    */
-  campaignPlan: Annotation<CampaignPlan[]>,
+  campaignPlan: Annotation<string>,
   /**
    * The generated posts for LinkedIn/Twitter.
    */

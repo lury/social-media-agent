@@ -1,5 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { CampaignPlan, RepurposerState } from "../types.js";
+import { RepurposerState } from "../types.js";
+import { formatReportForPrompt } from "../utils.js";
 
 const GENERATE_CAMPAIGN_PLAN_PROMPT = `You're a highly skilled marketing professional, working on crafting a thoughtful and detailed marketing campaign plan for a new series of posts for your Twitter and LinkedIn pages.
 
@@ -68,35 +69,6 @@ some details text here
 {NEW_MARKETING_REPORT}
 </new-marketing-report>`;
 
-function extractCampaignPlan(response: string): CampaignPlan[] {
-  // Match each post block including its contents
-  const postMatches = response.match(/<post>([\s\S]*?)<\/post>/g);
-
-  if (!postMatches) {
-    return [];
-  }
-
-  return postMatches.map((postBlock) => {
-    // Extract header content
-    const headerMatch = postBlock.match(/<header>([\s\S]*?)<\/header>/);
-    const header = headerMatch ? headerMatch[1].trim() : "";
-
-    // Extract details content
-    const detailsMatch = postBlock.match(/<details>([\s\S]*?)<\/details>/);
-    const details = detailsMatch ? detailsMatch[1].trim() : "";
-
-    // Extract index content and convert to number
-    const indexMatch = postBlock.match(/<index>([\s\S]*?)<\/index>/);
-    const index = indexMatch ? parseInt(indexMatch[1].trim(), 10) : 0;
-
-    return {
-      header,
-      details,
-      index,
-    };
-  });
-}
-
 export async function generateCampaignPlan(
   state: RepurposerState,
 ): Promise<Partial<RepurposerState>> {
@@ -111,14 +83,11 @@ export async function generateCampaignPlan(
   )
     .replace("{POST_OR_POSTS}", state.quality === 1 ? "post" : "posts")
     .replace("{ORIGINAL_CONTENT}", state.originalContent)
-    .replace(
-      "{NEW_MARKETING_REPORT}",
-      `<key-details>\n${state.reports[0].keyDetails}\n</key-details>\n\n<report>\n${state.reports[0].report}\n</report>`,
-    );
+    .replace("{NEW_MARKETING_REPORT}", formatReportForPrompt(state.reports[0]));
 
   const response = await model.invoke(formattedUserPrompt);
 
   return {
-    campaignPlan: extractCampaignPlan(response.content as string),
+    campaignPlan: response.content as string,
   };
 }
