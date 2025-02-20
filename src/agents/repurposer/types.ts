@@ -14,9 +14,9 @@ type RepurposedPost = {
 
 export const RepurposerGraphAnnotation = Annotation.Root({
   /**
-   * The link(s) to the original post(s).
+   * The link to the original post/content the new campaign is based on.
    */
-  originalPostLinks: Annotation<string[]>,
+  originalLink: Annotation<string>,
   /**
    * The links to use to generate a series of posts.
    */
@@ -42,9 +42,9 @@ export type RepurposerState = typeof RepurposerGraphAnnotation.State;
 
 export const RepurposerInputAnnotation = Annotation.Root({
   /**
-   * The link(s) to the original post(s).
+   * The link to the original post/content the new campaign is based on.
    */
-  originalPostLinks: Annotation<string[]>,
+  originalLink: Annotation<string>,
   /**
    * The links to use to generate a series of posts.
    */

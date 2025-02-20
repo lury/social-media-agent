@@ -1,31 +1,12 @@
 import { VerifyTweetAnnotation } from "../verify-tweet-state.js";
 import { extractTweetId, imageUrlToBuffer } from "../../utils.js";
-import { TwitterClient } from "../../../clients/twitter/client.js";
-import { resolveAndReplaceTweetTextLinks } from "../../../clients/twitter/utils.js";
+import {
+  getFullThreadText,
+  resolveAndReplaceTweetTextLinks,
+} from "../../../clients/twitter/utils.js";
 import { TweetV2, TweetV2SingleResult } from "twitter-api-v2";
 import { shouldExcludeTweetContent } from "../../should-exclude.js";
-
-async function getTwitterClient(): Promise<TwitterClient> {
-  const useArcadeAuth = process.env.USE_ARCADE_AUTH;
-  const useTwitterApiOnly = process.env.USE_TWITTER_API_ONLY;
-
-  if (useTwitterApiOnly === "true" || useArcadeAuth !== "true") {
-    return TwitterClient.fromBasicTwitterAuth();
-  } else {
-    const twitterUserId = process.env.TWITTER_USER_ID;
-    if (!twitterUserId) {
-      throw new Error("Twitter user ID not found in configurable fields.");
-    }
-
-    const twitterToken = process.env.TWITTER_USER_TOKEN;
-    const twitterTokenSecret = process.env.TWITTER_USER_TOKEN_SECRET;
-
-    return TwitterClient.fromArcade(twitterUserId, {
-      twitterToken,
-      twitterTokenSecret,
-    });
-  }
-}
+import { getTwitterClient } from "../../../clients/twitter/client.js";
 
 async function getMediaUrls(
   parentTweet: TweetV2SingleResult,
@@ -68,29 +49,6 @@ async function getMediaUrls(
   return mediaUrls;
 }
 
-function getFullTweetText(
-  parentTweet: TweetV2SingleResult,
-  threadReplies: TweetV2[],
-): string {
-  let tweetContentText = "";
-
-  if (parentTweet.data.note_tweet?.text) {
-    tweetContentText = parentTweet.data.note_tweet.text;
-  } else {
-    tweetContentText = parentTweet.data.text;
-  }
-
-  threadReplies.forEach((r) => {
-    if (r.note_tweet?.text?.length) {
-      tweetContentText += `\n${r.note_tweet.text}`;
-    } else if (r.text?.length) {
-      tweetContentText += `\n${r.text}`;
-    }
-  });
-
-  return tweetContentText;
-}
-
 export async function getTweetContent(
   state: typeof VerifyTweetAnnotation.State,
 ) {
@@ -125,7 +83,7 @@ export async function getTweetContent(
   }
 
   const mediaUrls = await getMediaUrls(tweetContent, threadReplies);
-  const tweetContentText = getFullTweetText(tweetContent, threadReplies);
+  const tweetContentText = getFullThreadText(tweetContent, threadReplies);
 
   const { content, externalUrls } =
     await resolveAndReplaceTweetTextLinks(tweetContentText);

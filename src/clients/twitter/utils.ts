@@ -1,4 +1,4 @@
-import { TweetV2 } from "twitter-api-v2";
+import { TweetV2, TweetV2SingleResult } from "twitter-api-v2";
 import { extractUrls } from "../../agents/utils.js";
 import { TweetV2WithURLs } from "../../agents/curate-data/types.js";
 
@@ -154,4 +154,37 @@ export async function resolveTweetsWithUrls(
   }
 
   return resolvedTweets;
+}
+
+/**
+ * Combines the text content of a parent tweet and its thread replies into a single string.
+ * For both parent tweet and replies, it checks for and uses note_tweet text if available,
+ * otherwise falls back to regular text content.
+ *
+ * @param parentTweet - The parent tweet object containing the initial tweet's data
+ * @param threadReplies - An array of reply tweets that form the thread
+ * @returns A string containing the combined text of the parent tweet and all replies,
+ *          separated by newlines
+ */
+export function getFullThreadText(
+  parentTweet: TweetV2SingleResult,
+  threadReplies: TweetV2[],
+): string {
+  let tweetContentText = "";
+
+  if (parentTweet.data.note_tweet?.text) {
+    tweetContentText = parentTweet.data.note_tweet.text;
+  } else {
+    tweetContentText = parentTweet.data.text;
+  }
+
+  threadReplies.forEach((r) => {
+    if (r.note_tweet?.text?.length) {
+      tweetContentText += `\n${r.note_tweet.text}`;
+    } else if (r.text?.length) {
+      tweetContentText += `\n${r.text}`;
+    }
+  });
+
+  return tweetContentText;
 }

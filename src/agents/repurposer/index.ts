@@ -5,7 +5,7 @@ import {
   RepurposerState,
 } from "./types.js";
 import { generateReport } from "./nodes/generate-report.js";
-import { extractContent } from "./nodes/extract-content.js";
+import { extractContent } from "./nodes/extract-content/index.js";
 import { generateCampaignPlan } from "./nodes/generate-campaign-plan.js";
 import { generatePosts } from "./nodes/generate-posts.js";
 import { humanNode } from "./nodes/human-node.js";

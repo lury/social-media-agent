@@ -11,6 +11,32 @@ import {
 } from "twitter-api-v2";
 import { AuthorizeUserResponse } from "../types.js";
 
+/**
+ * Gets a TwitterClient instance. Will use Arcade auth if USE_ARCADE_AUTH is true, otherwise will use basic auth.
+ * @returns A TwitterClient instance.
+ */
+export async function getTwitterClient(): Promise<TwitterClient> {
+  const useArcadeAuth = process.env.USE_ARCADE_AUTH;
+  const useTwitterApiOnly = process.env.USE_TWITTER_API_ONLY;
+
+  if (useTwitterApiOnly === "true" || useArcadeAuth !== "true") {
+    return TwitterClient.fromBasicTwitterAuth();
+  } else {
+    const twitterUserId = process.env.TWITTER_USER_ID;
+    if (!twitterUserId) {
+      throw new Error("Twitter user ID not found in configurable fields.");
+    }
+
+    const twitterToken = process.env.TWITTER_USER_TOKEN;
+    const twitterTokenSecret = process.env.TWITTER_USER_TOKEN_SECRET;
+
+    return TwitterClient.fromArcade(twitterUserId, {
+      twitterToken,
+      twitterTokenSecret,
+    });
+  }
+}
+
 const BASE_FETCH_TWEET_OPTIONS: Partial<TweetV2PaginableListParams> = {
   "tweet.fields": [
     "note_tweet",
