@@ -154,16 +154,15 @@ async function filterImageUrls(imageOptions: string[]): Promise<{
   };
 }
 
-function extractIndicesFromTextFunc(text: string): number[] {
-  const chunkAnalysis = parseResult(text);
-  // Convert chunk indices to global indices and add to our list of relevant indices
-  // const globalIndices = chunkAnalysis.map((index) => index + baseIndex);
-  return chunkAnalysis;
-}
-
-const extractIndicesFromText = traceable(extractIndicesFromTextFunc, {
-  name: "extractIndicesFromText",
-});
+const extractIndicesFromText = traceable(
+  (text: string): number[] => {
+    const chunkAnalysis = parseResult(text);
+    return chunkAnalysis;
+  },
+  {
+    name: "extractIndicesFromText",
+  },
+);
 
 export async function validateImages(state: RepurposerState): Promise<{
   imageOptions: string[] | undefined;
@@ -186,7 +185,7 @@ export async function validateImages(state: RepurposerState): Promise<{
 
   // Split images into chunks of 10
   const imageChunks = chunkArray(imagesWithoutProtected, 10);
-  let allIrrelevantIndices: number[] = [];
+  let allRelevantIndices: number[] = [];
   let baseIndex = 0;
 
   const formattedSystemPrompt = VALIDATE_IMAGES_PROMPT.replace(
@@ -214,8 +213,8 @@ export async function validateImages(state: RepurposerState): Promise<{
         },
       ]);
 
-      allIrrelevantIndices = [
-        ...allIrrelevantIndices,
+      allRelevantIndices = [
+        ...allRelevantIndices,
         ...(await extractIndicesFromText(response.content as string)),
       ];
     } catch (error) {
@@ -238,12 +237,12 @@ export async function validateImages(state: RepurposerState): Promise<{
       fileUri.startsWith(YOUTUBE_THUMBNAIL_URL),
   );
 
-  // Keep only the relevant images (those whose indices are in allIrrelevantIndices)
+  // Keep only the relevant images (those whose indices are in allRelevantIndices)
   return {
     imageOptions: [
       ...(protectedUrls || []),
       ...(imagesWithoutProtected || []).filter((_, index) =>
-        allIrrelevantIndices.some((i) => i === index),
+        allRelevantIndices.some((i) => i === index),
       ),
     ],
   };
