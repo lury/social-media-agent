@@ -41,6 +41,20 @@ Here are a set of rules and guidelines you should strictly follow when creating 
 ${getPrompts().postContentRules}
 </rules>
 
+Ensure you read over each plan item (or the only one one, depending on how many posts it requests you write) carefully, and ensure your post(s) flow well together.
+
+Lastly, you should follow the process below when writing the LinkedIn/Twitter {POST_OR_POSTS}:
+<writing-process>
+Step 1. First, read over the marketing report VERY thoroughly. (the user will provide this)
+Step 2. Once finished reading the marketing report, inspect the post campaign plan (the user will also provide this) so you have a deep understanding of each post you will need to write.
+Step 3. Lastly, write {NUM_POSTS} LinkedIn/Twitter {POST_OR_POSTS}. Use all of the information provided above to help you write the post. Ensure you write only ONE post for both LinkedIn and Twitter.
+</writing-process>
+
+Given these examples, rules, and the content provided by the user, curate a LinkedIn/Twitter post that is engaging and follows the structure of the examples provided.
+Ensure you do NOT make information up, or make assumptions about the content. Base your {POST_OR_POSTS} on the content and facts provided above.`;
+
+const USER_PROMPT = `Hello. Please write {NUM_POSTS} new {POST_OR_POSTS} for my LinkedIn and Twitter pages.
+
 Here is the marketing report you should use as the master context for all of the LinkedIn/Twitter posts you will write:
 <report>
 {MARKETING_REPORT}
@@ -51,17 +65,15 @@ Here is the plan for the new marketing campaign. You should generate {NUM_POSTS}
 {CAMPAIGN_PLAN}
 </plan>
 
-Ensure you read over each plan item (or the only one one, depending on how many posts it requests you write) carefully, and ensure your post(s) flow well together.
+Take in all of the provided context, and write {NUM_POSTS} new {POST_OR_POSTS} I, and you, would be happy with!`;
 
-Lastly, you should follow the process below when writing the LinkedIn/Twitter {POST_OR_POSTS}:
-<writing-process>
-Step 1. First, read over the marketing report VERY thoroughly.
-Step 2. Once finished reading the marketing report, inspect the post campaign plan so you have a deep understanding of each post you will need to write.
-Step 3. Lastly, write {NUM_POSTS} LinkedIn/Twitter {POST_OR_POSTS}. Use all of the information provided above to help you write the post. Ensure you write only ONE post for both LinkedIn and Twitter.
-</writing-process>
-
-Given these examples, rules, and the content provided by the user, curate a LinkedIn/Twitter post that is engaging and follows the structure of the examples provided.
-Ensure you do NOT make information up, or make assumptions about the content. Base your {POST_OR_POSTS} on the content and facts provided above.`;
+function formatUserPrompt(report: string, plan: string, numPosts: number) {
+  const postOrPosts = numPosts === 1 ? "post" : "posts";
+  return USER_PROMPT.replaceAll("{NUM_POSTS}", numPosts.toString())
+    .replaceAll("{POST_OR_POSTS}", postOrPosts)
+    .replace("{MARKETING_REPORT}", report)
+    .replace("{CAMPAIGN_PLAN}", plan);
+}
 
 export async function generatePosts(
   state: RepurposerState,
@@ -97,12 +109,13 @@ export async function generatePosts(
   const formattedSystemPrompt = GENERATE_POST_PROMPT.replaceAll(
     "{NUM_POSTS}",
     numPosts.toString(),
-  )
-    .replaceAll("{POST_OR_POSTS}", postOrPosts)
-    .replace("{MARKETING_REPORT}", formatReportForPrompt(state.reports[0]))
-    .replace("{CAMPAIGN_PLAN}", state.campaignPlan);
+  ).replaceAll("{POST_OR_POSTS}", postOrPosts);
 
-  const userPrompt = "";
+  const userPrompt = formatUserPrompt(
+    formatReportForPrompt(state.reports[0]),
+    state.campaignPlan,
+    numPosts,
+  );
 
   const result = await model.invoke([
     {

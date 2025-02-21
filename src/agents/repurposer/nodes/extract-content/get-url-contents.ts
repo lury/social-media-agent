@@ -1,6 +1,10 @@
 import { TweetV2, TweetV2SingleResult } from "twitter-api-v2";
 import { getTwitterClient } from "../../../../clients/twitter/client.js";
-import { extractTweetId, extractUrls, getUrlType } from "../../../utils.js";
+import {
+  extractTweetId,
+  extractAllImageUrlsFromMarkdown,
+  getUrlType,
+} from "../../../utils.js";
 import { FireCrawlLoader } from "@langchain/community/document_loaders/web/firecrawl";
 import {
   getFullThreadText,
@@ -28,7 +32,9 @@ async function getGeneralContent(url: string): Promise<{
     const metadataImageUrls = docs.flatMap(
       (d) => getImagesFromFireCrawlMetadata(d.metadata) || [],
     );
-    const imageUrlsFromText = extractUrls(docs[0].pageContent);
+    const imageUrlsFromText = extractAllImageUrlsFromMarkdown(
+      docs[0].pageContent,
+    );
 
     return {
       contents: `<webpage-content url="${url}">\n${docs[0].pageContent}\n</webpage-content>`,
@@ -78,14 +84,17 @@ async function getTwitterContent(url: string): Promise<{
   }
 
   const threadReplies: TweetV2[] = [];
-  if (tweetContent.data.author_id) {
+  if (tweetContent.includes?.users?.length) {
+    const { username } = tweetContent.includes?.users[0];
+    console.log("Getting thread replies for tweet", tweetId, username);
     threadReplies.push(
-      ...(await twitterClient.getThreadReplies(
-        tweetId,
-        tweetContent.data.author_id,
-      )),
+      ...(await twitterClient.getThreadReplies(tweetId, username)),
     );
+  } else {
+    console.log("No user included in tweet");
+    console.dir(tweetContent, { depth: Infinity });
   }
+  console.log("Got thread replies", threadReplies);
 
   const mediaUrls = await getMediaUrls(tweetContent, threadReplies);
   const tweetContentText = getFullThreadText(tweetContent, threadReplies);
@@ -106,7 +115,10 @@ async function getTwitterContent(url: string): Promise<{
       console.error(`Failed to get content from ${url} extracted in Tweet.`, e);
     }
 
-    return "";
+    return {
+      contents: "",
+      imageUrls: [],
+    };
   });
   const externalUrlsContent = await Promise.all(externalUrlPromises);
 
@@ -116,7 +128,7 @@ async function getTwitterContent(url: string): Promise<{
     ${content}
   </post>
   <external-urls-content>
-    ${externalUrlsContent.map((c, idx) => `<external-content index="${idx}">\n${c}\n</external-content>`).join("\n")}
+    ${externalUrlsContent.map((c, idx) => `<external-content index="${idx}">\n${c.contents}\n</external-content>`).join("\n")}
   </external-urls-content>
 </twitter-thread>`,
     imageUrls: mediaUrls,

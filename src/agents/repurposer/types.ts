@@ -38,11 +38,11 @@ export const RepurposerGraphAnnotation = Annotation.Root({
   /**
    * The links to use to generate a series of posts.
    */
-  contextLinks: Annotation<string[]>,
+  contextLinks: Annotation<string[] | undefined>,
   /**
    * The additional context to use for generating posts.
    */
-  additionalContexts: Annotation<AdditionalContext[]>,
+  additionalContexts: Annotation<AdditionalContext[] | undefined>,
   /**
    * The pageContents field is required as it's the input to the generateReportGraph.
    * It will contain a string, combining the above originalContent and additionalContexts.

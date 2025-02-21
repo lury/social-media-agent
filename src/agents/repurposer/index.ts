@@ -11,6 +11,7 @@ import { humanNode } from "./nodes/human-node/index.js";
 import { rewritePosts } from "./nodes/rewrite-posts.js";
 import { schedulePosts } from "./nodes/schedule-posts.js";
 import { generateReportGraph } from "../generate-report/index.js";
+import { validateImages } from "./nodes/validate-images.js";
 
 function routeFromHumanNode(
   state: RepurposerState,
@@ -32,6 +33,7 @@ const repurposerBuilder = new StateGraph({
   input: RepurposerInputAnnotation,
 })
   .addNode("extractContent", extractContent)
+  .addNode("validateImages", validateImages)
   .addNode("generateReport", generateReportGraph)
   .addNode("generateCampaignPlan", generateCampaignPlan)
   .addNode("generatePosts", generatePosts)
@@ -40,11 +42,13 @@ const repurposerBuilder = new StateGraph({
   .addNode("schedulePosts", schedulePosts)
 
   .addEdge(START, "extractContent")
-  .addEdge("extractContent", "generateReport")
+  .addEdge("extractContent", "validateImages")
+  .addEdge("validateImages", "generateReport")
   .addEdge("generateReport", "generateCampaignPlan")
   .addEdge("generateCampaignPlan", "generatePosts")
   .addEdge("generatePosts", "humanNode")
   .addConditionalEdges("humanNode", routeFromHumanNode, [
+    "rewritePosts",
     "rewritePosts",
     "schedulePosts",
     "humanNode",

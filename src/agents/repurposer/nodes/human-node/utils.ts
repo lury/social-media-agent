@@ -161,9 +161,11 @@ ${originalContent}
   
 ## Additional Contexts
 
-- ${contextLinks.join("\n- ")}
+${contextLinks?.length ? `- ${contextLinks.join("\n- ")}` : "No additional context available."}
 
-<details><summary>Additional Contexts Contents</summary>
+${
+  additionalContexts?.length
+    ? `<details><summary>Additional Contexts Contents</summary>
 
 ${additionalContexts.map(
   (c, idx) => `<details><summary>${idx + 1} - ${c.link}</summary>
@@ -176,7 +178,9 @@ ${c.content}
 `,
 )}
 
-</details>
+</details>`
+    : ""
+}
 
 ${imageOptionsText}
 

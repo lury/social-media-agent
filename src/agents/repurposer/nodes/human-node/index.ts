@@ -25,7 +25,8 @@ export async function humanNode(
     PRIORITY_LEVELS.includes(state.scheduleDate)
   ) {
     defaultDateString = state.scheduleDate as string;
-  } else if (typeof state.scheduleDate === "object") {
+  } else if (state.scheduleDate && typeof state.scheduleDate === "object") {
+    console.log("ATTEMPTING TO FORMAT DATE", state.scheduleDate);
     defaultDateString = formatInTimeZone(
       state.scheduleDate,
       "America/Los_Angeles",
@@ -41,10 +42,13 @@ export async function humanNode(
       args: {
         date: defaultDateString,
         ...Object.fromEntries(
-          state.posts.map((p) => [`post_${p.index}`, p.content]),
-        ),
-        ...Object.fromEntries(
-          state.images.map((i) => [`image_${i.index}`, i.imageUrl]),
+          state.posts.flatMap((p) => [
+            [`post_${p.index}`, p.content],
+            [
+              `image_${p.index}`,
+              state.images.find((i) => i.index === p.index)?.imageUrl ?? "",
+            ],
+          ]),
         ),
       },
     },
