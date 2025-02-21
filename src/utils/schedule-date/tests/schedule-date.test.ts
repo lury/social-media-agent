@@ -6,7 +6,7 @@ import {
   getTakenScheduleDates,
   putTakenScheduleDates,
   TakenScheduleDates,
-} from "../find-date.js";
+} from "../index.js";
 
 describe("Priority P1 get scheduled date", () => {
   // Define MOCK_CURRENT_DATE in UTC or as per the mocked timezone

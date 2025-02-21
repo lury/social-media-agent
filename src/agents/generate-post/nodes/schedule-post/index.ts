@@ -5,9 +5,11 @@ import {
   POST_TO_LINKEDIN_ORGANIZATION,
   TEXT_ONLY_MODE,
 } from "../../constants.js";
-import { getScheduledDateSeconds } from "./find-date.js";
+import {
+  getScheduledDateSeconds,
+  getFutureDate,
+} from "../../../../utils/schedule-date/index.js";
 import { SlackClient } from "../../../../clients/slack.js";
-import { getFutureDate } from "./get-future-date.js";
 import { isTextOnly, shouldPostToLinkedInOrg } from "../../../utils.js";
 
 interface SendSlackMessageArgs {
