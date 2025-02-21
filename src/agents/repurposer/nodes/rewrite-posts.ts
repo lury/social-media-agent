@@ -28,8 +28,5 @@ import { RepurposerState } from "../types.js";
 export async function rewritePosts(
   state: RepurposerState,
 ): Promise<Partial<RepurposerState>> {
-  console.log("Rewriting posts");
-  console.dir(state, { depth: null });
-
   return {};
 }

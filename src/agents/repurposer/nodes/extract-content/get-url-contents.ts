@@ -85,16 +85,11 @@ async function getTwitterContent(url: string): Promise<{
 
   const threadReplies: TweetV2[] = [];
   if (tweetContent.includes?.users?.length) {
-    const { username } = tweetContent.includes?.users[0];
-    console.log("Getting thread replies for tweet", tweetId, username);
+    const username = tweetContent.includes?.users[0]?.username;
     threadReplies.push(
       ...(await twitterClient.getThreadReplies(tweetId, username)),
     );
-  } else {
-    console.log("No user included in tweet");
-    console.dir(tweetContent, { depth: Infinity });
   }
-  console.log("Got thread replies", threadReplies);
 
   const mediaUrls = await getMediaUrls(tweetContent, threadReplies);
   const tweetContentText = getFullThreadText(tweetContent, threadReplies);
