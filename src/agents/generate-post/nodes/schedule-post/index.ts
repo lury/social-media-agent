@@ -78,10 +78,10 @@ export async function schedulePost(
     apiUrl: `http://localhost:${process.env.PORT}`,
   });
 
-  const afterSeconds = await getScheduledDateSeconds(
-    state.scheduleDate,
+  const afterSeconds = await getScheduledDateSeconds({
+    scheduleDate: state.scheduleDate,
     config,
-  );
+  });
 
   const thread = await client.threads.create();
   const run = await client.runs.create(thread.thread_id, "upload_post", {
@@ -108,7 +108,7 @@ export async function schedulePost(
       image: state.image,
     });
   } catch (e) {
-    console.error("Failed to schedule post", e);
+    console.error("Failed to send schedule post Slack message", e);
   }
 
   return {};
