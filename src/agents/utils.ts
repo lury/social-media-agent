@@ -372,7 +372,8 @@ export type UrlType =
 export function getUrlType(url: string): UrlType {
   let parsedUrl: URL | undefined = undefined;
   try {
-    parsedUrl = new URL(url);
+    const formattedUrl = url.startsWith("http") ? url : `https://${url}`;
+    parsedUrl = new URL(formattedUrl);
   } catch (e) {
     console.error("Failed to parse URL:", e);
     return undefined;
