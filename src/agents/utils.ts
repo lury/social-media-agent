@@ -372,7 +372,8 @@ export type UrlType =
 export function getUrlType(url: string): UrlType {
   let parsedUrl: URL | undefined = undefined;
   try {
-    parsedUrl = new URL(url);
+    const formattedUrl = url.startsWith("http") ? url : `https://${url}`;
+    parsedUrl = new URL(formattedUrl);
   } catch (e) {
     console.error("Failed to parse URL:", e);
     return undefined;
@@ -560,4 +561,11 @@ export function filterLinksForPostContent(links: string[]): string {
     (l) => !blacklistedTypes.includes(getUrlType(l) ?? ""),
   );
   return filteredLinks.join("\n\n");
+}
+
+/**
+ * Capitalizes the first letter of a string.
+ */
+export function capitalize(string: string): string {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }
