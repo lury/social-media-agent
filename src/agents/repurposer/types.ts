@@ -49,11 +49,9 @@ export const RepurposerGraphAnnotation = Annotation.Root({
    */
   pageContents: Annotation<string[]>,
   /**
-   * The quality level of the content. This dictates how many posts
-   * to generate.
-   * Should be 1-4.
+   * The quantity of posts to generate.
    */
-  quality: Annotation<number>,
+  quantity: Annotation<number>,
   /**
    * The report generated on the content of the message. Used
    * as context for generating the post.
@@ -116,9 +114,7 @@ export const RepurposerInputAnnotation = Annotation.Root({
    */
   contextLinks: Annotation<string[] | undefined>,
   /**
-   * The quality level of the content. This dictates how many posts
-   * to generate.
-   * Should be 1-4.
+   * The quantity of posts to generate.
    */
-  quality: Annotation<number>,
+  quantity: Annotation<number>,
 });

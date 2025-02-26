@@ -78,7 +78,7 @@ function formatUserPrompt(report: string, plan: string, numPosts: number) {
 export async function generatePosts(
   state: RepurposerState,
 ): Promise<Partial<RepurposerState>> {
-  const { quality: numPosts } = state;
+  const { quantity: numPosts } = state;
   const postOrPosts = numPosts === 1 ? "post" : "posts";
 
   const postsSchema = z.object({

@@ -15,7 +15,7 @@ ls.describe("SMA - Repurposer", () => {
     {
       inputs: {
         originalLink: "https://x.com/LangChainAI/status/1857117443065540707",
-        quality: 3,
+        quantity: 3,
       },
       expected: {},
     },

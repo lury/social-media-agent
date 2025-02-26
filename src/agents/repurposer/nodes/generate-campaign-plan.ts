@@ -79,9 +79,9 @@ export async function generateCampaignPlan(
 
   const formattedUserPrompt = GENERATE_CAMPAIGN_PLAN_PROMPT.replace(
     `{NUM_POSTS}`,
-    state.quality.toString(),
+    state.quantity.toString(),
   )
-    .replace("{POST_OR_POSTS}", state.quality === 1 ? "post" : "posts")
+    .replace("{POST_OR_POSTS}", state.quantity === 1 ? "post" : "posts")
     .replace("{ORIGINAL_CONTENT}", state.originalContent)
     .replace("{NEW_MARKETING_REPORT}", formatReportForPrompt(state.reports[0]));
 
