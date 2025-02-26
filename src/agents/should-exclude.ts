@@ -2,19 +2,20 @@ function useLangChainPrompts(): boolean {
   return process.env.USE_LANGCHAIN_PROMPTS === "true";
 }
 
+export const LANGCHAIN_DOMAINS = [
+  "langchain.com",
+  "langchain.dev",
+  "langchain-ai.github.io",
+];
+
 export function shouldExcludeGeneralContent(url: string): boolean {
   // Do not exclude any content if USE_LANGCHAIN_PROMPTS is not set to true.
   if (!useLangChainPrompts()) {
     return false;
   }
 
-  const langChainUrls = [
-    "langchain.com",
-    "langchain.dev",
-    "langchain-ai.github.io",
-  ];
   // We don't want to generate posts on LangChain website content.
-  if (langChainUrls.some((lcUrl) => url.includes(lcUrl))) {
+  if (LANGCHAIN_DOMAINS.some((lcUrl) => url.includes(lcUrl))) {
     return true;
   }
 
