@@ -2,6 +2,7 @@ import { z } from "zod";
 import { IngestRepurposedDataState, RepurposedContent } from "./types.js";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { isValidUrl } from "../utils.js";
+import { traceable } from "langsmith/traceable";
 
 const EXTRACT_CONTENT_PROMPT = `You're a helpful AI assistant, tasked with extracting content from a Slack message.
 
@@ -50,9 +51,9 @@ const extractionSchema = z.object({
     .default(DEFAULT_POST_QUANTITY),
 });
 
-export async function extract(
-  state: IngestRepurposedDataState,
-): Promise<Partial<IngestRepurposedDataState>> {
+async function extractContentsFunc(
+  messageText: string,
+): Promise<RepurposedContent | undefined> {
   const model = new ChatAnthropic({
     model: "claude-3-7-sonnet-latest",
     temperature: 0,
@@ -69,26 +70,39 @@ export async function extract(
     },
   );
 
+  const formattedPrompt = EXTRACT_CONTENT_PROMPT.replace(
+    "{SLACK_MESSAGE}",
+    messageText,
+  );
+
+  const result = await model.invoke(formattedPrompt);
+  const args = result.tool_calls?.[0]?.args as z.infer<typeof extractionSchema>;
+
+  if (!isValidUrl(args?.original_link)) {
+    return undefined;
+  }
+
+  return {
+    originalLink: args?.original_link,
+    additionalContextLinks: args?.additional_contents,
+    quantity: args?.quantity ?? DEFAULT_POST_QUANTITY,
+  };
+}
+
+const extractContents = traceable(extractContentsFunc, {
+  name: "extract_contents",
+});
+
+export async function extract(
+  state: IngestRepurposedDataState,
+): Promise<Partial<IngestRepurposedDataState>> {
   const extractedContents: RepurposedContent[] = [];
 
   for await (const message of state.messages) {
     const messageText = message.text;
-    const formattedPrompt = EXTRACT_CONTENT_PROMPT.replace(
-      "{SLACK_MESSAGE}",
-      messageText,
-    );
-
-    const result = await model.invoke(formattedPrompt);
-    const args = result.tool_calls?.[0]?.args as z.infer<
-      typeof extractionSchema
-    >;
-
-    if (isValidUrl(args?.original_link)) {
-      extractedContents.push({
-        originalLink: args?.original_link,
-        additionalContextLinks: args?.additional_contents,
-        quantity: args?.quantity ?? DEFAULT_POST_QUANTITY,
-      });
+    const content = await extractContents(messageText);
+    if (content) {
+      extractedContents.push(content);
     }
   }
 
