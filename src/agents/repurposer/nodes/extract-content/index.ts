@@ -7,7 +7,7 @@ export async function extractContent(
   const { contents: originalContent, imageUrls } = await getUrlContents(
     state.originalLink,
   );
-  const originalContentPrompt = `Here is the original content. This content is the basis of the new marketing campaign. This post has already been shared, so use this as a base for the new campaign building ontop of this post:
+  const originalContentPrompt = `Here is the original content. This content is the basis of the new marketing campaign. This post has already been shared, so use this as a base for the new campaign building on top of this post:
   
 <original-post-content>
 ${originalContent}
