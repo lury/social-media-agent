@@ -378,9 +378,7 @@ describe("Get scheduled dates", () => {
   });
 });
 
-// TODO: Add tests where base date is after all allowed slots
-// TODO: Add tests where base date is 1 min after/before an allowed slot
-describe.only("Priority R1 get scheduled date", () => {
+describe("Priority R1 get scheduled date", () => {
   it("returns exact number of requested future dates when none are taken", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
@@ -731,9 +729,135 @@ describe.only("Priority R1 get scheduled date", () => {
       expectedDateRanges[7][1].getTime(),
     );
   });
+
+  it("can find dates when the base date is after all taken dates", () => {
+    const baseDate = new Date("2025-01-22T15:00:00.000Z");
+    const numDates = 3;
+    const takenDates = {
+      ...DEFAULT_TAKEN_DATES,
+      r1: [
+        new Date("2025-01-20T16:00:00.000Z"),
+        new Date("2025-01-20T17:00:00.000Z"),
+        new Date("2025-01-20T18:00:00.000Z"),
+
+        new Date("2025-01-21T16:00:00.000Z"),
+        new Date("2025-01-21T17:00:00.000Z"),
+        new Date("2025-01-21T18:00:00.000Z"),
+
+        new Date("2025-01-22T16:00:00.000Z"),
+      ],
+    };
+
+    const expectedDateRanges = [
+      [
+        new Date("2025-01-22T16:55:00.000Z"),
+        new Date("2025-01-22T17:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-23T15:55:00.000Z"),
+        new Date("2025-01-23T16:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-24T15:55:00.000Z"),
+        new Date("2025-01-24T16:05:00.000Z"),
+      ],
+    ];
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r1",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+    }).sort((a, b) => a.getTime() - b.getTime());
+
+    expect(result[0].getTime()).toBeGreaterThan(
+      expectedDateRanges[0][0].getTime(),
+    );
+    expect(result[0].getTime()).toBeLessThan(
+      expectedDateRanges[0][1].getTime(),
+    );
+
+    expect(result[1].getTime()).toBeGreaterThan(
+      expectedDateRanges[1][0].getTime(),
+    );
+    expect(result[1].getTime()).toBeLessThan(
+      expectedDateRanges[1][1].getTime(),
+    );
+
+    expect(result[2].getTime()).toBeGreaterThan(
+      expectedDateRanges[2][0].getTime(),
+    );
+    expect(result[2].getTime()).toBeLessThan(
+      expectedDateRanges[2][1].getTime(),
+    );
+  });
+
+  it("can find dates when the base date time is after allowed times", () => {
+    // Base date is 5 min past the last allowed hour. it should return dates starting on the next day
+    const baseDate = new Date("2025-01-22T18:05:00.000Z");
+    const numDates = 3;
+    const takenDates = {
+      ...DEFAULT_TAKEN_DATES,
+      r1: [
+        new Date("2025-01-20T16:00:00.000Z"),
+        new Date("2025-01-20T17:00:00.000Z"),
+        new Date("2025-01-20T18:00:00.000Z"),
+
+        new Date("2025-01-21T16:00:00.000Z"),
+        new Date("2025-01-21T17:00:00.000Z"),
+        new Date("2025-01-21T18:00:00.000Z"),
+
+        new Date("2025-01-22T16:00:00.000Z"),
+        new Date("2025-01-22T17:00:00.000Z"),
+      ],
+    };
+
+    const expectedDateRanges = [
+      [
+        new Date("2025-01-23T15:55:00.000Z"),
+        new Date("2025-01-23T16:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-24T15:55:00.000Z"),
+        new Date("2025-01-24T16:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-27T15:55:00.000Z"),
+        new Date("2025-01-27T16:05:00.000Z"),
+      ],
+    ];
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r1",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+    }).sort((a, b) => a.getTime() - b.getTime());
+
+    expect(result[0].getTime()).toBeGreaterThan(
+      expectedDateRanges[0][0].getTime(),
+    );
+    expect(result[0].getTime()).toBeLessThan(
+      expectedDateRanges[0][1].getTime(),
+    );
+
+    expect(result[1].getTime()).toBeGreaterThan(
+      expectedDateRanges[1][0].getTime(),
+    );
+    expect(result[1].getTime()).toBeLessThan(
+      expectedDateRanges[1][1].getTime(),
+    );
+
+    expect(result[2].getTime()).toBeGreaterThan(
+      expectedDateRanges[2][0].getTime(),
+    );
+    expect(result[2].getTime()).toBeLessThan(
+      expectedDateRanges[2][1].getTime(),
+    );
+  });
 });
 
-describe.only("Priority R2 get scheduled date", () => {
+describe("Priority R2 get scheduled date", () => {
   it("returns exact number of requested future dates when none are taken", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
@@ -1084,9 +1208,128 @@ describe.only("Priority R2 get scheduled date", () => {
       expectedDateRanges[7][1].getTime(),
     );
   });
+
+  it("can find dates when the base date is after all taken dates", () => {
+    const baseDate = new Date("2025-01-22T15:00:00.000Z");
+    const numDates = 3;
+    const takenDates = {
+      ...DEFAULT_TAKEN_DATES,
+      r2: [
+        new Date("2025-01-20T19:00:00.000Z"),
+        new Date("2025-01-20T20:00:00.000Z"),
+        new Date("2025-01-20T21:00:00.000Z"),
+
+        new Date("2025-01-21T19:00:00.000Z"),
+        new Date("2025-01-21T20:00:00.000Z"),
+      ],
+    };
+
+    const expectedDateRanges = [
+      [
+        new Date("2025-01-22T18:55:00.000Z"),
+        new Date("2025-01-22T19:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-23T18:55:00.000Z"),
+        new Date("2025-01-23T19:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-24T18:55:00.000Z"),
+        new Date("2025-01-24T19:05:00.000Z"),
+      ],
+    ];
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r2",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+    }).sort((a, b) => a.getTime() - b.getTime());
+
+    expect(result[0].getTime()).toBeGreaterThan(
+      expectedDateRanges[0][0].getTime(),
+    );
+    expect(result[0].getTime()).toBeLessThan(
+      expectedDateRanges[0][1].getTime(),
+    );
+
+    expect(result[1].getTime()).toBeGreaterThan(
+      expectedDateRanges[1][0].getTime(),
+    );
+    expect(result[1].getTime()).toBeLessThan(
+      expectedDateRanges[1][1].getTime(),
+    );
+
+    expect(result[2].getTime()).toBeGreaterThan(
+      expectedDateRanges[2][0].getTime(),
+    );
+    expect(result[2].getTime()).toBeLessThan(
+      expectedDateRanges[2][1].getTime(),
+    );
+  });
+
+  it("can find dates when the base date time is after allowed times", () => {
+    // Base date is 5 min past the last allowed hour. it should return dates starting on the next day
+    const baseDate = new Date("2025-01-22T21:05:00.000Z");
+    const numDates = 3;
+    const takenDates = {
+      ...DEFAULT_TAKEN_DATES,
+      r2: [
+        new Date("2025-01-20T19:00:00.000Z"),
+        new Date("2025-01-20T20:00:00.000Z"),
+        new Date("2025-01-20T21:00:00.000Z"),
+
+        new Date("2025-01-21T19:00:00.000Z"),
+        new Date("2025-01-21T20:00:00.000Z"),
+      ],
+    };
+
+    const expectedDateRanges = [
+      [
+        new Date("2025-01-23T18:55:00.000Z"),
+        new Date("2025-01-23T19:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-24T18:55:00.000Z"),
+        new Date("2025-01-24T19:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-27T18:55:00.000Z"),
+        new Date("2025-01-27T19:05:00.000Z"),
+      ],
+    ];
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r2",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+    }).sort((a, b) => a.getTime() - b.getTime());
+
+    expect(result[0].getTime()).toBeGreaterThan(
+      expectedDateRanges[0][0].getTime(),
+    );
+    expect(result[0].getTime()).toBeLessThan(
+      expectedDateRanges[0][1].getTime(),
+    );
+
+    expect(result[1].getTime()).toBeGreaterThan(
+      expectedDateRanges[1][0].getTime(),
+    );
+    expect(result[1].getTime()).toBeLessThan(
+      expectedDateRanges[1][1].getTime(),
+    );
+
+    expect(result[2].getTime()).toBeGreaterThan(
+      expectedDateRanges[2][0].getTime(),
+    );
+    expect(result[2].getTime()).toBeLessThan(
+      expectedDateRanges[2][1].getTime(),
+    );
+  });
 });
 
-describe.only("Priority R3 get scheduled date", () => {
+describe("Priority R3 get scheduled date", () => {
   it("returns exact number of requested future dates when none are taken", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
@@ -1435,6 +1678,127 @@ describe.only("Priority R3 get scheduled date", () => {
     );
     expect(result[7].getTime()).toBeLessThan(
       expectedDateRanges[7][1].getTime(),
+    );
+  });
+
+  it("can find dates when the base date is after all taken dates", () => {
+    const baseDate = new Date("2025-01-22T15:00:00.000Z");
+    const numDates = 3;
+    const takenDates = {
+      ...DEFAULT_TAKEN_DATES,
+      r3: [
+        new Date("2025-01-20T22:00:00.000Z"),
+        new Date("2025-01-20T23:00:00.000Z"),
+        new Date("2025-01-21T00:00:00.000Z"),
+
+        new Date("2025-01-21T22:00:00.000Z"),
+        new Date("2025-01-21T23:00:00.000Z"),
+      ],
+    };
+
+    const expectedDateRanges = [
+      [
+        new Date("2025-01-22T21:55:00.000Z"),
+        new Date("2025-01-22T22:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-23T21:55:00.000Z"),
+        new Date("2025-01-23T22:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-24T21:55:00.000Z"),
+        new Date("2025-01-24T22:05:00.000Z"),
+      ],
+    ];
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r3",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+    }).sort((a, b) => a.getTime() - b.getTime());
+
+    expect(result[0].getTime()).toBeGreaterThan(
+      expectedDateRanges[0][0].getTime(),
+    );
+    expect(result[0].getTime()).toBeLessThan(
+      expectedDateRanges[0][1].getTime(),
+    );
+
+    expect(result[1].getTime()).toBeGreaterThan(
+      expectedDateRanges[1][0].getTime(),
+    );
+    expect(result[1].getTime()).toBeLessThan(
+      expectedDateRanges[1][1].getTime(),
+    );
+
+    expect(result[2].getTime()).toBeGreaterThan(
+      expectedDateRanges[2][0].getTime(),
+    );
+    expect(result[2].getTime()).toBeLessThan(
+      expectedDateRanges[2][1].getTime(),
+    );
+  });
+
+  it("can find dates when the base date time is after allowed times", () => {
+    // Base date is 5 min past the last allowed hour. it should return dates starting on the next day (same dat since UTC)
+    const baseDate = new Date("2025-01-22T00:05:00.000Z");
+    const numDates = 3;
+    const takenDates = {
+      ...DEFAULT_TAKEN_DATES,
+      r3: [
+        new Date("2025-01-20T22:00:00.000Z"),
+        new Date("2025-01-20T23:00:00.000Z"),
+        new Date("2025-01-21T00:00:00.000Z"),
+
+        new Date("2025-01-21T22:00:00.000Z"),
+        new Date("2025-01-21T23:00:00.000Z"),
+      ],
+    };
+
+    const expectedDateRanges = [
+      [
+        new Date("2025-01-22T21:55:00.000Z"),
+        new Date("2025-01-22T22:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-23T21:55:00.000Z"),
+        new Date("2025-01-23T22:05:00.000Z"),
+      ],
+      [
+        new Date("2025-01-24T21:55:00.000Z"),
+        new Date("2025-01-24T22:05:00.000Z"),
+      ],
+    ];
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r3",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+    }).sort((a, b) => a.getTime() - b.getTime());
+
+    console.log(result.map((r) => r.toUTCString()));
+
+    expect(result[0].getTime()).toBeGreaterThan(
+      expectedDateRanges[0][0].getTime(),
+    );
+    expect(result[0].getTime()).toBeLessThan(
+      expectedDateRanges[0][1].getTime(),
+    );
+
+    expect(result[1].getTime()).toBeGreaterThan(
+      expectedDateRanges[1][0].getTime(),
+    );
+    expect(result[1].getTime()).toBeLessThan(
+      expectedDateRanges[1][1].getTime(),
+    );
+
+    expect(result[2].getTime()).toBeGreaterThan(
+      expectedDateRanges[2][0].getTime(),
+    );
+    expect(result[2].getTime()).toBeLessThan(
+      expectedDateRanges[2][1].getTime(),
     );
   });
 });
