@@ -26,7 +26,6 @@ export async function humanNode(
   ) {
     defaultDateString = state.scheduleDate as string;
   } else if (state.scheduleDate && typeof state.scheduleDate === "object") {
-    console.log("ATTEMPTING TO FORMAT DATE", state.scheduleDate);
     defaultDateString = formatInTimeZone(
       state.scheduleDate,
       "America/Los_Angeles",
