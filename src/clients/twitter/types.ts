@@ -41,6 +41,7 @@ export interface CreateMediaRequest {
 
 export interface TwitterClientArgs {
   twitterClient: TwitterApi;
+  twitterClientOauth2?: TwitterApi;
   twitterToken?: string;
   twitterTokenSecret?: string;
   useArcade?: boolean;

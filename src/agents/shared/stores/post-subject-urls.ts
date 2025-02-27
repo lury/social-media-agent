@@ -25,7 +25,7 @@ export async function savePostSubjectUrls(
   const urlsToSaveSet = new Set(urls);
   if (!overwrite) {
     const existingUrls = await getPostSubjectUrls(config);
-    existingUrls.forEach(urlsToSaveSet.add);
+    existingUrls.forEach((url) => urlsToSaveSet.add(url));
   }
 
   await store.put(NAMESPACE, KEY, {

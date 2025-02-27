@@ -54,6 +54,8 @@ type MediaIdStringArray =
 export class TwitterClient {
   private twitterClient: TwitterApi;
 
+  private twitterClientOauth2?: TwitterApi;
+
   private twitterToken: string | undefined;
 
   private twitterTokenSecret: string | undefined;
@@ -70,6 +72,7 @@ export class TwitterClient {
    */
   constructor(args: TwitterClientArgs) {
     this.twitterClient = args.twitterClient;
+    this.twitterClientOauth2 = args.twitterClientOauth2;
     const textOnlyMode =
       args.textOnlyMode != null
         ? args.textOnlyMode
@@ -167,8 +170,14 @@ export class TwitterClient {
       accessToken: process.env.TWITTER_USER_TOKEN,
       accessSecret: process.env.TWITTER_USER_TOKEN_SECRET,
     });
+
+    const twitterClientOauth2 = process.env.TWITTER_BEARER_TOKEN
+      ? new TwitterApi(process.env.TWITTER_BEARER_TOKEN)
+      : undefined;
+
     return new TwitterClient({
       twitterClient,
+      twitterClientOauth2,
     });
   }
 
@@ -489,6 +498,10 @@ export class TwitterClient {
    * @returns {Promise<TweetV2[]>} An array of tweets in chronological order. This does NOT include the initial tweet, only the replies.
    */
   async getThreadReplies(id: string, username: string): Promise<TweetV2[]> {
+    if (!this.twitterClientOauth2) {
+      console.error("Twitter client OAuth2 is not initialized.");
+      return [];
+    }
     const fetchTweetOptions: Partial<Tweetv2FieldsParams> =
       BASE_FETCH_TWEET_OPTIONS;
 
@@ -497,10 +510,10 @@ export class TwitterClient {
     // Search for replies by the same author, to the same author. This must result in a thread, or the author is replying to themselves.
     const query = `conversation_id:${id} from:${username} to:${username}`;
 
-    const replies = await this.twitterClient.v2.searchAll(query, {
+    const replies = await this.twitterClientOauth2.v2.searchAll(query, {
       ...fetchTweetOptions,
       sort_order: "recency",
-      max_results: 2, // Limit to 15 replies as most threads will not be longer than this.
+      max_results: 15, // Limit to 15 replies as most threads will not be longer than this.
     });
 
     if (!replies.data || !replies.data.data) {
