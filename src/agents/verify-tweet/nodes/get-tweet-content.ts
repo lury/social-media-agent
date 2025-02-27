@@ -21,7 +21,6 @@ export async function getTweetContent(
   const twitterClient = await getTwitterClient();
 
   let tweetContent: TweetV2SingleResult | undefined;
-
   try {
     tweetContent = await twitterClient.getTweet(tweetId);
     if (!tweetContent) {
@@ -33,13 +32,17 @@ export async function getTweetContent(
   }
 
   const threadReplies: TweetV2[] = [];
-  if (tweetContent.data.author_id) {
-    threadReplies.push(
-      ...(await twitterClient.getThreadReplies(
-        tweetId,
-        tweetContent.data.author_id,
-      )),
-    );
+  try {
+    if (tweetContent.data.author_id) {
+      threadReplies.push(
+        ...(await twitterClient.getThreadReplies(
+          tweetId,
+          tweetContent.data.author_id,
+        )),
+      );
+    }
+  } catch (e) {
+    console.error("Failed to get thread replies", e);
   }
 
   const mediaUrls = await getMediaUrls(tweetContent, threadReplies);
