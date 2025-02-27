@@ -19,9 +19,8 @@ export async function getTweetContent(
   }
 
   const twitterClient = await getTwitterClient();
-  console.log("Got twitter client");
-  let tweetContent: TweetV2SingleResult | undefined;
 
+  let tweetContent: TweetV2SingleResult | undefined;
   try {
     tweetContent = await twitterClient.getTweet(tweetId);
     if (!tweetContent) {
