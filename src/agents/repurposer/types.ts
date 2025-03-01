@@ -100,6 +100,13 @@ export const RepurposerGraphAnnotation = Annotation.Root({
    * (this is only intended to be used for testing/single posts)
    */
   scheduleDate: Annotation<DateType | undefined>(),
+  /**
+   * The number of weeks between each post.
+   */
+  numWeeksBetween: Annotation<number>({
+    reducer: (_state, update) => update,
+    default: () => 1,
+  }),
 });
 
 export type RepurposerState = typeof RepurposerGraphAnnotation.State;
