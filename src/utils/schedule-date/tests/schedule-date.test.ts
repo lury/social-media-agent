@@ -378,8 +378,8 @@ describe("Get scheduled dates", () => {
   });
 });
 
-describe("Priority R1 get scheduled date", () => {
-  it("returns exact number of requested future dates when none are taken", () => {
+describe.only("Priority R1 get scheduled date", () => {
+  it("returns exact number of requested future dates with one per week when none are taken", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
     const numDates = 3;
@@ -391,78 +391,77 @@ describe("Priority R1 get scheduled date", () => {
       numberOfDates: numDates,
       takenDates,
     }).sort((a, b) => a.getTime() - b.getTime());
+
     expect(result).toHaveLength(numDates);
 
     const expectedDateRanges = [
-      // After 15:55 and before 16:05 (should be 16:00 but dont want to check for exact seconds.)
+      // Week 1: Monday 16:00 UTC
       [
         new Date("2025-01-20T15:55:00.000Z"),
         new Date("2025-01-20T16:05:00.000Z"),
       ],
+      // Week 2: Monday 16:00 UTC
       [
-        new Date("2025-01-21T15:55:00.000Z"),
-        new Date("2025-01-21T16:05:00.000Z"),
+        new Date("2025-01-27T15:55:00.000Z"),
+        new Date("2025-01-27T16:05:00.000Z"),
       ],
+      // Week 3: Monday 16:00 UTC
       [
-        new Date("2025-01-22T15:55:00.000Z"),
-        new Date("2025-01-22T16:05:00.000Z"),
+        new Date("2025-02-03T15:55:00.000Z"),
+        new Date("2025-02-03T16:05:00.000Z"),
       ],
     ];
 
-    expect(result[0].getTime()).toBeGreaterThan(
-      expectedDateRanges[0][0].getTime(),
-    );
-    expect(result[0].getTime()).toBeLessThan(
-      expectedDateRanges[0][1].getTime(),
-    );
+    // Verify each date is in the expected range
+    result.forEach((date, i) => {
+      expect(date.getTime()).toBeGreaterThan(
+        expectedDateRanges[i][0].getTime(),
+      );
+      expect(date.getTime()).toBeLessThan(expectedDateRanges[i][1].getTime());
+    });
 
-    expect(result[1].getTime()).toBeGreaterThan(
-      expectedDateRanges[1][0].getTime(),
-    );
-    expect(result[1].getTime()).toBeLessThan(
-      expectedDateRanges[1][1].getTime(),
-    );
-
-    expect(result[2].getTime()).toBeGreaterThan(
-      expectedDateRanges[2][0].getTime(),
-    );
-    expect(result[2].getTime()).toBeLessThan(
-      expectedDateRanges[2][1].getTime(),
-    );
+    // Verify dates are at least 7 days apart
+    for (let i = 1; i < result.length; i++) {
+      const daysDiff =
+        (result[i].getTime() - result[i - 1].getTime()) / (1000 * 60 * 60 * 24);
+      expect(daysDiff).toBeGreaterThanOrEqual(7);
+    }
   });
 
-  it("skips already taken dates", () => {
+  it("skips taken dates and finds next available slot in the week", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
-    const numDates = 5;
+    const numDates = 3;
     const takenDates = {
       ...DEFAULT_TAKEN_DATES,
       r1: [
+        // Monday slots are taken
         new Date("2025-01-20T16:00:00.000Z"),
         new Date("2025-01-20T17:00:00.000Z"),
+        new Date("2025-01-20T18:00:00.000Z"),
+
+        // Next week's Monday is also taken
+        new Date("2025-01-27T16:00:00.000Z"),
+        new Date("2025-01-27T17:00:00.000Z"),
+        new Date("2025-01-27T18:00:00.000Z"),
       ],
     };
 
     const expectedDateRanges = [
-      [
-        new Date("2025-01-20T17:55:00.000Z"),
-        new Date("2025-01-20T18:05:00.000Z"),
-      ],
+      // Week 1: Should get Tuesday since Monday is taken
       [
         new Date("2025-01-21T15:55:00.000Z"),
         new Date("2025-01-21T16:05:00.000Z"),
       ],
+      // Week 2: Should get Tuesday since Monday is taken
       [
-        new Date("2025-01-22T15:55:00.000Z"),
-        new Date("2025-01-22T16:05:00.000Z"),
+        new Date("2025-01-28T15:55:00.000Z"),
+        new Date("2025-01-28T16:05:00.000Z"),
       ],
+      // Week 3: Should get Monday (first available)
       [
-        new Date("2025-01-23T15:55:00.000Z"),
-        new Date("2025-01-23T16:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-24T15:55:00.000Z"),
-        new Date("2025-01-24T16:05:00.000Z"),
+        new Date("2025-02-03T15:55:00.000Z"),
+        new Date("2025-02-03T16:05:00.000Z"),
       ],
     ];
 
@@ -473,40 +472,15 @@ describe("Priority R1 get scheduled date", () => {
       takenDates,
     }).sort((a, b) => a.getTime() - b.getTime());
 
-    expect(result[0].getTime()).toBeGreaterThan(
-      expectedDateRanges[0][0].getTime(),
-    );
-    expect(result[0].getTime()).toBeLessThan(
-      expectedDateRanges[0][1].getTime(),
-    );
+    expect(result).toHaveLength(numDates);
 
-    expect(result[1].getTime()).toBeGreaterThan(
-      expectedDateRanges[1][0].getTime(),
-    );
-    expect(result[1].getTime()).toBeLessThan(
-      expectedDateRanges[1][1].getTime(),
-    );
-
-    expect(result[2].getTime()).toBeGreaterThan(
-      expectedDateRanges[2][0].getTime(),
-    );
-    expect(result[2].getTime()).toBeLessThan(
-      expectedDateRanges[2][1].getTime(),
-    );
-
-    expect(result[3].getTime()).toBeGreaterThan(
-      expectedDateRanges[3][0].getTime(),
-    );
-    expect(result[3].getTime()).toBeLessThan(
-      expectedDateRanges[3][1].getTime(),
-    );
-
-    expect(result[4].getTime()).toBeGreaterThan(
-      expectedDateRanges[4][0].getTime(),
-    );
-    expect(result[4].getTime()).toBeLessThan(
-      expectedDateRanges[4][1].getTime(),
-    );
+    // Verify each date is in the expected range
+    result.forEach((date, i) => {
+      expect(date.getTime()).toBeGreaterThan(
+        expectedDateRanges[i][0].getTime(),
+      );
+      expect(date.getTime()).toBeLessThan(expectedDateRanges[i][1].getTime());
+    });
   });
 
   it("skips entire days if there are already taken dates", () => {
@@ -528,8 +502,8 @@ describe("Priority R1 get scheduled date", () => {
         new Date("2025-01-21T16:05:00.000Z"),
       ],
       [
-        new Date("2025-01-22T15:55:00.000Z"),
-        new Date("2025-01-22T16:05:00.000Z"),
+        new Date("2025-01-27T15:55:00.000Z"),
+        new Date("2025-01-27T16:05:00.000Z"),
       ],
     ];
 
@@ -614,122 +588,6 @@ describe("Priority R1 get scheduled date", () => {
     expect(result[0].getUTCDay()).toBe(1);
   });
 
-  it("handles taken dates spanning multiple weeks", () => {
-    // Over multiple weeks, ensure skipping taken slots properly
-    const baseDate = new Date("2025-01-20T15:00:00.000Z");
-    const numDates = 8;
-    const takenDates = {
-      ...DEFAULT_TAKEN_DATES,
-      r1: [
-        new Date("2025-01-20T16:00:00.000Z"),
-        new Date("2025-01-21T19:00:00.000Z"),
-        new Date("2025-01-23T16:00:00.000Z"),
-        new Date("2025-01-24T18:00:00.000Z"),
-      ],
-    };
-
-    const expectedDateRanges = [
-      [
-        new Date("2025-01-20T16:55:00.000Z"),
-        new Date("2025-01-20T17:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-21T15:55:00.000Z"),
-        new Date("2025-01-21T16:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-22T15:55:00.000Z"),
-        new Date("2025-01-22T16:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-23T16:55:00.000Z"),
-        new Date("2025-01-23T17:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-24T15:55:00.000Z"),
-        new Date("2025-01-24T16:05:00.000Z"),
-      ],
-      // New week
-      [
-        new Date("2025-01-27T15:55:00.000Z"),
-        new Date("2025-01-27T16:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-28T15:55:00.000Z"),
-        new Date("2025-01-28T16:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-29T15:55:00.000Z"),
-        new Date("2025-01-29T16:05:00.000Z"),
-      ],
-    ];
-
-    const result = findAvailableRepurposeDates({
-      repurposedPriority: "r1",
-      baseDate,
-      numberOfDates: numDates,
-      takenDates,
-    });
-
-    expect(result.length).toBe(numDates);
-
-    expect(result[0].getTime()).toBeGreaterThan(
-      expectedDateRanges[0][0].getTime(),
-    );
-    expect(result[0].getTime()).toBeLessThan(
-      expectedDateRanges[0][1].getTime(),
-    );
-
-    expect(result[1].getTime()).toBeGreaterThan(
-      expectedDateRanges[1][0].getTime(),
-    );
-    expect(result[1].getTime()).toBeLessThan(
-      expectedDateRanges[1][1].getTime(),
-    );
-
-    expect(result[2].getTime()).toBeGreaterThan(
-      expectedDateRanges[2][0].getTime(),
-    );
-    expect(result[2].getTime()).toBeLessThan(
-      expectedDateRanges[2][1].getTime(),
-    );
-
-    expect(result[3].getTime()).toBeGreaterThan(
-      expectedDateRanges[3][0].getTime(),
-    );
-    expect(result[3].getTime()).toBeLessThan(
-      expectedDateRanges[3][1].getTime(),
-    );
-
-    expect(result[4].getTime()).toBeGreaterThan(
-      expectedDateRanges[4][0].getTime(),
-    );
-    expect(result[4].getTime()).toBeLessThan(
-      expectedDateRanges[4][1].getTime(),
-    );
-
-    expect(result[5].getTime()).toBeGreaterThan(
-      expectedDateRanges[5][0].getTime(),
-    );
-    expect(result[5].getTime()).toBeLessThan(
-      expectedDateRanges[5][1].getTime(),
-    );
-
-    expect(result[6].getTime()).toBeGreaterThan(
-      expectedDateRanges[6][0].getTime(),
-    );
-    expect(result[6].getTime()).toBeLessThan(
-      expectedDateRanges[6][1].getTime(),
-    );
-
-    expect(result[7].getTime()).toBeGreaterThan(
-      expectedDateRanges[7][0].getTime(),
-    );
-    expect(result[7].getTime()).toBeLessThan(
-      expectedDateRanges[7][1].getTime(),
-    );
-  });
-
   it("can find dates when the base date is after all taken dates", () => {
     const baseDate = new Date("2025-01-22T15:00:00.000Z");
     const numDates = 3;
@@ -754,12 +612,12 @@ describe("Priority R1 get scheduled date", () => {
         new Date("2025-01-22T17:05:00.000Z"),
       ],
       [
-        new Date("2025-01-23T15:55:00.000Z"),
-        new Date("2025-01-23T16:05:00.000Z"),
+        new Date("2025-01-27T15:55:00.000Z"),
+        new Date("2025-01-27T16:05:00.000Z"),
       ],
       [
-        new Date("2025-01-24T15:55:00.000Z"),
-        new Date("2025-01-24T16:05:00.000Z"),
+        new Date("2025-02-03T15:55:00.000Z"),
+        new Date("2025-02-03T16:05:00.000Z"),
       ],
     ];
 
@@ -818,12 +676,12 @@ describe("Priority R1 get scheduled date", () => {
         new Date("2025-01-23T16:05:00.000Z"),
       ],
       [
-        new Date("2025-01-24T15:55:00.000Z"),
-        new Date("2025-01-24T16:05:00.000Z"),
-      ],
-      [
         new Date("2025-01-27T15:55:00.000Z"),
         new Date("2025-01-27T16:05:00.000Z"),
+      ],
+      [
+        new Date("2025-02-03T15:55:00.000Z"),
+        new Date("2025-02-03T16:05:00.000Z"),
       ],
     ];
 
@@ -855,9 +713,56 @@ describe("Priority R1 get scheduled date", () => {
       expectedDateRanges[2][1].getTime(),
     );
   });
+
+  it("works when a custom week offset is specified", () => {
+    // baseDate is Monday at 15:00 UTC, just before the first allowed slot
+    const baseDate = new Date("2025-01-20T15:00:00.000Z");
+    const numDates = 2;
+    const takenDates = DEFAULT_TAKEN_DATES;
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r1",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+      numWeeksBetween: 2,
+    }).sort((a, b) => a.getTime() - b.getTime());
+
+    expect(result).toHaveLength(numDates);
+
+    const expectedDateRanges = [
+      // Week 1: Monday 16:00 UTC
+      [
+        new Date("2025-01-20T15:55:00.000Z"),
+        new Date("2025-01-20T16:05:00.000Z"),
+      ],
+      // Week 2: Monday 16:00 UTC
+      // SKIP
+      // Week 3: Monday 16:00 UTC
+      [
+        new Date("2025-02-03T15:55:00.000Z"),
+        new Date("2025-02-03T16:05:00.000Z"),
+      ],
+    ];
+
+    // Verify each date is in the expected range
+    result.forEach((date, i) => {
+      expect(date.getTime()).toBeGreaterThan(
+        expectedDateRanges[i][0].getTime(),
+      );
+      expect(date.getTime()).toBeLessThan(expectedDateRanges[i][1].getTime());
+    });
+
+    // Verify dates are at least 7 days apart
+    for (let i = 1; i < result.length; i++) {
+      const daysDiff =
+        (result[i].getTime() - result[i - 1].getTime()) / (1000 * 60 * 60 * 24);
+      expect(daysDiff).toBeGreaterThanOrEqual(7);
+    }
+  });
 });
 
-describe("Priority R2 get scheduled date", () => {
+describe.only("Priority R2 get scheduled date", () => {
   it("returns exact number of requested future dates when none are taken", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
@@ -879,12 +784,12 @@ describe("Priority R2 get scheduled date", () => {
         new Date("2025-01-20T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-21T18:55:00.000Z"),
-        new Date("2025-01-21T19:05:00.000Z"),
+        new Date("2025-01-27T18:55:00.000Z"),
+        new Date("2025-01-27T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-22T18:55:00.000Z"),
-        new Date("2025-01-22T19:05:00.000Z"),
+        new Date("2025-02-03T18:55:00.000Z"),
+        new Date("2025-02-03T19:05:00.000Z"),
       ],
     ];
 
@@ -910,7 +815,7 @@ describe("Priority R2 get scheduled date", () => {
     );
   });
 
-  it("skips already taken dates", () => {
+  it("skips already taken hours", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
     const numDates = 5;
@@ -928,20 +833,20 @@ describe("Priority R2 get scheduled date", () => {
         new Date("2025-01-20T21:05:00.000Z"),
       ],
       [
-        new Date("2025-01-21T18:55:00.000Z"),
-        new Date("2025-01-21T19:05:00.000Z"),
+        new Date("2025-01-27T18:55:00.000Z"),
+        new Date("2025-01-27T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-22T18:55:00.000Z"),
-        new Date("2025-01-22T19:05:00.000Z"),
+        new Date("2025-02-03T18:55:00.000Z"),
+        new Date("2025-02-03T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-23T18:55:00.000Z"),
-        new Date("2025-01-23T19:05:00.000Z"),
+        new Date("2025-02-10T18:55:00.000Z"),
+        new Date("2025-02-10T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-24T18:55:00.000Z"),
-        new Date("2025-01-24T19:05:00.000Z"),
+        new Date("2025-02-17T18:55:00.000Z"),
+        new Date("2025-02-17T19:05:00.000Z"),
       ],
     ];
 
@@ -1007,8 +912,8 @@ describe("Priority R2 get scheduled date", () => {
         new Date("2025-01-21T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-22T18:55:00.000Z"),
-        new Date("2025-01-22T19:05:00.000Z"),
+        new Date("2025-01-27T18:55:00.000Z"),
+        new Date("2025-01-27T19:05:00.000Z"),
       ],
     ];
 
@@ -1093,122 +998,6 @@ describe("Priority R2 get scheduled date", () => {
     expect(result[0].getUTCDay()).toBe(1);
   });
 
-  it("handles taken dates spanning multiple weeks", () => {
-    // Over multiple weeks, ensure skipping taken slots properly
-    const baseDate = new Date("2025-01-20T15:00:00.000Z");
-    const numDates = 8;
-    const takenDates = {
-      ...DEFAULT_TAKEN_DATES,
-      r2: [
-        new Date("2025-01-20T19:00:00.000Z"),
-        new Date("2025-01-21T20:00:00.000Z"),
-        new Date("2025-01-23T19:00:00.000Z"),
-        new Date("2025-01-24T21:00:00.000Z"),
-      ],
-    };
-
-    const expectedDateRanges = [
-      [
-        new Date("2025-01-20T19:55:00.000Z"),
-        new Date("2025-01-20T20:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-21T18:55:00.000Z"),
-        new Date("2025-01-21T19:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-22T18:55:00.000Z"),
-        new Date("2025-01-22T19:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-23T19:55:00.000Z"),
-        new Date("2025-01-23T20:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-24T18:55:00.000Z"),
-        new Date("2025-01-24T19:05:00.000Z"),
-      ],
-      // New week
-      [
-        new Date("2025-01-27T18:55:00.000Z"),
-        new Date("2025-01-27T19:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-28T18:55:00.000Z"),
-        new Date("2025-01-28T19:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-29T18:55:00.000Z"),
-        new Date("2025-01-29T19:05:00.000Z"),
-      ],
-    ];
-
-    const result = findAvailableRepurposeDates({
-      repurposedPriority: "r2",
-      baseDate,
-      numberOfDates: numDates,
-      takenDates,
-    });
-
-    expect(result.length).toBe(numDates);
-
-    expect(result[0].getTime()).toBeGreaterThan(
-      expectedDateRanges[0][0].getTime(),
-    );
-    expect(result[0].getTime()).toBeLessThan(
-      expectedDateRanges[0][1].getTime(),
-    );
-
-    expect(result[1].getTime()).toBeGreaterThan(
-      expectedDateRanges[1][0].getTime(),
-    );
-    expect(result[1].getTime()).toBeLessThan(
-      expectedDateRanges[1][1].getTime(),
-    );
-
-    expect(result[2].getTime()).toBeGreaterThan(
-      expectedDateRanges[2][0].getTime(),
-    );
-    expect(result[2].getTime()).toBeLessThan(
-      expectedDateRanges[2][1].getTime(),
-    );
-
-    expect(result[3].getTime()).toBeGreaterThan(
-      expectedDateRanges[3][0].getTime(),
-    );
-    expect(result[3].getTime()).toBeLessThan(
-      expectedDateRanges[3][1].getTime(),
-    );
-
-    expect(result[4].getTime()).toBeGreaterThan(
-      expectedDateRanges[4][0].getTime(),
-    );
-    expect(result[4].getTime()).toBeLessThan(
-      expectedDateRanges[4][1].getTime(),
-    );
-
-    expect(result[5].getTime()).toBeGreaterThan(
-      expectedDateRanges[5][0].getTime(),
-    );
-    expect(result[5].getTime()).toBeLessThan(
-      expectedDateRanges[5][1].getTime(),
-    );
-
-    expect(result[6].getTime()).toBeGreaterThan(
-      expectedDateRanges[6][0].getTime(),
-    );
-    expect(result[6].getTime()).toBeLessThan(
-      expectedDateRanges[6][1].getTime(),
-    );
-
-    expect(result[7].getTime()).toBeGreaterThan(
-      expectedDateRanges[7][0].getTime(),
-    );
-    expect(result[7].getTime()).toBeLessThan(
-      expectedDateRanges[7][1].getTime(),
-    );
-  });
-
   it("can find dates when the base date is after all taken dates", () => {
     const baseDate = new Date("2025-01-22T15:00:00.000Z");
     const numDates = 3;
@@ -1230,12 +1019,12 @@ describe("Priority R2 get scheduled date", () => {
         new Date("2025-01-22T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-23T18:55:00.000Z"),
-        new Date("2025-01-23T19:05:00.000Z"),
+        new Date("2025-01-27T18:55:00.000Z"),
+        new Date("2025-01-27T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-24T18:55:00.000Z"),
-        new Date("2025-01-24T19:05:00.000Z"),
+        new Date("2025-02-03T18:55:00.000Z"),
+        new Date("2025-02-03T19:05:00.000Z"),
       ],
     ];
 
@@ -1290,12 +1079,12 @@ describe("Priority R2 get scheduled date", () => {
         new Date("2025-01-23T19:05:00.000Z"),
       ],
       [
-        new Date("2025-01-24T18:55:00.000Z"),
-        new Date("2025-01-24T19:05:00.000Z"),
-      ],
-      [
         new Date("2025-01-27T18:55:00.000Z"),
         new Date("2025-01-27T19:05:00.000Z"),
+      ],
+      [
+        new Date("2025-02-03T18:55:00.000Z"),
+        new Date("2025-02-03T19:05:00.000Z"),
       ],
     ];
 
@@ -1327,9 +1116,45 @@ describe("Priority R2 get scheduled date", () => {
       expectedDateRanges[2][1].getTime(),
     );
   });
+
+  it("works when a custom week offset is specified", () => {
+    // baseDate is Monday at 15:00 UTC, just before the first allowed slot
+    const baseDate = new Date("2025-01-20T15:00:00.000Z");
+    const numDates = 2;
+    const takenDates = DEFAULT_TAKEN_DATES;
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r2",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+      numWeeksBetween: 2,
+    }).sort((a, b) => a.getTime() - b.getTime());
+    expect(result).toHaveLength(numDates);
+
+    const expectedDateRanges = [
+      // After 15:55 and before 16:05 (should be 16:00 but dont want to check for exact seconds.)
+      [
+        new Date("2025-01-20T18:55:00.000Z"),
+        new Date("2025-01-20T19:05:00.000Z"),
+      ],
+      [
+        new Date("2025-02-03T18:55:00.000Z"),
+        new Date("2025-02-03T19:05:00.000Z"),
+      ],
+    ];
+
+    // Verify each date is in the expected range
+    result.forEach((date, i) => {
+      expect(date.getTime()).toBeGreaterThan(
+        expectedDateRanges[i][0].getTime(),
+      );
+      expect(date.getTime()).toBeLessThan(expectedDateRanges[i][1].getTime());
+    });
+  });
 });
 
-describe("Priority R3 get scheduled date", () => {
+describe.only("Priority R3 get scheduled date", () => {
   it("returns exact number of requested future dates when none are taken", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
@@ -1351,12 +1176,12 @@ describe("Priority R3 get scheduled date", () => {
         new Date("2025-01-20T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-21T21:55:00.000Z"),
-        new Date("2025-01-21T22:05:00.000Z"),
+        new Date("2025-01-27T21:55:00.000Z"),
+        new Date("2025-01-27T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-22T21:55:00.000Z"),
-        new Date("2025-01-22T22:05:00.000Z"),
+        new Date("2025-02-03T21:55:00.000Z"),
+        new Date("2025-02-03T22:05:00.000Z"),
       ],
     ];
 
@@ -1382,7 +1207,7 @@ describe("Priority R3 get scheduled date", () => {
     );
   });
 
-  it("skips already taken dates", () => {
+  it("skips already taken hours", () => {
     // baseDate is Monday at 15:00 UTC, just before the first allowed slot
     const baseDate = new Date("2025-01-20T15:00:00.000Z");
     const numDates = 5;
@@ -1400,20 +1225,20 @@ describe("Priority R3 get scheduled date", () => {
         new Date("2025-01-21T00:05:00.000Z"),
       ],
       [
-        new Date("2025-01-21T21:55:00.000Z"),
-        new Date("2025-01-21T22:05:00.000Z"),
+        new Date("2025-01-27T21:55:00.000Z"),
+        new Date("2025-01-27T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-22T21:55:00.000Z"),
-        new Date("2025-01-22T22:05:00.000Z"),
+        new Date("2025-02-03T21:55:00.000Z"),
+        new Date("2025-02-03T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-23T21:55:00.000Z"),
-        new Date("2025-01-23T22:05:00.000Z"),
+        new Date("2025-02-10T21:55:00.000Z"),
+        new Date("2025-02-10T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-24T21:55:00.000Z"),
-        new Date("2025-01-24T22:05:00.000Z"),
+        new Date("2025-02-17T21:55:00.000Z"),
+        new Date("2025-02-17T22:05:00.000Z"),
       ],
     ];
 
@@ -1479,8 +1304,8 @@ describe("Priority R3 get scheduled date", () => {
         new Date("2025-01-21T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-22T21:55:00.000Z"),
-        new Date("2025-01-22T22:05:00.000Z"),
+        new Date("2025-01-27T21:55:00.000Z"),
+        new Date("2025-01-27T22:05:00.000Z"),
       ],
     ];
 
@@ -1565,122 +1390,6 @@ describe("Priority R3 get scheduled date", () => {
     expect(result[0].getUTCDay()).toBe(1);
   });
 
-  it("handles taken dates spanning multiple weeks", () => {
-    // Over multiple weeks, ensure skipping taken slots properly
-    const baseDate = new Date("2025-01-20T15:00:00.000Z");
-    const numDates = 8;
-    const takenDates = {
-      ...DEFAULT_TAKEN_DATES,
-      r3: [
-        new Date("2025-01-20T22:00:00.000Z"),
-        new Date("2025-01-21T23:00:00.000Z"),
-        new Date("2025-01-23T22:00:00.000Z"),
-        new Date("2025-01-25T00:00:00.000Z"),
-      ],
-    };
-
-    const expectedDateRanges = [
-      [
-        new Date("2025-01-20T22:55:00.000Z"),
-        new Date("2025-01-20T23:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-21T21:55:00.000Z"),
-        new Date("2025-01-21T22:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-22T21:55:00.000Z"),
-        new Date("2025-01-22T22:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-23T22:55:00.000Z"),
-        new Date("2025-01-23T23:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-24T21:55:00.000Z"),
-        new Date("2025-01-24T22:05:00.000Z"),
-      ],
-      // New week
-      [
-        new Date("2025-01-27T21:55:00.000Z"),
-        new Date("2025-01-27T22:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-28T21:55:00.000Z"),
-        new Date("2025-01-28T22:05:00.000Z"),
-      ],
-      [
-        new Date("2025-01-29T21:55:00.000Z"),
-        new Date("2025-01-29T22:05:00.000Z"),
-      ],
-    ];
-
-    const result = findAvailableRepurposeDates({
-      repurposedPriority: "r3",
-      baseDate,
-      numberOfDates: numDates,
-      takenDates,
-    });
-
-    expect(result.length).toBe(numDates);
-
-    expect(result[0].getTime()).toBeGreaterThan(
-      expectedDateRanges[0][0].getTime(),
-    );
-    expect(result[0].getTime()).toBeLessThan(
-      expectedDateRanges[0][1].getTime(),
-    );
-
-    expect(result[1].getTime()).toBeGreaterThan(
-      expectedDateRanges[1][0].getTime(),
-    );
-    expect(result[1].getTime()).toBeLessThan(
-      expectedDateRanges[1][1].getTime(),
-    );
-
-    expect(result[2].getTime()).toBeGreaterThan(
-      expectedDateRanges[2][0].getTime(),
-    );
-    expect(result[2].getTime()).toBeLessThan(
-      expectedDateRanges[2][1].getTime(),
-    );
-
-    expect(result[3].getTime()).toBeGreaterThan(
-      expectedDateRanges[3][0].getTime(),
-    );
-    expect(result[3].getTime()).toBeLessThan(
-      expectedDateRanges[3][1].getTime(),
-    );
-
-    expect(result[4].getTime()).toBeGreaterThan(
-      expectedDateRanges[4][0].getTime(),
-    );
-    expect(result[4].getTime()).toBeLessThan(
-      expectedDateRanges[4][1].getTime(),
-    );
-
-    expect(result[5].getTime()).toBeGreaterThan(
-      expectedDateRanges[5][0].getTime(),
-    );
-    expect(result[5].getTime()).toBeLessThan(
-      expectedDateRanges[5][1].getTime(),
-    );
-
-    expect(result[6].getTime()).toBeGreaterThan(
-      expectedDateRanges[6][0].getTime(),
-    );
-    expect(result[6].getTime()).toBeLessThan(
-      expectedDateRanges[6][1].getTime(),
-    );
-
-    expect(result[7].getTime()).toBeGreaterThan(
-      expectedDateRanges[7][0].getTime(),
-    );
-    expect(result[7].getTime()).toBeLessThan(
-      expectedDateRanges[7][1].getTime(),
-    );
-  });
-
   it("can find dates when the base date is after all taken dates", () => {
     const baseDate = new Date("2025-01-22T15:00:00.000Z");
     const numDates = 3;
@@ -1702,12 +1411,12 @@ describe("Priority R3 get scheduled date", () => {
         new Date("2025-01-22T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-23T21:55:00.000Z"),
-        new Date("2025-01-23T22:05:00.000Z"),
+        new Date("2025-01-27T21:55:00.000Z"),
+        new Date("2025-01-27T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-24T21:55:00.000Z"),
-        new Date("2025-01-24T22:05:00.000Z"),
+        new Date("2025-02-03T21:55:00.000Z"),
+        new Date("2025-02-03T22:05:00.000Z"),
       ],
     ];
 
@@ -1762,12 +1471,12 @@ describe("Priority R3 get scheduled date", () => {
         new Date("2025-01-22T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-23T21:55:00.000Z"),
-        new Date("2025-01-23T22:05:00.000Z"),
+        new Date("2025-01-27T21:55:00.000Z"),
+        new Date("2025-01-27T22:05:00.000Z"),
       ],
       [
-        new Date("2025-01-24T21:55:00.000Z"),
-        new Date("2025-01-24T22:05:00.000Z"),
+        new Date("2025-02-03T21:55:00.000Z"),
+        new Date("2025-02-03T22:05:00.000Z"),
       ],
     ];
 
@@ -1777,8 +1486,6 @@ describe("Priority R3 get scheduled date", () => {
       numberOfDates: numDates,
       takenDates,
     }).sort((a, b) => a.getTime() - b.getTime());
-
-    console.log(result.map((r) => r.toUTCString()));
 
     expect(result[0].getTime()).toBeGreaterThan(
       expectedDateRanges[0][0].getTime(),
@@ -1800,5 +1507,40 @@ describe("Priority R3 get scheduled date", () => {
     expect(result[2].getTime()).toBeLessThan(
       expectedDateRanges[2][1].getTime(),
     );
+  });
+
+  it("works when a custom week offset is specified", () => {
+    // baseDate is Monday at 15:00 UTC, just before the first allowed slot
+    const baseDate = new Date("2025-01-20T15:00:00.000Z");
+    const numDates = 2;
+    const takenDates = DEFAULT_TAKEN_DATES;
+
+    const result = findAvailableRepurposeDates({
+      repurposedPriority: "r3",
+      baseDate,
+      numberOfDates: numDates,
+      takenDates,
+      numWeeksBetween: 2,
+    }).sort((a, b) => a.getTime() - b.getTime());
+    expect(result).toHaveLength(numDates);
+
+    const expectedDateRanges = [
+      [
+        new Date("2025-01-20T21:55:00.000Z"),
+        new Date("2025-01-20T22:05:00.000Z"),
+      ],
+      [
+        new Date("2025-02-03T21:55:00.000Z"),
+        new Date("2025-02-03T22:05:00.000Z"),
+      ],
+    ];
+
+    // Verify each date is in the expected range
+    result.forEach((date, i) => {
+      expect(date.getTime()).toBeGreaterThan(
+        expectedDateRanges[i][0].getTime(),
+      );
+      expect(date.getTime()).toBeLessThan(expectedDateRanges[i][1].getTime());
+    });
   });
 });

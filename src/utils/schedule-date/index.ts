@@ -418,6 +418,10 @@ interface FindAvailableRepurposeDatesRepurposer {
   baseDate: Date;
   numberOfDates: number;
   takenDates: TakenScheduleDates;
+  /**
+   * @default 1
+   */
+  numWeeksBetween?: number;
 }
 
 function normalizeSlots(
@@ -448,9 +452,10 @@ export function findAvailableRepurposeDates({
   baseDate,
   numberOfDates,
   takenDates: allTakenDates,
+  numWeeksBetween = 1,
 }: FindAvailableRepurposeDatesRepurposer): Date[] {
   const results: Date[] = [];
-  let dayOffset = 0;
+  let weekOffset = 0;
 
   const takenDates = allTakenDates[repurposedPriority];
 
@@ -465,48 +470,61 @@ export function findAvailableRepurposeDates({
   // Normalize them so day+1, hour=0 becomes day, hour=24
   const allowedSlots = normalizeSlots(rawAllowedSlots);
 
-  // We'll allow searching up to 365 days in the future to avoid infinite loops
-  while (results.length < numberOfDates && dayOffset < 365) {
-    // Anchor to the start of the "candidate day" in UTC:
+  // We'll allow searching up to 52 weeks (1 year) in the future to avoid infinite loops
+  while (results.length < numberOfDates && weekOffset < 52) {
+    // Start from Monday of the current week
     const checkDate = new Date(baseDate.getTime());
     checkDate.setUTCHours(0, 0, 0, 0);
-    checkDate.setUTCDate(checkDate.getUTCDate() + dayOffset);
 
-    const dayOfWeek = checkDate.getUTCDay();
+    // Move to Monday (day 1) of the current week if we're not already there
+    const currentDay = checkDate.getUTCDay();
+    const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    checkDate.setUTCDate(
+      checkDate.getUTCDate() + daysToMonday + weekOffset * 7,
+    );
 
-    // Gather all slots that match this dayOfWeek, e.g. day=1 => Monday
-    const sameDaySlots = allowedSlots
-      .filter((slot) => slot.day === dayOfWeek)
-      // Sort by hour ascending, so e.g. [22, 23, 24]
-      .sort((a, b) => a.hour - b.hour);
+    let foundSlotThisWeek = false;
 
-    for (const slot of sameDaySlots) {
-      const candidate = new Date(checkDate.getTime());
-      // Instead of candidate.setUTCHours(slot.hour, 0, 0, 0):
-      setUTCHoursExtended(candidate, slot.hour);
+    // Try each day of the week (Monday-Friday)
+    for (let dayOffset = 0; dayOffset < 5 && !foundSlotThisWeek; dayOffset++) {
+      const candidateDay = new Date(checkDate.getTime());
+      candidateDay.setUTCDate(candidateDay.getUTCDate() + dayOffset);
+      const dayOfWeek = candidateDay.getUTCDay();
 
-      // Ensure it’s strictly in the future
-      if (candidate <= baseDate) {
-        continue; // It's in the past, skip
-      }
+      // Get allowed slots for this day
+      const sameDaySlots = allowedSlots
+        .filter((slot) => slot.day === dayOfWeek)
+        .sort((a, b) => a.hour - b.hour);
 
-      // Check if already taken
-      const alreadyTaken = takenDates.some((taken) => {
-        return (
-          taken.getUTCFullYear() === candidate.getUTCFullYear() &&
-          taken.getUTCMonth() === candidate.getUTCMonth() &&
-          taken.getUTCDate() === candidate.getUTCDate() &&
-          taken.getUTCHours() === candidate.getUTCHours()
-        );
-      });
+      // Try each time slot for this day
+      for (const slot of sameDaySlots) {
+        const candidate = new Date(candidateDay.getTime());
+        setUTCHoursExtended(candidate, slot.hour);
 
-      if (!alreadyTaken) {
-        results.push(candidate);
-        break; // We only want one slot per *UTC day* iteration
+        // Ensure it's strictly in the future
+        if (candidate <= baseDate) {
+          continue;
+        }
+
+        // Check if already taken
+        const alreadyTaken = takenDates.some((taken) => {
+          return (
+            taken.getUTCFullYear() === candidate.getUTCFullYear() &&
+            taken.getUTCMonth() === candidate.getUTCMonth() &&
+            taken.getUTCDate() === candidate.getUTCDate() &&
+            taken.getUTCHours() === candidate.getUTCHours()
+          );
+        });
+
+        if (!alreadyTaken) {
+          results.push(candidate);
+          foundSlotThisWeek = true;
+          break;
+        }
       }
     }
 
-    dayOffset++;
+    weekOffset += numWeeksBetween;
   }
 
   return results;
@@ -698,6 +716,7 @@ type GetScheduledBasicDateArgs = {
 
 type GetScheduledRepurposeDateArgs = GetScheduledBasicDateArgs & {
   numberOfDates: number;
+  numWeeksBetween: number;
 };
 
 export async function getScheduledDateSeconds(
@@ -711,9 +730,10 @@ export async function getScheduledDateSeconds(
 export async function getScheduledDateSeconds(
   args: GetScheduledBasicDateArgs | GetScheduledRepurposeDateArgs,
 ): Promise<number | number[]> {
-  const { scheduleDate, config, baseDate, numberOfDates } = {
+  const { scheduleDate, config, baseDate, numberOfDates, numWeeksBetween } = {
     baseDate: new Date(),
     numberOfDates: undefined,
+    numWeeksBetween: undefined,
     ...args,
   };
   if (isValid(scheduleDate)) {
@@ -728,12 +748,17 @@ export async function getScheduledDateSeconds(
 
   const takenScheduleDates = await getTakenScheduleDates(config);
 
-  if (isRepurposedPriority(scheduleDate) && numberOfDates !== undefined) {
+  if (
+    isRepurposedPriority(scheduleDate) &&
+    numberOfDates !== undefined &&
+    numWeeksBetween !== undefined
+  ) {
     const scheduleDates = findAvailableRepurposeDates({
       repurposedPriority: scheduleDate,
       baseDate,
       numberOfDates,
       takenDates: takenScheduleDates,
+      numWeeksBetween,
     });
 
     const isValidDate = scheduleDates.every((d) =>

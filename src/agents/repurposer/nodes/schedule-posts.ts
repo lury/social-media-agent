@@ -80,6 +80,7 @@ export async function schedulePosts(
     scheduleDate: state.scheduleDate,
     numberOfDates: state.posts.length,
     config,
+    numWeeksBetween: state.numWeeksBetween,
   });
 
   const startRunsPromises = state.posts.map(async (post) => {

@@ -40,6 +40,7 @@ export async function humanNode(
       action: `Schedule Repurposed ${capitalize(postOrPosts)}`,
       args: {
         date: defaultDateString,
+        numberOfWeeksBetween: state.numWeeksBetween,
         ...Object.fromEntries(
           state.posts.flatMap((p) => [
             [`post_${p.index}`, p.content],
@@ -131,11 +132,16 @@ export async function humanNode(
     );
   }
 
+  const numWeeksBetween: number = castArgs.numberOfWeeksBetween
+    ? parseInt(castArgs.numberOfWeeksBetween, 10)
+    : 1;
+
   return {
     next: "schedulePosts",
     scheduleDate: postDate,
     posts,
     images,
     userResponse: undefined,
+    numWeeksBetween,
   };
 }
