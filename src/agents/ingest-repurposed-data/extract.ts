@@ -3,6 +3,7 @@ import { IngestRepurposedDataState, RepurposedContent } from "./types.js";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { isValidUrl } from "../utils.js";
 import { traceable } from "langsmith/traceable";
+import { DEFAULT_POST_QUANTITY } from "./constants.js";
 
 const EXTRACT_CONTENT_PROMPT = `You're a helpful AI assistant, tasked with extracting content from a Slack message.
 
@@ -30,8 +31,6 @@ Here is the Slack message:
 {SLACK_MESSAGE}
 </slack-message>
 `;
-
-const DEFAULT_POST_QUANTITY = 2;
 
 const extractionSchema = z.object({
   original_link: z
