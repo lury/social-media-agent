@@ -1,5 +1,6 @@
 import { Annotation, END } from "@langchain/langgraph";
 import { DateType } from "../types.js";
+import { DEFAULT_POST_QUANTITY } from "../ingest-repurposed-data/constants.js";
 
 export type RepurposedPost = {
   /**
@@ -51,7 +52,10 @@ export const RepurposerGraphAnnotation = Annotation.Root({
   /**
    * The quantity of posts to generate.
    */
-  quantity: Annotation<number>,
+  quantity: Annotation<number>({
+    reducer: (_state, update) => update,
+    default: () => DEFAULT_POST_QUANTITY,
+  }),
   /**
    * The report generated on the content of the message. Used
    * as context for generating the post.
