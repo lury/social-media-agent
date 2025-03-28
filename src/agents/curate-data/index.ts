@@ -16,11 +16,12 @@ import { reflectOnTweetGroups } from "./nodes/tweets/reflect-tweet-groups.js";
 import { reGroupTweets } from "./nodes/tweets/re-group-tweets.js";
 import { generatePostsSubgraph } from "./nodes/generate-posts-subgraph.js";
 import { extractAINewsletterContent } from "./nodes/extract-ai-newsletter-content.js";
+import { useLangChainPrompts } from "../utils.js";
 
 function generatePostOrContinue(
   _state: CurateDataState,
 ): "generatePostsSubgraph" | "verifyBulkTweets" {
-  const useLangChain = process.env.USE_LANGCHAIN_PROMPTS === "true";
+  const useLangChain = useLangChainPrompts();
 
   if (useLangChain) {
     return "generatePostsSubgraph";

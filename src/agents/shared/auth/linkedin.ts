@@ -6,6 +6,7 @@ import {
 } from "@langchain/langgraph";
 import { HumanInterrupt, HumanResponse } from "@langchain/langgraph/prebuilt";
 import Arcade from "@arcadeai/arcadejs";
+import { useArcadeAuth } from "../../utils.js";
 
 const LINKEDIN_AUTHORIZATION_DOCS_URL =
   "https://github.com/langchain-ai/social-media-agent?tab=readme-ov-file#setup";
@@ -158,9 +159,8 @@ export async function getLinkedInAuthOrInterrupt(fields?: {
   returnInterrupt?: boolean;
   postToOrg?: boolean;
 }) {
-  const useArcadeAuth = process.env.USE_ARCADE_AUTH;
   const linkedInUserId = fields?.linkedInUserId || process.env.LINKEDIN_USER_ID;
-  if (useArcadeAuth === "true") {
+  if (useArcadeAuth()) {
     if (!fields?.linkedInUserId) {
       throw new Error("Must provide LinkedIn User ID when using Arcade auth.");
     }

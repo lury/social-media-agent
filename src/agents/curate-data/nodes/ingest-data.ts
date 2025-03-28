@@ -12,6 +12,7 @@ import { latentSpaceLoader } from "../loaders/latent-space.js";
 import { SimpleRedditPostWithComments } from "../../../clients/reddit/types.js";
 import { langchainDependencyReposLoader } from "../loaders/github/langchain.js";
 import { RunnableLambda } from "@langchain/core/runnables";
+import { useLangChainPrompts } from "../../utils.js";
 
 export async function ingestData(
   _state: CurateDataState,
@@ -26,8 +27,6 @@ export async function ingestData(
     throw new Error("PORT environment variable not set");
   }
 
-  const useLangChain = process.env.USE_LANGCHAIN_PROMPTS === "true";
-
   let tweets: TweetV2[] = [];
   let trendingRepos: string[] = [];
   let latentSpacePosts: string[] = [];
@@ -36,7 +35,7 @@ export async function ingestData(
 
   // We wrap all of these loaders in RunnableLambda's to ensure proper tracing.
 
-  if (useLangChain) {
+  if (useLangChainPrompts()) {
     if (sources.includes("twitter")) {
       tweets = await RunnableLambda.from<unknown, TweetV2[]>((_, config) =>
         twitterLoaderWithLangChain(config),

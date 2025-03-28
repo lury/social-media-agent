@@ -485,8 +485,8 @@ export function chunkArray<T>(arr: T[], size: number): T[][] {
   );
 }
 
-export function isTextOnly(config: LangGraphRunnableConfig): boolean {
-  const textOnlyModeConfig = config.configurable?.[TEXT_ONLY_MODE];
+export function isTextOnly(config?: LangGraphRunnableConfig): boolean {
+  const textOnlyModeConfig = config?.configurable?.[TEXT_ONLY_MODE];
   const isTextOnlyMode =
     textOnlyModeConfig != null
       ? textOnlyModeConfig
@@ -495,9 +495,9 @@ export function isTextOnly(config: LangGraphRunnableConfig): boolean {
 }
 
 export function shouldPostToLinkedInOrg(
-  config: LangGraphRunnableConfig,
+  config?: LangGraphRunnableConfig,
 ): boolean {
-  const postToOrgConfig = config.configurable?.[POST_TO_LINKEDIN_ORGANIZATION];
+  const postToOrgConfig = config?.configurable?.[POST_TO_LINKEDIN_ORGANIZATION];
   const postToOrg =
     postToOrgConfig != null
       ? postToOrgConfig
@@ -568,4 +568,16 @@ export function filterLinksForPostContent(links: string[]): string {
  */
 export function capitalize(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+export function useLangChainPrompts(): boolean {
+  return process.env.USE_LANGCHAIN_PROMPTS === "true";
+}
+
+export function useArcadeAuth(): boolean {
+  return process.env.USE_ARCADE_AUTH === "true";
+}
+
+export function useTwitterApiOnly(): boolean {
+  return process.env.USE_TWITTER_API_ONLY === "true";
 }

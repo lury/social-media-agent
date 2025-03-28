@@ -4,6 +4,7 @@ import { interrupt, type NodeInterrupt } from "@langchain/langgraph";
 import { HumanInterrupt, HumanResponse } from "@langchain/langgraph/prebuilt";
 import Arcade from "@arcadeai/arcadejs";
 import { TwitterClient } from "../../../clients/twitter/client.js";
+import { useArcadeAuth } from "../../utils.js";
 
 /**
  * Checks Twitter authorization status and triggers an interrupt if authorization is needed.
@@ -135,8 +136,7 @@ export async function getTwitterAuthOrInterrupt(fields?: {
   twitterUserId?: string;
   returnInterrupt?: boolean;
 }) {
-  const useArcadeAuth = process.env.USE_ARCADE_AUTH;
-  if (useArcadeAuth === "true") {
+  if (useArcadeAuth()) {
     if (!fields?.twitterUserId) {
       throw new Error("Must provide Twitter User ID when using Arcade auth.");
     }
