@@ -120,7 +120,7 @@ async function routeToCuratedInterruptOrContinue(
     });
 
     const { thread_id } = await client.threads.create();
-    await client.runs.create(thread_id, "curated_data_interrupt", {
+    await client.runs.create(thread_id, "curated_post_interrupt", {
       input: state,
       config: {
         configurable: {

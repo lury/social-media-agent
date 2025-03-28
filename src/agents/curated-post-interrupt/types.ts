@@ -7,7 +7,7 @@ import {
   TEXT_ONLY_MODE,
 } from "../generate-post/constants.js";
 
-export const CuratedDataInterruptAnnotation = Annotation.Root({
+export const CuratedPostInterruptAnnotation = Annotation.Root({
   /**
    * The links to use to generate a post.
    */
@@ -62,12 +62,12 @@ export const CuratedDataInterruptAnnotation = Annotation.Root({
   }),
 });
 
-export type CuratedDataInterruptState =
-  typeof CuratedDataInterruptAnnotation.State;
-export type CuratedDataInterruptUpdate =
-  typeof CuratedDataInterruptAnnotation.Update;
+export type CuratedPostInterruptState =
+  typeof CuratedPostInterruptAnnotation.State;
+export type CuratedPostInterruptUpdate =
+  typeof CuratedPostInterruptAnnotation.Update;
 
-export const CuratedDataInterruptConfigurableAnnotation = Annotation.Root({
+export const CuratedPostInterruptConfigurableAnnotation = Annotation.Root({
   /**
    * Whether to post to the LinkedIn organization or the user's profile.
    * If true, [LINKEDIN_ORGANIZATION_ID] is required.

@@ -12,7 +12,7 @@
     "supervisor": "./src/agents/supervisor/supervisor-graph.ts:supervisorGraph",
     "generate_report": "./src/agents/generate-report/index.ts:generateReportGraph",
     "repurposer": "./src/agents/repurposer/index.ts:repurposerGraph",
-    "curated_data_interrupt": "./src/agents/curated-data-interrupt/index.ts:curatedDataInterruptGraph",
+    "curated_post_interrupt": "./src/agents/curated-post-interrupt/index.ts:curatedPostInterruptGraph",
     "ingest_repurposed_data": "./src/agents/ingest-repurposed-data/index.ts:graph"
   },
   "env": ".env",
