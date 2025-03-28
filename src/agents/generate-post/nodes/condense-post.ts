@@ -1,6 +1,6 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { GeneratePostAnnotation } from "../generate-post-state.js";
-import { parseGeneration } from "./geterate-post/utils.js";
+import { parseGeneration } from "./generate-post/utils.js";
 import { filterLinksForPostContent, removeUrls } from "../../utils.js";
 import {
   REFLECTIONS_PROMPT,

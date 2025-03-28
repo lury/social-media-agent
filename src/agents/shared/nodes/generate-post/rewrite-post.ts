@@ -1,11 +1,11 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import { GeneratePostAnnotation } from "../generate-post-state.js";
+import { BaseGeneratePostState, BaseGeneratePostUpdate } from "./types.js";
 import { ChatAnthropic } from "@langchain/anthropic";
 import {
   getReflectionsPrompt,
   REFLECTIONS_PROMPT,
-} from "../../../utils/reflections.js";
+} from "../../../../utils/reflections.js";
 
 const REWRITE_POST_PROMPT = `You're a highly regarded marketing employee, working on crafting thoughtful and engaging content for the LinkedIn and Twitter pages.
 You wrote a post for the LinkedIn and Twitter pages, however your boss has asked for some changes to be made before it can be published.
@@ -41,8 +41,6 @@ async function runReflections({
   const thread = await client.threads.create();
   await client.runs.create(thread.thread_id, "reflection", {
     input: {
-      // original_post: originalPost,
-      // user_response: userResponse,
       originalPost,
       newPost,
       userResponse,
@@ -50,10 +48,10 @@ async function runReflections({
   });
 }
 
-export async function rewritePost(
-  state: typeof GeneratePostAnnotation.State,
-  config: LangGraphRunnableConfig,
-): Promise<Partial<typeof GeneratePostAnnotation.State>> {
+export async function rewritePost<
+  State extends BaseGeneratePostState = BaseGeneratePostState,
+  Update extends BaseGeneratePostUpdate = BaseGeneratePostUpdate,
+>(state: State, config: LangGraphRunnableConfig): Promise<Update> {
   if (!state.post) {
     throw new Error("No post found");
   }
@@ -98,5 +96,5 @@ export async function rewritePost(
     post: revisePostResponse.content as string,
     next: undefined,
     userResponse: undefined,
-  };
+  } as Update;
 }

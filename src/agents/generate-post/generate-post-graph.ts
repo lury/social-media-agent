@@ -8,12 +8,11 @@ import {
   GeneratePostAnnotation,
   GeneratePostConfigurableAnnotation,
   GeneratePostInputAnnotation,
+  GeneratePostState,
+  GeneratePostUpdate,
 } from "./generate-post-state.js";
 import { generateContentReport } from "./nodes/generate-report/index.js";
-import { generatePost } from "./nodes/geterate-post/index.js";
-import { humanNode } from "./nodes/human-node/index.js";
-import { rewritePost } from "./nodes/rewrite-post.js";
-import { schedulePost } from "./nodes/schedule-post/index.js";
+import { generatePost } from "./nodes/generate-post/index.js";
 import { condensePost } from "./nodes/condense-post.js";
 import { isTextOnly, removeUrls } from "../utils.js";
 import { verifyLinksGraph } from "../verify-links/verify-links-graph.js";
@@ -21,9 +20,12 @@ import { authSocialsPassthrough } from "./nodes/auth-socials.js";
 import { findImagesGraph } from "../find-images/find-images-graph.js";
 import { updateScheduledDate } from "../shared/nodes/update-scheduled-date.js";
 import { getPostSubjectUrls } from "../shared/stores/post-subject-urls.js";
+import { humanNode } from "../shared/nodes/generate-post/human-node.js";
+import { schedulePost } from "../shared/nodes/generate-post/schedule-post.js";
+import { rewritePost } from "../shared/nodes/generate-post/rewrite-post.js";
 
 function routeAfterGeneratingReport(
-  state: typeof GeneratePostAnnotation.State,
+  state: GeneratePostState,
 ): "generatePost" | typeof END {
   if (state.report) {
     return "generatePost";
@@ -32,7 +34,7 @@ function routeAfterGeneratingReport(
 }
 
 function rewriteOrEndConditionalEdge(
-  state: typeof GeneratePostAnnotation.State,
+  state: GeneratePostState,
 ):
   | "rewritePost"
   | "schedulePost"
@@ -50,7 +52,7 @@ function rewriteOrEndConditionalEdge(
 }
 
 function condenseOrHumanConditionalEdge(
-  state: typeof GeneratePostAnnotation.State,
+  state: GeneratePostState,
   config: LangGraphRunnableConfig,
 ): "condensePost" | "humanNode" | "findImagesSubGraph" {
   const cleanedPost = removeUrls(state.post || "");
@@ -83,7 +85,7 @@ async function checkIfUrlsArePreviouslyUsed(
 }
 
 async function generateReportOrEndConditionalEdge(
-  state: typeof GeneratePostAnnotation.State,
+  state: GeneratePostState,
   config: LangGraphRunnableConfig,
 ): Promise<"generateContentReport" | typeof END> {
   const urlsAlreadyUsed = await checkIfUrlsArePreviouslyUsed(
@@ -113,11 +115,11 @@ const generatePostBuilder = new StateGraph(
   // Attempt to condense the post if it's too long.
   .addNode("condensePost", condensePost)
   // Interrupts the node for human in the loop.
-  .addNode("humanNode", humanNode)
+  .addNode("humanNode", humanNode<GeneratePostState, GeneratePostUpdate>)
   // Schedules the post for Twitter/LinkedIn.
-  .addNode("schedulePost", schedulePost)
+  .addNode("schedulePost", schedulePost<GeneratePostState, GeneratePostUpdate>)
   // Rewrite a post based on the user's response.
-  .addNode("rewritePost", rewritePost)
+  .addNode("rewritePost", rewritePost<GeneratePostState, GeneratePostUpdate>)
   // Generates a report on the content.
   .addNode("generateContentReport", generateContentReport)
   // Finds images in the content.
