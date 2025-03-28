@@ -11,6 +11,7 @@ import {
 import { routeResponse } from "./router.js";
 import { formatInTimeZone } from "date-fns-tz";
 import { capitalize } from "../../../utils.js";
+import { DateType } from "../../../types.js";
 
 export async function humanNode(
   state: RepurposerState,
@@ -124,9 +125,17 @@ export async function humanNode(
   const images = await processImageArgs(castArgs);
 
   const postDateString = castArgs.date;
-  const postDate = postDateString
-    ? parseDateResponse(postDateString)
-    : undefined;
+  let postDate: DateType | undefined;
+  if (postDateString) {
+    postDate = parseDateResponse(postDateString);
+    if (!postDate) {
+      throw new Error(
+        "Invalid date provided.\n\n" +
+          "Expected format: 'MM/dd/yyyy hh:mm a z' or 'P1'/'P2'/'P3'/'R1'/'R2'/'R3' or leave empty to post now.\n\n" +
+          `Received: '${postDateString}'`,
+      );
+    }
+  }
 
   const numWeeksBetween: number = castArgs.numberOfWeeksBetween
     ? parseInt(castArgs.numberOfWeeksBetween, 10)
