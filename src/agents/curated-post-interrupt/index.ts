@@ -1,9 +1,9 @@
 import { END, START, StateGraph } from "@langchain/langgraph";
 import {
-  CuratedDataInterruptAnnotation,
-  CuratedDataInterruptConfigurableAnnotation,
-  CuratedDataInterruptState,
-  CuratedDataInterruptUpdate,
+  CuratedPostInterruptAnnotation,
+  CuratedPostInterruptConfigurableAnnotation,
+  CuratedPostInterruptState,
+  CuratedPostInterruptUpdate,
 } from "./types.js";
 import { updateScheduledDate } from "../shared/nodes/update-scheduled-date.js";
 import { humanNode } from "../shared/nodes/generate-post/human-node.js";
@@ -11,7 +11,7 @@ import { schedulePost } from "../shared/nodes/generate-post/schedule-post.js";
 import { rewritePost } from "../shared/nodes/generate-post/rewrite-post.js";
 
 function rewriteOrEndConditionalEdge(
-  state: CuratedDataInterruptState,
+  state: CuratedPostInterruptState,
 ):
   | "rewritePost"
   | "schedulePost"
@@ -30,23 +30,23 @@ function rewriteOrEndConditionalEdge(
 }
 
 const workflow = new StateGraph(
-  CuratedDataInterruptAnnotation,
-  CuratedDataInterruptConfigurableAnnotation,
+  CuratedPostInterruptAnnotation,
+  CuratedPostInterruptConfigurableAnnotation,
 )
   // Interrupts the node for human in the loop.
   .addNode(
     "humanNode",
-    humanNode<CuratedDataInterruptState, CuratedDataInterruptUpdate>,
+    humanNode<CuratedPostInterruptState, CuratedPostInterruptUpdate>,
   )
   // Schedules the post for Twitter/LinkedIn.
   .addNode(
     "schedulePost",
-    schedulePost<CuratedDataInterruptState, CuratedDataInterruptUpdate>,
+    schedulePost<CuratedPostInterruptState, CuratedPostInterruptUpdate>,
   )
   // Rewrite a post based on the user's response.
   .addNode(
     "rewritePost",
-    rewritePost<CuratedDataInterruptState, CuratedDataInterruptUpdate>,
+    rewritePost<CuratedPostInterruptState, CuratedPostInterruptUpdate>,
   )
   // Updated the scheduled date from the natural language response from the user.
   .addNode("updateScheduleDate", updateScheduledDate)
@@ -65,5 +65,5 @@ const workflow = new StateGraph(
   // Always end after scheduling the post.
   .addEdge("schedulePost", END);
 
-export const curatedDataInterruptGraph = workflow.compile();
-curatedDataInterruptGraph.name = "Curated Data Interrupt Graph";
+export const curatedPostInterruptGraph = workflow.compile();
+curatedPostInterruptGraph.name = "Curated Post Interrupt Graph";
