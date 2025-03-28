@@ -102,6 +102,7 @@ const checkGeneratePostResult: SimpleEvaluator = ({ expected, actual }) => {
 const BASE_CONFIG = {
   [POST_TO_LINKEDIN_ORGANIZATION]: undefined,
   [TEXT_ONLY_MODE]: false,
+  origin: undefined,
 };
 
 ls.describe("SMA - E2E", () => {
