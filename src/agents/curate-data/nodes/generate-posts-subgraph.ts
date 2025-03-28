@@ -127,6 +127,7 @@ export async function generatePostsSubgraph(
       config: {
         configurable: {
           [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
+          origin: "curate-data",
         },
       },
       afterSeconds,

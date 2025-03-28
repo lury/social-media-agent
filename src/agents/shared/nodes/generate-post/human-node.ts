@@ -1,5 +1,5 @@
 import { END, LangGraphRunnableConfig, interrupt } from "@langchain/langgraph";
-import { GeneratePostAnnotation } from "../../generate-post-state.js";
+import { BaseGeneratePostState, BaseGeneratePostUpdate } from "./types.js";
 import { formatInTimeZone } from "date-fns-tz";
 import { isTextOnly, processImageInput } from "../../../utils.js";
 import {
@@ -95,9 +95,7 @@ Here is the report that was generated for the posts:\n${report}
 `;
 }
 
-const getUnknownResponseDescription = (
-  state: typeof GeneratePostAnnotation.State,
-) => {
+const getUnknownResponseDescription = (state: BaseGeneratePostState) => {
   if (state.next === "unknownResponse" && state.userResponse) {
     return `# <div style="color: red;">UNKNOWN/INVALID RESPONSE RECEIVED: '${state.userResponse}'</div>
 
@@ -110,10 +108,10 @@ const getUnknownResponseDescription = (
   return "";
 };
 
-export async function humanNode(
-  state: typeof GeneratePostAnnotation.State,
-  config: LangGraphRunnableConfig,
-): Promise<Partial<typeof GeneratePostAnnotation.State>> {
+export async function humanNode<
+  State extends BaseGeneratePostState = BaseGeneratePostState,
+  Update extends BaseGeneratePostUpdate = BaseGeneratePostUpdate,
+>(state: State, config: LangGraphRunnableConfig): Promise<Update> {
   if (!state.post) {
     throw new Error("No post found");
   }
@@ -180,7 +178,7 @@ export async function humanNode(
   if (response.type === "ignore") {
     return {
       next: END,
-    };
+    } as Update;
   }
   if (!response.args) {
     throw new Error(
@@ -203,19 +201,19 @@ export async function humanNode(
       return {
         userResponse: response.args,
         next: "rewritePost",
-      };
+      } as Update;
     }
     if (route === "update_date") {
       return {
         userResponse: response.args,
         next: "updateScheduleDate",
-      };
+      } as Update;
     }
 
     return {
       userResponse: response.args,
       next: "unknownResponse",
-    };
+    } as Update;
   }
 
   if (typeof response.args !== "object") {
@@ -245,7 +243,7 @@ export async function humanNode(
     if (!postDate) {
       throw new Error(
         "Invalid date provided.\n\n" +
-          "Expected format: 'MM/dd/yyyy hh:mm a z' or 'P1'/'P2'/'P3'/'R1'/'R2'/'R3' or leave empty to post now.\n\n" +
+          "Expected format: 'MM/dd/yyyy hh:mm a z' or 'P1'/'P2'/'P3' or leave empty to post now.\n\n" +
           `Received: '${postDateString}'`,
       );
     }
@@ -271,5 +269,5 @@ export async function humanNode(
     // TODO: Update so if the mime type is blacklisted, it re-routes to human node with an error message.
     image: imageState,
     userResponse: undefined,
-  };
+  } as Update;
 }

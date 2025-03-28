@@ -1,23 +1,13 @@
 import { Annotation, END } from "@langchain/langgraph";
 import { IngestDataAnnotation } from "../ingest-data/ingest-data-state.js";
-import { POST_TO_LINKEDIN_ORGANIZATION, TEXT_ONLY_MODE } from "./constants.js";
 import { DateType } from "../types.js";
 import { VerifyLinksResultAnnotation } from "../verify-links/verify-links-state.js";
+import {
+  POST_TO_LINKEDIN_ORGANIZATION,
+  TEXT_ONLY_MODE,
+} from "../generate-post/constants.js";
 
-export type LangChainProduct = "langchain" | "langgraph" | "langsmith";
-
-export type YouTubeVideoSummary = {
-  /**
-   * The link to the YouTube video the summary is for.
-   */
-  link: string;
-  /**
-   * The summary of the video.
-   */
-  summary: string;
-};
-
-export const GeneratePostAnnotation = Annotation.Root({
+export const CuratedDataInterruptAnnotation = Annotation.Root({
   /**
    * The links to use to generate a post.
    */
@@ -47,8 +37,8 @@ export const GeneratePostAnnotation = Annotation.Root({
   next: Annotation<
     | "schedulePost"
     | "rewritePost"
-    | "updateScheduleDate"
     | "unknownResponse"
+    | "updateScheduleDate"
     | typeof END
     | undefined
   >,
@@ -72,17 +62,12 @@ export const GeneratePostAnnotation = Annotation.Root({
   }),
 });
 
-export type GeneratePostState = typeof GeneratePostAnnotation.State;
-export type GeneratePostUpdate = typeof GeneratePostAnnotation.Update;
+export type CuratedDataInterruptState =
+  typeof CuratedDataInterruptAnnotation.State;
+export type CuratedDataInterruptUpdate =
+  typeof CuratedDataInterruptAnnotation.Update;
 
-export const GeneratePostInputAnnotation = Annotation.Root({
-  /**
-   * The links to use to generate a post.
-   */
-  links: Annotation<string[]>,
-});
-
-export const GeneratePostConfigurableAnnotation = Annotation.Root({
+export const CuratedDataInterruptConfigurableAnnotation = Annotation.Root({
   /**
    * Whether to post to the LinkedIn organization or the user's profile.
    * If true, [LINKEDIN_ORGANIZATION_ID] is required.
@@ -98,9 +83,4 @@ export const GeneratePostConfigurableAnnotation = Annotation.Root({
     reducer: (_state, update) => update,
     default: () => false,
   }),
-  /**
-   * The original graph that started the "generate-post" graph
-   * run. Undefined if the graph was started directly.
-   */
-  origin: Annotation<string | undefined>,
 });

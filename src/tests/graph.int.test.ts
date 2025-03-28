@@ -22,6 +22,7 @@ import { resolveTwitterUrl } from "../clients/twitter/utils.js";
 const BASE_CONFIG = {
   [POST_TO_LINKEDIN_ORGANIZATION]: undefined,
   [TEXT_ONLY_MODE]: false,
+  origin: undefined,
 };
 
 describe("GeneratePostGraph", () => {

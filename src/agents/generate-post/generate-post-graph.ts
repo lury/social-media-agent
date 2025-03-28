@@ -8,22 +8,26 @@ import {
   GeneratePostAnnotation,
   GeneratePostConfigurableAnnotation,
   GeneratePostInputAnnotation,
+  GeneratePostState,
+  GeneratePostUpdate,
 } from "./generate-post-state.js";
 import { generateContentReport } from "./nodes/generate-report/index.js";
-import { generatePost } from "./nodes/geterate-post/index.js";
-import { humanNode } from "./nodes/human-node/index.js";
-import { rewritePost } from "./nodes/rewrite-post.js";
-import { schedulePost } from "./nodes/schedule-post/index.js";
+import { generatePost } from "./nodes/generate-post/index.js";
 import { condensePost } from "./nodes/condense-post.js";
-import { isTextOnly, removeUrls } from "../utils.js";
+import { isTextOnly, removeUrls, shouldPostToLinkedInOrg } from "../utils.js";
 import { verifyLinksGraph } from "../verify-links/verify-links-graph.js";
 import { authSocialsPassthrough } from "./nodes/auth-socials.js";
 import { findImagesGraph } from "../find-images/find-images-graph.js";
 import { updateScheduledDate } from "../shared/nodes/update-scheduled-date.js";
 import { getPostSubjectUrls } from "../shared/stores/post-subject-urls.js";
+import { humanNode } from "../shared/nodes/generate-post/human-node.js";
+import { schedulePost } from "../shared/nodes/generate-post/schedule-post.js";
+import { rewritePost } from "../shared/nodes/generate-post/rewrite-post.js";
+import { Client } from "@langchain/langgraph-sdk";
+import { POST_TO_LINKEDIN_ORGANIZATION } from "./constants.js";
 
 function routeAfterGeneratingReport(
-  state: typeof GeneratePostAnnotation.State,
+  state: GeneratePostState,
 ): "generatePost" | typeof END {
   if (state.report) {
     return "generatePost";
@@ -32,7 +36,7 @@ function routeAfterGeneratingReport(
 }
 
 function rewriteOrEndConditionalEdge(
-  state: typeof GeneratePostAnnotation.State,
+  state: GeneratePostState,
 ):
   | "rewritePost"
   | "schedulePost"
@@ -49,10 +53,10 @@ function rewriteOrEndConditionalEdge(
   return END;
 }
 
-function condenseOrHumanConditionalEdge(
-  state: typeof GeneratePostAnnotation.State,
+async function condenseOrHumanConditionalEdge(
+  state: GeneratePostState,
   config: LangGraphRunnableConfig,
-): "condensePost" | "humanNode" | "findImagesSubGraph" {
+): Promise<"condensePost" | "humanNode" | "findImagesSubGraph" | typeof END> {
   const cleanedPost = removeUrls(state.post || "");
   if (cleanedPost.length > 280 && state.condenseCount <= 3) {
     return "condensePost";
@@ -60,7 +64,7 @@ function condenseOrHumanConditionalEdge(
 
   const isTextOnlyMode = isTextOnly(config);
   if (isTextOnlyMode) {
-    return "humanNode";
+    return routeToCuratedInterruptOrContinue(state, config);
   }
   return "findImagesSubGraph";
 }
@@ -83,7 +87,7 @@ async function checkIfUrlsArePreviouslyUsed(
 }
 
 async function generateReportOrEndConditionalEdge(
-  state: typeof GeneratePostAnnotation.State,
+  state: GeneratePostState,
   config: LangGraphRunnableConfig,
 ): Promise<"generateContentReport" | typeof END> {
   const urlsAlreadyUsed = await checkIfUrlsArePreviouslyUsed(
@@ -100,6 +104,37 @@ async function generateReportOrEndConditionalEdge(
   return "generateContentReport";
 }
 
+/**
+ * If the 'origin' is set to 'curate-data' we need to route to a new graph 'curated_data_interrupt'
+ * for the interrupt, so that users can separate curated posts from posts ingested from Slack in the
+ * Agent Inbox.
+ */
+async function routeToCuratedInterruptOrContinue(
+  state: GeneratePostState,
+  config: LangGraphRunnableConfig,
+): Promise<"humanNode" | typeof END> {
+  if (config.configurable?.origin === "curate-data") {
+    const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
+    const client = new Client({
+      apiUrl: `http://localhost:${process.env.PORT}`,
+    });
+
+    const { thread_id } = await client.threads.create();
+    await client.runs.create(thread_id, "curated_data_interrupt", {
+      input: state,
+      config: {
+        configurable: {
+          [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
+        },
+      },
+    });
+
+    return END;
+  }
+
+  return "humanNode";
+}
+
 const generatePostBuilder = new StateGraph(
   { stateSchema: GeneratePostAnnotation, input: GeneratePostInputAnnotation },
   GeneratePostConfigurableAnnotation,
@@ -113,11 +148,11 @@ const generatePostBuilder = new StateGraph(
   // Attempt to condense the post if it's too long.
   .addNode("condensePost", condensePost)
   // Interrupts the node for human in the loop.
-  .addNode("humanNode", humanNode)
+  .addNode("humanNode", humanNode<GeneratePostState, GeneratePostUpdate>)
   // Schedules the post for Twitter/LinkedIn.
-  .addNode("schedulePost", schedulePost)
+  .addNode("schedulePost", schedulePost<GeneratePostState, GeneratePostUpdate>)
   // Rewrite a post based on the user's response.
-  .addNode("rewritePost", rewritePost)
+  .addNode("rewritePost", rewritePost<GeneratePostState, GeneratePostUpdate>)
   // Generates a report on the content.
   .addNode("generateContentReport", generateContentReport)
   // Finds images in the content.
@@ -148,6 +183,7 @@ const generatePostBuilder = new StateGraph(
     "condensePost",
     "findImagesSubGraph",
     "humanNode",
+    END,
   ])
   // After condensing the post, we should verify again that the content is below the character limit.
   // Once the post is below the character limit, we can find & filter images. This needs to happen after the post
@@ -156,10 +192,15 @@ const generatePostBuilder = new StateGraph(
     "condensePost",
     "findImagesSubGraph",
     "humanNode",
+    END,
   ])
 
   // After finding images, we are done and can interrupt for the human to respond.
-  .addEdge("findImagesSubGraph", "humanNode")
+  .addConditionalEdges(
+    "findImagesSubGraph",
+    routeToCuratedInterruptOrContinue,
+    ["humanNode", END],
+  )
 
   // Always route back to `humanNode` if the post was re-written or date was updated.
   .addEdge("rewritePost", "humanNode")

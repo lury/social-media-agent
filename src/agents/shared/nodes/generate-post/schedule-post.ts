@@ -1,16 +1,16 @@
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import { GeneratePostAnnotation } from "../../generate-post-state.js";
+import { BaseGeneratePostState, BaseGeneratePostUpdate } from "./types.js";
 import { Client } from "@langchain/langgraph-sdk";
-import {
-  POST_TO_LINKEDIN_ORGANIZATION,
-  TEXT_ONLY_MODE,
-} from "../../constants.js";
 import {
   getScheduledDateSeconds,
   getFutureDate,
 } from "../../../../utils/schedule-date/index.js";
 import { SlackClient } from "../../../../clients/slack.js";
 import { isTextOnly, shouldPostToLinkedInOrg } from "../../../utils.js";
+import {
+  POST_TO_LINKEDIN_ORGANIZATION,
+  TEXT_ONLY_MODE,
+} from "../../../generate-post/constants.js";
 
 interface SendSlackMessageArgs {
   isTextOnlyMode: boolean;
@@ -64,10 +64,10 @@ ${!isTextOnlyMode ? imageString : "Text only mode enabled. Image support has bee
   await slackClient.sendMessage(messageString);
 }
 
-export async function schedulePost(
-  state: typeof GeneratePostAnnotation.State,
-  config: LangGraphRunnableConfig,
-): Promise<Partial<typeof GeneratePostAnnotation.State>> {
+export async function schedulePost<
+  State extends BaseGeneratePostState = BaseGeneratePostState,
+  Update extends BaseGeneratePostUpdate = BaseGeneratePostUpdate,
+>(state: State, config: LangGraphRunnableConfig): Promise<Update> {
   if (!state.post) {
     throw new Error("No post to schedule found");
   }
@@ -114,5 +114,5 @@ export async function schedulePost(
     console.error("Failed to send schedule post Slack message", e);
   }
 
-  return {};
+  return {} as Update;
 }
