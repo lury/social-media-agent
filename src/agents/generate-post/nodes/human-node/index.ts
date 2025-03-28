@@ -9,6 +9,7 @@ import {
 import { routeResponse } from "../../../shared/nodes/route-response.js";
 import { savePostSubjectUrls } from "../../../shared/stores/post-subject-urls.js";
 import { HumanInterrupt, HumanResponse } from "@langchain/langgraph/prebuilt";
+import { DateType } from "../../../types.js";
 
 interface ConstructDescriptionArgs {
   unknownResponseDescription: string;
@@ -237,13 +238,17 @@ export async function humanNode(
     );
   }
 
-  const postDateString = castArgs.date || defaultDateString;
-  const postDate = parseDateResponse(postDateString);
-  if (!postDate) {
-    // TODO: Handle invalid dates better
-    throw new Error(
-      `Invalid date provided. Expected format: 'MM/dd/yyyy hh:mm a z' or 'P1'/'P2'/'P3'. Received: '${postDateString}'`,
-    );
+  const postDateString = castArgs.date;
+  let postDate: DateType | undefined;
+  if (postDateString) {
+    postDate = parseDateResponse(postDateString);
+    if (!postDate) {
+      throw new Error(
+        "Invalid date provided.\n\n" +
+          "Expected format: 'MM/dd/yyyy hh:mm a z' or 'P1'/'P2'/'P3'/'R1'/'R2'/'R3' or leave empty to post now.\n\n" +
+          `Received: '${postDateString}'`,
+      );
+    }
   }
 
   let imageState: { imageUrl: string; mimeType: string } | undefined =
