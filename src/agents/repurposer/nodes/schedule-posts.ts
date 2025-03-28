@@ -12,13 +12,13 @@ import { DateType } from "../../types.js";
 
 interface SendSlackMessageArgs {
   posts: {
-    afterSeconds: number;
+    afterSeconds: number | undefined;
     threadId: string;
     runId: string;
     postContent: string;
     image?: string;
   }[];
-  priority: DateType;
+  priority: DateType | undefined;
 }
 
 async function sendSlackMessage({ posts, priority }: SendSlackMessageArgs) {
@@ -37,7 +37,7 @@ async function sendSlackMessage({ posts, priority }: SendSlackMessageArgs) {
 
   let description = `*New Repurposed ${capitalize(postOrPosts)} Scheduled*
 Total posts: *${posts.length}*
-Schedule Priority: *${priority}*`;
+Schedule Priority: *${priority ? priority : "now"}*`;
 
   for (const { afterSeconds, threadId, runId, postContent, image } of posts) {
     const imageString = image
@@ -45,7 +45,7 @@ Schedule Priority: *${priority}*`;
 ${image}`
       : "No image provided";
 
-    const messageString = `Scheduled post for: *${getFutureDate(afterSeconds)}*
+    const messageString = `Scheduled post for: *${afterSeconds ? getFutureDate(afterSeconds) : "now"}*
 Run ID: *${runId}*
 Thread ID: *${threadId}*
 
@@ -66,28 +66,28 @@ export async function schedulePosts(
   state: RepurposerState,
   config: LangGraphRunnableConfig,
 ): Promise<Partial<RepurposerState>> {
-  if (!state.scheduleDate) {
-    throw new Error("No schedule date found");
-  }
-
   const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
 
   const client = new Client({
     apiUrl: `http://localhost:${process.env.PORT}`,
   });
 
-  const allAfterSeconds = await getScheduledDateSeconds({
-    scheduleDate: state.scheduleDate,
-    numberOfDates: state.posts.length,
-    config,
-    numWeeksBetween: state.numWeeksBetween,
-  });
+  let allAfterSeconds: number[] = [];
+
+  if (state.scheduleDate) {
+    allAfterSeconds = await getScheduledDateSeconds({
+      scheduleDate: state.scheduleDate,
+      numberOfDates: state.posts.length,
+      config,
+      numWeeksBetween: state.numWeeksBetween,
+    });
+  }
 
   const startRunsPromises = state.posts.map(async (post) => {
-    const afterSeconds = allAfterSeconds[post.index];
-    if (!afterSeconds) {
-      throw new Error("No after seconds found for post index " + post.index);
-    }
+    const afterSeconds = allAfterSeconds?.length
+      ? allAfterSeconds[post.index]
+      : undefined;
+
     const { thread_id } = await client.threads.create();
     const { run_id } = await client.runs.create(thread_id, "upload_post", {
       input: {
@@ -99,7 +99,7 @@ export async function schedulePosts(
           [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
         },
       },
-      afterSeconds,
+      ...(afterSeconds ? { afterSeconds } : {}),
     });
 
     return {

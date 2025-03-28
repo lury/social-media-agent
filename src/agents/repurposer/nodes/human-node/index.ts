@@ -123,14 +123,10 @@ export async function humanNode(
 
   const images = await processImageArgs(castArgs);
 
-  const postDateString = castArgs.date || defaultDateString;
-  const postDate = parseDateResponse(postDateString);
-  if (!postDate) {
-    // TODO: Handle invalid dates better
-    throw new Error(
-      `Invalid date provided. Expected format: 'MM/dd/yyyy hh:mm a z' or 'P1'/'P2'/'P3'/'R1'/'R2'/'R3'. Received: '${postDateString}'`,
-    );
-  }
+  const postDateString = castArgs.date;
+  const postDate = postDateString
+    ? parseDateResponse(postDateString)
+    : undefined;
 
   const numWeeksBetween: number = castArgs.numberOfWeeksBetween
     ? parseInt(castArgs.numberOfWeeksBetween, 10)
