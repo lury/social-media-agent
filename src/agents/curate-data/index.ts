@@ -21,9 +21,7 @@ import { useLangChainPrompts } from "../utils.js";
 function generatePostOrContinue(
   _state: CurateDataState,
 ): "generatePostsSubgraph" | "verifyBulkTweets" {
-  const useLangChain = useLangChainPrompts();
-
-  if (useLangChain) {
+  if (useLangChainPrompts()) {
     return "generatePostsSubgraph";
   }
   return "verifyBulkTweets";

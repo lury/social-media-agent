@@ -570,14 +570,29 @@ export function capitalize(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+/**
+ * Returns true if LangChain prompts should be used
+ *
+ * @returns {boolean} True if LangChain prompts should be used
+ */
 export function useLangChainPrompts(): boolean {
   return process.env.USE_LANGCHAIN_PROMPTS === "true";
 }
 
+/**
+ * Returns true if Arcade authentication should be used
+ *
+ * @returns {boolean} True if Arcade authentication should be used
+ */
 export function useArcadeAuth(): boolean {
   return process.env.USE_ARCADE_AUTH === "true";
 }
 
+/**
+ * Returns true if Twitter API-only mode should be used
+ *
+ * @returns {boolean} True if Twitter API-only mode should be used
+ */
 export function useTwitterApiOnly(): boolean {
   return process.env.USE_TWITTER_API_ONLY === "true";
 }
