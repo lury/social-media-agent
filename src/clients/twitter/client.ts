@@ -10,6 +10,11 @@ import {
   TwitterApiReadWrite,
 } from "twitter-api-v2";
 import { AuthorizeUserResponse } from "../types.js";
+import {
+  isTextOnly,
+  useArcadeAuth,
+  useTwitterApiOnly,
+} from "../../agents/utils.js";
 
 const BASE_FETCH_TWEET_OPTIONS: Partial<TweetV2PaginableListParams> = {
   "tweet.fields": [
@@ -74,9 +79,7 @@ export class TwitterClient {
     this.twitterClient = args.twitterClient;
     this.twitterClientOauth2 = args.twitterClientOauth2;
     const textOnlyMode =
-      args.textOnlyMode != null
-        ? args.textOnlyMode
-        : process.env.TEXT_ONLY_MODE === "true";
+      args.textOnlyMode != null ? args.textOnlyMode : isTextOnly();
 
     // If we want to use Arcade, we need to set the token and token secret for uploading media.
     // However, this should only be done if text only mode is false.
@@ -405,10 +408,7 @@ export class TwitterClient {
       twitterUserId?: string;
     },
   ): Promise<TweetV2SingleResult> {
-    const useArcadeAuth = process.env.USE_ARCADE_AUTH;
-    const useTwitterApiOnly = process.env.USE_TWITTER_API_ONLY;
-
-    if (useTwitterApiOnly === "true" || useArcadeAuth !== "true") {
+    if (useTwitterApiOnly() || !useArcadeAuth()) {
       // Use the developer API account for reading tweets, not Arcade.
       const fetchTweetOptions: Partial<Tweetv2FieldsParams> =
         BASE_FETCH_TWEET_OPTIONS;
@@ -529,10 +529,7 @@ export class TwitterClient {
  * @returns A TwitterClient instance.
  */
 export async function getTwitterClient(): Promise<TwitterClient> {
-  const useArcadeAuth = process.env.USE_ARCADE_AUTH;
-  const useTwitterApiOnly = process.env.USE_TWITTER_API_ONLY;
-
-  if (useTwitterApiOnly === "true" || useArcadeAuth !== "true") {
+  if (useTwitterApiOnly() || !useArcadeAuth()) {
     return TwitterClient.fromBasicTwitterAuth();
   } else {
     const twitterUserId = process.env.TWITTER_USER_ID;

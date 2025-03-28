@@ -10,6 +10,8 @@ import {
   imageUrlToBuffer,
   isTextOnly,
   shouldPostToLinkedInOrg,
+  useArcadeAuth,
+  useTwitterApiOnly,
 } from "../utils.js";
 import { CreateMediaRequest } from "../../clients/twitter/types.js";
 import { LinkedInClient } from "../../clients/linkedin.js";
@@ -117,10 +119,8 @@ export async function uploadPost(
 
   try {
     let twitterClient: TwitterClient;
-    const useArcadeAuth = process.env.USE_ARCADE_AUTH;
-    const useTwitterApiOnly = process.env.USE_TWITTER_API_ONLY;
 
-    if (useTwitterApiOnly === "true" || useArcadeAuth !== "true") {
+    if (useTwitterApiOnly() || !useArcadeAuth()) {
       twitterClient = TwitterClient.fromBasicTwitterAuth();
     } else {
       const twitterUserId = process.env.TWITTER_USER_ID;
@@ -174,8 +174,7 @@ export async function uploadPost(
   try {
     let linkedInClient: LinkedInClient;
 
-    const useArcadeAuth = process.env.USE_ARCADE_AUTH;
-    if (useArcadeAuth === "true") {
+    if (useArcadeAuth()) {
       const linkedInUserId = process.env.LINKEDIN_USER_ID;
       if (!linkedInUserId) {
         throw new Error("LinkedIn user ID not found in configurable fields.");

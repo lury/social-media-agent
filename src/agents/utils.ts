@@ -485,8 +485,8 @@ export function chunkArray<T>(arr: T[], size: number): T[][] {
   );
 }
 
-export function isTextOnly(config: LangGraphRunnableConfig): boolean {
-  const textOnlyModeConfig = config.configurable?.[TEXT_ONLY_MODE];
+export function isTextOnly(config?: LangGraphRunnableConfig): boolean {
+  const textOnlyModeConfig = config?.configurable?.[TEXT_ONLY_MODE];
   const isTextOnlyMode =
     textOnlyModeConfig != null
       ? textOnlyModeConfig
@@ -495,9 +495,9 @@ export function isTextOnly(config: LangGraphRunnableConfig): boolean {
 }
 
 export function shouldPostToLinkedInOrg(
-  config: LangGraphRunnableConfig,
+  config?: LangGraphRunnableConfig,
 ): boolean {
-  const postToOrgConfig = config.configurable?.[POST_TO_LINKEDIN_ORGANIZATION];
+  const postToOrgConfig = config?.configurable?.[POST_TO_LINKEDIN_ORGANIZATION];
   const postToOrg =
     postToOrgConfig != null
       ? postToOrgConfig
@@ -568,4 +568,31 @@ export function filterLinksForPostContent(links: string[]): string {
  */
 export function capitalize(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+/**
+ * Returns true if LangChain prompts should be used
+ *
+ * @returns {boolean} True if LangChain prompts should be used
+ */
+export function useLangChainPrompts(): boolean {
+  return process.env.USE_LANGCHAIN_PROMPTS === "true";
+}
+
+/**
+ * Returns true if Arcade authentication should be used
+ *
+ * @returns {boolean} True if Arcade authentication should be used
+ */
+export function useArcadeAuth(): boolean {
+  return process.env.USE_ARCADE_AUTH === "true";
+}
+
+/**
+ * Returns true if Twitter API-only mode should be used
+ *
+ * @returns {boolean} True if Twitter API-only mode should be used
+ */
+export function useTwitterApiOnly(): boolean {
+  return process.env.USE_TWITTER_API_ONLY === "true";
 }

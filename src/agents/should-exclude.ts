@@ -1,6 +1,4 @@
-function useLangChainPrompts(): boolean {
-  return process.env.USE_LANGCHAIN_PROMPTS === "true";
-}
+import { useLangChainPrompts } from "./utils.js";
 
 export const LANGCHAIN_DOMAINS = [
   "langchain.com",

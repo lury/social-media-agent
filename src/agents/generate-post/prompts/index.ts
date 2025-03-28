@@ -6,6 +6,7 @@ import {
   CONTENT_VALIDATION_PROMPT as LANGCHAIN_CONTENT_VALIDATION_PROMPT,
 } from "./prompts.langchain.js";
 import { EXAMPLES } from "./examples.js";
+import { useLangChainPrompts } from "../../utils.js";
 
 export const TWEET_EXAMPLES = EXAMPLES.map(
   (example, index) => `<example index="${index}">\n${example}\n</example>`,
@@ -86,7 +87,7 @@ The following are rules to follow when determining whether or not to approve con
 
 export function getPrompts() {
   // NOTE: you should likely not have this set, unless you want to use the LangChain prompts
-  if (process.env.USE_LANGCHAIN_PROMPTS === "true") {
+  if (useLangChainPrompts()) {
     return {
       businessContext: LANGCHAIN_BUSINESS_CONTEXT,
       tweetExamples: LANGCHAIN_TWEET_EXAMPLES,
