@@ -14,7 +14,7 @@ import { isTextOnly, shouldPostToLinkedInOrg } from "../../../utils.js";
 
 interface SendSlackMessageArgs {
   isTextOnlyMode: boolean;
-  afterSeconds: number;
+  afterSeconds: number | undefined;
   threadId: string;
   runId: string;
   postContent: string;
@@ -50,7 +50,7 @@ ${image?.imageUrl}`
 
   const messageString = `*New Post Scheduled*
     
-Scheduled post for: *${getFutureDate(afterSeconds)}*
+Scheduled post for: *${afterSeconds ? getFutureDate(afterSeconds) : "now"}*
 Run ID: *${runId}*
 Thread ID: *${threadId}*
 
@@ -68,8 +68,8 @@ export async function schedulePost(
   state: typeof GeneratePostAnnotation.State,
   config: LangGraphRunnableConfig,
 ): Promise<Partial<typeof GeneratePostAnnotation.State>> {
-  if (!state.post || !state.scheduleDate) {
-    throw new Error("No post or schedule date found");
+  if (!state.post) {
+    throw new Error("No post to schedule found");
   }
   const isTextOnlyMode = isTextOnly(config);
   const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
@@ -78,10 +78,13 @@ export async function schedulePost(
     apiUrl: `http://localhost:${process.env.PORT}`,
   });
 
-  const afterSeconds = await getScheduledDateSeconds({
-    scheduleDate: state.scheduleDate,
-    config,
-  });
+  let afterSeconds: number | undefined;
+  if (state.scheduleDate) {
+    afterSeconds = await getScheduledDateSeconds({
+      scheduleDate: state.scheduleDate,
+      config,
+    });
+  }
 
   const thread = await client.threads.create();
   const run = await client.runs.create(thread.thread_id, "upload_post", {
@@ -95,7 +98,7 @@ export async function schedulePost(
         [TEXT_ONLY_MODE]: isTextOnlyMode,
       },
     },
-    afterSeconds,
+    ...(afterSeconds ? { afterSeconds } : {}),
   });
 
   try {
