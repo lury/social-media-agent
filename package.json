@@ -9,6 +9,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "yarn langgraph:in_mem:up",
     "build": "tsc",
     "clean": "rm -rf dist",
     "test": "cross-env TZ=America/Los_Angeles node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=\\.test\\.ts$ --testPathIgnorePatterns=\\.int\\.test\\.ts$",
