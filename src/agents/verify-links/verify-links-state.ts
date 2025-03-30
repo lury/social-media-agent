@@ -16,7 +16,7 @@ const sharedLinksReducer = (
   // Use a set to ensure no duplicate links are added.
   const stateSet = new Set(state || []);
   update.forEach((link) => stateSet.add(link));
-  return filterUnwantedImageUrls(Array.from(stateSet))
+  return filterUnwantedImageUrls(Array.from(stateSet));
 };
 
 export const VerifyLinksResultAnnotation = Annotation.Root({
