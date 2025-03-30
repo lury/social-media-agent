@@ -117,6 +117,6 @@ export async function findImages(state: typeof FindImagesAnnotation.State) {
   }
 
   return {
-    imageOptions: filterUnwantedImageUrls(Array.from(imageUrls)),
+    imageOptions: Array.from(imageUrls),
   };
 }
