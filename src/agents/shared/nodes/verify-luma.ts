@@ -41,23 +41,27 @@ type UrlContents = {
 };
 
 export async function getUrlContents(url: string): Promise<UrlContents> {
-  const loader = new FireCrawlLoader({
-    url,
-    mode: "scrape",
-    params: {
-      formats: ["markdown", "screenshot"],
-    },
-  });
-  const docs = await loader.load();
+  try {
+    const loader = new FireCrawlLoader({
+      url,
+      mode: "scrape",
+      params: {
+        formats: ["markdown", "screenshot"],
+      },
+    });
+    const docs = await loader.load();
 
-  const docsText = docs.map((d) => d.pageContent).join("\n");
-  if (docsText.length) {
-    return {
-      content: docsText,
-      imageUrls: docs.flatMap(
-        (d) => getImagesFromFireCrawlMetadata(d.metadata) || [],
-      ),
-    };
+    const docsText = docs.map((d) => d.pageContent).join("\n");
+    if (docsText.length) {
+      return {
+        content: docsText,
+        imageUrls: docs.flatMap(
+          (d) => getImagesFromFireCrawlMetadata(d.metadata) || [],
+        ),
+      };
+    }
+  } catch (e) {
+    console.error(`Failed to fetch content from ${url}\nError:\n`, e);
   }
 
   const text = await getPageText(url);
