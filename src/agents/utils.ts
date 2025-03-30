@@ -357,7 +357,8 @@ export function filterUnwantedImageUrls(urls: string[]): string[] {
       !BLACKLISTED_IMAGE_URL_ENDINGS.find((ending) => url.endsWith(ending)) &&
       !BLACKLISTED_IMAGE_URLS.find((blacklistedUrl) =>
         url.includes(blacklistedUrl),
-      ),
+      ) &&
+      isValidUrl(url),
   );
 }
 
