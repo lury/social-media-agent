@@ -1,72 +1,8 @@
-import { capitalize, imageUrlToBuffer } from "../../../utils.js";
-import { RepurposedPost, Image, RepurposerState } from "../../types.js";
+import { RepurposerPostInterruptState } from "../../types.js";
 
-export function extractPostsFromArgs(
-  args: Record<string, string>,
-): RepurposedPost[] {
-  const posts: RepurposedPost[] = [];
-
-  // Find all keys that match post_X pattern
-  Object.entries(args).forEach(([key, value]) => {
-    const match = key.match(/^post_(\d+)$/);
-    if (match) {
-      const index = parseInt(match[1], 10);
-      posts.push({
-        content: value,
-        index,
-      });
-    }
-  });
-
-  // Sort posts by index to maintain order
-  return posts.sort((a, b) => a.index - b.index);
-}
-
-function extractImagesFromArgs(args: Record<string, string>): Image[] {
-  const images: Image[] = [];
-
-  // Find all keys that match post_X pattern
-  Object.entries(args).forEach(([key, value]) => {
-    const match = key.match(/^image_(\d+)$/);
-    if (match) {
-      const index = parseInt(match[1], 10);
-      images.push({
-        imageUrl: value,
-        mimeType: "",
-        index,
-      });
-    }
-  });
-
-  // Sort posts by index to maintain order
-  return images.sort((a, b) => a.index - b.index);
-}
-
-export async function processImageArgs(
-  args: Record<string, string>,
-): Promise<Image[]> {
-  const images = extractImagesFromArgs(args);
-
-  const imagesWithMimeTypePromises = images.map(async (img) => {
-    try {
-      const { contentType } = await imageUrlToBuffer(img.imageUrl);
-      return { ...img, mimeType: contentType };
-    } catch (e) {
-      console.error(
-        `Failed to extract MIME type from image URL ${img.imageUrl}`,
-        e,
-      );
-      return undefined;
-    }
-  });
-
-  const imagesWithMimeType = (
-    await Promise.all(imagesWithMimeTypePromises)
-  ).filter((img): img is Image => img !== undefined);
-  return imagesWithMimeType;
-}
-
-export function getUnknownResponseDescription(state: RepurposerState) {
+export function getUnknownResponseDescription(
+  state: RepurposerPostInterruptState,
+) {
   if (state.next === "unknownResponse" && state.userResponse) {
     return `# <div style="color: red;">UNKNOWN/INVALID RESPONSE RECEIVED: '${state.userResponse}'</div>
 
@@ -120,7 +56,7 @@ export function constructDescription({
   state,
   unknownResponseDescription,
 }: {
-  state: RepurposerState;
+  state: RepurposerPostInterruptState;
   unknownResponseDescription: string;
 }): string {
   const {
@@ -131,8 +67,8 @@ export function constructDescription({
     reports,
     imageOptions,
     posts,
+    post,
   } = state;
-  const postOrPosts = posts.length === 1 ? "post" : "posts";
 
   const unknownResponseString = unknownResponseDescription
     ? `${unknownResponseDescription}\n\n`
@@ -141,9 +77,13 @@ export function constructDescription({
   const { imageOptionsText, imageInstructionsString } =
     formatImageDescriptions(imageOptions);
 
-  return `${unknownResponseString}# Schedule Repurposed ${capitalize(postOrPosts)}
+  return `${unknownResponseString}# Schedule Repurposed Post
 
-## ${capitalize(postOrPosts)}
+## Post
+
+${post}
+
+## All Generated Posts (for reference)
 
 ${posts.map((p) => `### Post ${p.index + 1}:\n\`\`\`${p.content}\n\`\`\``).join("\n\n")}
 

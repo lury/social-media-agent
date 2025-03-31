@@ -1,26 +1,27 @@
-import { RepurposerState } from "../../types.js";
+import {
+  RepurposerPostInterruptState,
+  RepurposerPostInterruptUpdate,
+} from "../../types.js";
 import { HumanInterrupt, HumanResponse } from "@langchain/langgraph/prebuilt";
 import { END, interrupt } from "@langchain/langgraph";
 import { parseDateResponse, PRIORITY_LEVELS } from "../../../../utils/date.js";
 import {
   constructDescription,
-  extractPostsFromArgs,
   getUnknownResponseDescription,
-  processImageArgs,
 } from "./utils.js";
 import { routeResponse } from "./router.js";
 import { formatInTimeZone } from "date-fns-tz";
-import { capitalize } from "../../../utils.js";
-import { DateType } from "../../../types.js";
+import { processImageInput } from "../../../utils.js";
+import { DateType, Image } from "../../../types.js";
 
 export async function humanNode(
-  state: RepurposerState,
-): Promise<Partial<RepurposerState>> {
-  if (!state.posts.length) {
-    throw new Error("No posts found");
+  state: RepurposerPostInterruptState,
+): Promise<RepurposerPostInterruptUpdate> {
+  if (!state.post) {
+    throw new Error("No post found");
   }
 
-  let defaultDateString = "r1";
+  let defaultDateString = "p1";
   if (
     typeof state.scheduleDate === "string" &&
     PRIORITY_LEVELS.includes(state.scheduleDate)
@@ -34,23 +35,13 @@ export async function humanNode(
     );
   }
 
-  const postOrPosts = state.posts.length === 1 ? "post" : "posts";
-
   const interruptValue: HumanInterrupt = {
     action_request: {
-      action: `Schedule Repurposed ${capitalize(postOrPosts)}`,
+      action: "Schedule Repurposed Post",
       args: {
         date: defaultDateString,
-        numberOfWeeksBetween: state.numWeeksBetween,
-        ...Object.fromEntries(
-          state.posts.flatMap((p) => [
-            [`post_${p.index}`, p.content],
-            [
-              `image_${p.index}`,
-              state.images.find((i) => i.index === p.index)?.imageUrl ?? "",
-            ],
-          ]),
-        ),
+        post: state.post,
+        image: state.image?.imageUrl ?? "",
       },
     },
     config: {
@@ -90,12 +81,12 @@ export async function humanNode(
       throw new Error("Response args must be a string.");
     }
 
-    const { route } = await routeResponse(state.posts, response.args);
+    const { route } = await routeResponse(state.post, response.args);
 
-    if (route === "rewrite_posts") {
+    if (route === "rewrite_post") {
       return {
         userResponse: response.args,
-        next: "rewritePosts",
+        next: "rewritePost",
       };
     }
 
@@ -117,12 +108,20 @@ export async function humanNode(
   }
 
   const castArgs = response.args.args as unknown as Record<string, string>;
-  const posts = extractPostsFromArgs(castArgs);
-  if (!posts.length) {
-    throw new Error("No posts found");
+  const post = castArgs.post;
+  if (!post) {
+    throw new Error("No post found");
   }
 
-  const images = await processImageArgs(castArgs);
+  let imageState: Image | undefined = undefined;
+  const processedImage = await processImageInput(castArgs.image);
+  if (processedImage && processedImage !== "remove") {
+    imageState = processedImage;
+  } else if (processedImage === "remove") {
+    imageState = undefined;
+  } else {
+    imageState = state.image;
+  }
 
   const postDateString = castArgs.date;
   let postDate: DateType | undefined;
@@ -137,16 +136,11 @@ export async function humanNode(
     }
   }
 
-  const numWeeksBetween: number = castArgs.numberOfWeeksBetween
-    ? parseInt(castArgs.numberOfWeeksBetween, 10)
-    : 1;
-
   return {
-    next: "schedulePosts",
+    next: "schedulePost",
     scheduleDate: postDate,
-    posts,
-    images,
+    post,
+    image: imageState,
     userResponse: undefined,
-    numWeeksBetween,
   };
 }
