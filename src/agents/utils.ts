@@ -4,6 +4,7 @@ import {
   POST_TO_LINKEDIN_ORGANIZATION,
   TEXT_ONLY_MODE,
 } from "./generate-post/constants.js";
+import { Image } from "./types.js";
 
 export const BLACKLISTED_MIME_TYPES = [
   "image/svg+xml",
@@ -296,7 +297,7 @@ export function extractMimeTypeFromBase64(base64String: string): string | null {
  */
 export async function processImageInput(
   imageInput: string,
-): Promise<{ imageUrl: string; mimeType: string } | "remove" | undefined> {
+): Promise<Image | "remove" | undefined> {
   if (imageInput.toLowerCase() === "remove" || !imageInput) {
     return "remove";
   }

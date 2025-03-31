@@ -1,14 +1,13 @@
 import { z } from "zod";
-import { RepurposedPost } from "../../types.js";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const ROUTE_POST_PROMPT = `You're an advanced AI assistant, tasked with routing a user's response.
-The only route which can be taken is 'rewrite_posts'. If the user is not asking to rewrite a post/posts, then choose the 'unknown_response' route.
+The only route which can be taken is 'rewrite_post'. If the user is not asking to rewrite a post, then choose the 'unknown_response' route.
 
-Here's the {POST_OR_POSTS} the user is responding to:
-<{POST_OR_POSTS}>
-{POSTS}
-</{POST_OR_POSTS}>
+Here's the post the user is responding to:
+<post>
+{POST}
+</post>
 
 Here's the user's response:
 <user-response>
@@ -19,11 +18,11 @@ Please examine the {POST_OR_POSTS} and determine which route to take.
 `;
 
 const routeResponseSchema = z.object({
-  route: z.enum(["rewrite_posts", "unknown_response"]),
+  route: z.enum(["rewrite_post", "unknown_response"]),
 });
 
 export async function routeResponse(
-  posts: RepurposedPost[],
+  post: string,
   userResponse: string,
 ): Promise<z.infer<typeof routeResponseSchema>> {
   const model = new ChatAnthropic({
@@ -42,23 +41,10 @@ export async function routeResponse(
     },
   );
 
-  const postOrPosts = posts.length === 1 ? "post" : "posts";
-
-  const formattedPosts =
-    posts.length === 1
-      ? posts[0].content
-      : posts
-          .map(
-            (post) => `<post index="${post.index}">\n${post.content}\n</post>`,
-          )
-          .join("\n");
-
-  const formattedPrompt = ROUTE_POST_PROMPT.replace(
-    "{POST_OR_POSTS}",
-    postOrPosts,
-  )
-    .replace("{POSTS}", formattedPosts)
-    .replace("{USER_RESPONSE}", userResponse);
+  const formattedPrompt = ROUTE_POST_PROMPT.replace("{POST}", post).replace(
+    "{USER_RESPONSE}",
+    userResponse,
+  );
 
   const response = await model.invoke(formattedPrompt);
 
