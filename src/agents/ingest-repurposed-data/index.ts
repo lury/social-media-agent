@@ -13,7 +13,7 @@ import {
   IngestRepurposedDataConfigurableAnnotation,
   IngestRepurposedDataState,
 } from "./types.js";
-import { extract } from "./extract.js";
+import { extract } from "./nodes/extract.js";
 
 async function generatePostsFromMessages(
   state: IngestRepurposedDataState,
@@ -43,6 +43,15 @@ async function generatePostsFromMessages(
   return {};
 }
 
+function ingestSlackMessagesOrSkip(
+  state: IngestRepurposedDataState,
+): "extract" | "ingestSlackMessages" {
+  if (state.messages.length > 0) {
+    return "extract";
+  }
+  return "ingestSlackMessages";
+}
+
 const builder = new StateGraph(
   IngestRepurposedDataAnnotation,
   IngestRepurposedDataConfigurableAnnotation,
@@ -57,7 +66,10 @@ const builder = new StateGraph(
   // finally generate and schedule the specified number of posts.
   .addNode("generatePostsGraph", generatePostsFromMessages)
   // Start node
-  .addEdge(START, "ingestSlackMessages")
+  .addConditionalEdges(START, ingestSlackMessagesOrSkip, [
+    "ingestSlackMessages",
+    "extract",
+  ])
   // After ingesting the messages, send them to the extract function to extract the links and other data
   .addEdge("ingestSlackMessages", "extract")
   // After extracting the data, route to the subgraph for each message.

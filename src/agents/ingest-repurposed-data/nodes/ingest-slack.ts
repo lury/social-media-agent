@@ -40,6 +40,6 @@ export async function ingestSlackMessages(
     .invoke({}, config);
 
   return {
-    messages: recentMessages,
+    slackMessages: recentMessages,
   };
 }
