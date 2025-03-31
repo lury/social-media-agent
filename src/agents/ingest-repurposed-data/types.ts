@@ -1,4 +1,4 @@
-import { Annotation } from "@langchain/langgraph";
+import { Annotation, MessagesAnnotation } from "@langchain/langgraph";
 import { SimpleSlackMessage } from "../../clients/slack.js";
 import { POST_TO_LINKEDIN_ORGANIZATION } from "../generate-post/constants.js";
 
@@ -10,17 +10,24 @@ export type RepurposedContent = {
 
 export const IngestRepurposedDataAnnotation = Annotation.Root({
   /**
+   * The message that triggered the repurposer. Must be of type list, but it will only
+   * ever contain a single message from the user.
+   */
+  messages: MessagesAnnotation.spec["messages"],
+  /**
    * The contents to use for generating repurposed posts.
    */
   contents: Annotation<RepurposedContent[]>,
   /**
    * The Slack messages ingested.
    */
-  messages: Annotation<SimpleSlackMessage[]>,
+  slackMessages: Annotation<SimpleSlackMessage[]>,
 });
 
 export type IngestRepurposedDataState =
   typeof IngestRepurposedDataAnnotation.State;
+export type IngestRepurposedDataUpdate =
+  typeof IngestRepurposedDataAnnotation.Update;
 
 export const IngestRepurposedDataConfigurableAnnotation = Annotation.Root({
   /**
