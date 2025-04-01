@@ -7,12 +7,6 @@ import { RunnableLambda } from "@langchain/core/runnables";
 const getChannelIdFromConfig = async (
   config: LangGraphRunnableConfig,
 ): Promise<string | undefined> => {
-  if (config.configurable?.slackChannelName) {
-    const client = new SlackClient({
-      channelName: config.configurable.slackChannelName,
-    });
-    return await client.getChannelId();
-  }
   return config.configurable?.slackChannelId;
 };
 
@@ -32,16 +26,16 @@ export async function ingestSlackData(
     throw new Error("Channel ID not found");
   }
 
-  const client = new SlackClient({
-    channelId,
-  });
+  const client = new SlackClient();
   const recentMessages = await RunnableLambda.from<
     unknown,
     SimpleSlackMessage[]
   >(() =>
-    client.fetchLast24HoursMessages({
+    client.getChannelMessages(channelId, {
       maxMessages: config.configurable?.maxMessages,
-      maxDaysHistory: config.configurable?.maxDaysHistory,
+      maxHoursHistory: config.configurable?.maxDaysHistory
+        ? 24 * config.configurable?.maxDaysHistory
+        : undefined,
     }),
   )
     .withConfig({ runName: "fetch-slack-messages" })

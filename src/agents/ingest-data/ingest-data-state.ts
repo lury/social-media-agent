@@ -40,8 +40,7 @@ export const IngestDataConfigurableAnnotation = Annotation.Root({
    * messages from Slack.
    */
   maxDaysHistory: Annotation<number>,
-  slackChannelName: Annotation<string | undefined>,
-  slackChannelId: Annotation<string | undefined>,
+  slackChannelId: Annotation<string>,
   /**
    * Whether or not to skip ingesting messages from Slack.
    * This will throw an error if slack messages are not

@@ -29,13 +29,11 @@ export async function ingestSlackMessages(
     throw new Error("Channel ID not found");
   }
 
-  const client = new SlackClient({
-    channelId,
-  });
+  const client = new SlackClient();
   const recentMessages = await RunnableLambda.from<
     unknown,
     SimpleSlackMessage[]
-  >(() => client.fetchLast24HoursMessages({}))
+  >(() => client.getChannelMessages(channelId))
     .withConfig({ runName: "fetch_slack_messages" })
     .invoke({}, config);
 

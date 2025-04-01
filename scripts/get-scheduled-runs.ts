@@ -77,11 +77,12 @@ Scheduled posts:
 ${pendingRunsString.join("\n\n")}`;
 
   if (process.env.SLACK_CHANNEL_ID && process.env.SLACK_CHANNEL_ID) {
-    const slackClient = new SlackClient({
-      channelId: process.env.SLACK_CHANNEL_ID,
-    });
+    const slackClient = new SlackClient();
 
-    await slackClient.sendMessage(slackMessageContent);
+    await slackClient.sendMessage(
+      process.env.SLACK_CHANNEL_ID,
+      slackMessageContent,
+    );
   } else {
     console.log(slackMessageContent);
   }

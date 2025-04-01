@@ -64,9 +64,7 @@ export async function generatePosts(
     return {};
   }
 
-  const slackClient = new SlackClient({
-    channelId: process.env.SLACK_CHANNEL_ID,
-  });
+  const slackClient = new SlackClient();
 
   const messageText = `*Ingested data successfully processed*
   
@@ -85,7 +83,7 @@ ${idsAndTypes
   .map((x) => `- *${x.thread_id}* : *${x.run_id}*`)
   .join("\n")}`;
 
-  await slackClient.sendMessage(messageText);
+  await slackClient.sendMessage(process.env.SLACK_CHANNEL_ID, messageText);
 
   return {
     idsAndTypes,
