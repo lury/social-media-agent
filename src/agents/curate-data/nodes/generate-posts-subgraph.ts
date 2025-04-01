@@ -59,32 +59,37 @@ async function sendSlackNotification(
   }
 
   const slackClient = new SlackClient({
-    channelId: process.env.SLACK_CHANNEL_ID,
     token: process.env.SLACK_TOKEN,
   });
 
   try {
     await saveIngestedData(state, config);
     if (slackClient) {
-      await slackClient.sendMessage(`✅ INGESTED DATA SAVED SUCCESSFULLY ✅
+      await slackClient.sendMessage(
+        process.env.SLACK_CHANNEL_ID,
+        `✅ INGESTED DATA SAVED SUCCESSFULLY ✅
 
 Number of tweets: *${state.rawTweets.length}*
 Number of repos: *${state.rawTrendingRepos.length}*
 Number of reddit posts: *${state.rawRedditPosts.length}*
 Run ID: *${config.configurable?.run_id || "not found"}*
 Thread ID: *${config.configurable?.thread_id || "not found"}*
-      `);
+      `,
+      );
     }
   } catch (error: any) {
     console.warn("Error saving ingested data", error);
     if (slackClient) {
       const errMessage = "message" in error ? error.message : String(error);
 
-      await slackClient.sendMessage(`FAILED TO SAVE INGESTED DATA: ${errMessage}
+      await slackClient.sendMessage(
+        process.env.SLACK_CHANNEL_ID,
+        `FAILED TO SAVE INGESTED DATA: ${errMessage}
   
 Run ID: *${config.configurable?.run_id || "not found"}*
 Thread ID: *${config.configurable?.thread_id || "not found"}*
-      `);
+      `,
+      );
     }
   }
 }

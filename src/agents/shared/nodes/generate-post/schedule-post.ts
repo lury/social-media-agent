@@ -39,9 +39,7 @@ async function sendSlackMessage({
     return;
   }
 
-  const slackClient = new SlackClient({
-    channelId: process.env.SLACK_CHANNEL_ID,
-  });
+  const slackClient = new SlackClient();
 
   const imageString = image?.imageUrl
     ? `Image:
@@ -61,7 +59,7 @@ ${postContent}
 
 ${!isTextOnlyMode ? imageString : "Text only mode enabled. Image support has been disabled."}`;
 
-  await slackClient.sendMessage(messageString);
+  await slackClient.sendMessage(process.env.SLACK_CHANNEL_ID, messageString);
 }
 
 export async function schedulePost<

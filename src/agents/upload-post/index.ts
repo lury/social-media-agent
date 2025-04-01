@@ -85,9 +85,7 @@ async function postUploadFailureToSlack({
     );
     return;
   }
-  const slackClient = new SlackClient({
-    channelId: process.env.SLACK_CHANNEL_ID,
-  });
+  const slackClient = new SlackClient();
   const slackMessageContent = `❌ FAILED TO UPLOAD POST TO ${uploadDestination.toUpperCase()} ❌
 
 Error message:
@@ -104,7 +102,10 @@ ${postContent}
 
 ${image ? `Image:\nURL: ${image.imageUrl}\nMIME type: ${image.mimeType}` : ""}
 `;
-  await slackClient.sendMessage(slackMessageContent);
+  await slackClient.sendMessage(
+    process.env.SLACK_CHANNEL_ID,
+    slackMessageContent,
+  );
 }
 
 export async function uploadPost(

@@ -1,4 +1,12 @@
-import { WebClient, ConversationsHistoryResponse } from "@slack/web-api";
+import { traceable } from "langsmith/traceable";
+import {
+  WebClient,
+  ConversationsHistoryResponse,
+  ChatPostMessageResponse,
+  ChatDeleteResponse,
+  FilesSharedPublicURLResponse,
+  FilesInfoResponse,
+} from "@slack/web-api";
 import moment from "moment";
 
 // Slack does not export their message type so we must extract it from another type they expose.
@@ -14,13 +22,13 @@ export type SlackMessageFile = NonNullable<
 
 export interface SimpleSlackMessage {
   id: string;
-  timestamp: string;
+  threadId?: string;
   username?: string;
-  user?: string;
+  userId?: string;
   text: string;
-  type: string;
-  attachments?: SlackMessageAttachment[];
-  files?: SlackMessageFile[];
+  type?: string;
+  attachmentIds?: string[];
+  fileIds?: string[];
 }
 
 export interface SlackClientArgs {
@@ -29,44 +37,74 @@ export interface SlackClientArgs {
    * If not provided, the token will be read from the SLACK_BOT_OAUTH_TOKEN environment variable.
    */
   token?: string;
-  /**
-   * The channel ID to fetch messages from.
-   * Optional, if not provided a channel name must be provided.
-   */
-  channelId?: string;
-  /**
-   * The channel name to fetch messages from.
-   * Optional, if not provided a channel ID must be provided.
-   */
-  channelName?: string;
 }
 
-/**
- * Wrapper around the Slack SDK for fetching messages from a channel.
- * Required scopes:
- * - 'groups:read' - used to get channel IDs from names
- * - 'channels:history' - used to fetch messages from a channel
- * - 'channels:read' - used to fetch message contents from a channel.
- */
+export type GetChannelMessagesArgs = {
+  /**
+   * The maximum number of messages to fetch.
+   * @default 100
+   */
+  maxMessages?: number;
+  /**
+   * The maximum number of hours of history to fetch.
+   * @default 24
+   */
+  maxHoursHistory?: number;
+  /**
+   * Whether or not to filter out messages which were sent as "thread_broadcast" messages
+   * These are messages which are sent as replies to a thread, but also sent as a top level
+   * message to the channel.
+   * @default false
+   */
+  filterMessageBroadcasts?: boolean;
+};
+
 export class SlackClient {
   private client: WebClient;
 
-  private channelId: string;
-
-  private channelName: string;
-
-  constructor(args: SlackClientArgs) {
-    if (!args.channelId && !args.channelName) {
-      throw new Error("Either channelId or channelName must be provided");
+  constructor(args?: SlackClientArgs) {
+    const slackToken = process.env.SLACK_BOT_OAUTH_TOKEN || args?.token;
+    if (!slackToken) {
+      throw new Error(
+        "Missing slack OAuth token. Please provide via the 'token' arg, or process.env.SLACK_BOT_OAUTH_TOKEN.",
+      );
     }
-
-    const slackToken = process.env.SLACK_BOT_OAUTH_TOKEN || args.token;
     this.client = new WebClient(slackToken);
-    this.channelId = args.channelId || "";
-    this.channelName = args.channelName || "";
+
+    // Wrap methods with traceable
+    this.getChannelMessages = this._wrapWithTraceable(
+      this.getChannelMessages,
+      "get_channel_messages",
+    );
+    this.getReplies = this._wrapWithTraceable(this.getReplies, "get_replies");
+    this.sendMessage = this._wrapWithTraceable(
+      this.sendMessage,
+      "send_message",
+    );
+    this.deleteMessage = this._wrapWithTraceable(
+      this.deleteMessage,
+      "delete_message",
+    );
+    this.getPublicFile = this._wrapWithTraceable(
+      this.getPublicFile,
+      "get_public_file",
+    );
+    this.makeFilePublic = this._wrapWithTraceable(
+      this.makeFilePublic,
+      "make_file_public",
+    );
   }
 
-  private convertSlackMessageToSimpleMessage(
+  // Helper method to wrap methods with traceable
+  private _wrapWithTraceable<T extends (...args: any[]) => Promise<any>>(
+    method: T,
+    name: string,
+  ): T {
+    const boundMethod = method.bind(this);
+    return traceable(boundMethod, { name }) as T;
+  }
+
+  private _convertToSimpleMessages(
     messages: SlackMessage[],
   ): SimpleSlackMessage[] {
     const messagesWithContent = messages.filter((m) => {
@@ -81,44 +119,51 @@ export class SlackClient {
       return true;
     });
 
-    return messagesWithContent.map((m) => ({
-      id: m.client_msg_id,
-      timestamp: m.ts,
-      username: m.username,
-      user: m.user,
-      text: m.text,
-      type: m.type,
-      attachments: m.attachments,
-      files: m.files,
-    })) as SimpleSlackMessage[];
+    const simpleMsgs: SimpleSlackMessage[] = messagesWithContent.map((m) => {
+      if (!m.ts) {
+        throw new Error(
+          `Failed to convert Slack message. Missing 'ts':\n${JSON.stringify(m, null, 2)}`,
+        );
+      }
+      return {
+        id: m.ts,
+        threadId: m.thread_ts,
+        username: m.username,
+        userId: m.user,
+        text: m.text ?? "",
+        type: m.type,
+        attachmentIds:
+          m.attachments?.flatMap((a) => a.id?.toString() ?? []) ?? [],
+        fileIds: m.files?.flatMap((f) => f.id?.toString() ?? []) ?? [],
+      };
+    });
+
+    return simpleMsgs;
   }
 
-  async fetchLast24HoursMessages({
-    maxMessages,
-    maxDaysHistory,
-  }: {
-    maxMessages?: number;
-    maxDaysHistory?: number;
-  }): Promise<SimpleSlackMessage[]> {
-    if (!this.channelId) {
-      this.channelId = await this.getChannelId(this.channelName);
-    }
-
+  async getChannelMessages(
+    channelId: string,
+    args?: GetChannelMessagesArgs,
+  ): Promise<SimpleSlackMessage[]> {
     try {
-      const getHours = maxDaysHistory !== undefined ? maxDaysHistory * 24 : 24;
-      const oldest = moment().subtract(getHours, "hours").unix().toString();
-      const messages: SlackMessage[] = [];
+      const { maxMessages, maxHoursHistory } = {
+        maxMessages: 100,
+        maxHoursHistory: 24,
+        ...args,
+      };
+      const oldest = moment()
+        .subtract(maxHoursHistory, "hours")
+        .unix()
+        .toString();
+      let messages: SlackMessage[] = [];
       let cursor: string | undefined;
 
       do {
-        // Adjust limit based on maxMessages
-        const limit =
-          maxMessages && maxMessages - messages.length < 100
-            ? maxMessages - messages.length
-            : 100;
+        // Adjust limit based on remaining messages needed
+        const limit = Math.min(100, maxMessages - messages.length);
 
         const result = await this.client.conversations.history({
-          channel: this.channelId,
+          channel: channelId,
           oldest: oldest,
           limit: limit,
           cursor: cursor,
@@ -131,60 +176,70 @@ export class SlackClient {
         cursor = (result.response_metadata?.next_cursor as string) || undefined;
 
         // Break the loop if we've reached maxMessages
-        if (maxMessages && messages.length >= maxMessages) {
+        if (messages.length >= maxMessages) {
           break;
         }
       } while (cursor);
 
+      // If the type if `thread_broadcast`, it's a thread reply which was also sent
+      // as a top level message to the channel.
+      if (args?.filterMessageBroadcasts) {
+        messages = messages.filter((m) => m.subtype !== "thread_broadcast");
+      }
+
       // Trim any excess messages if we went over maxMessages
-      return this.convertSlackMessageToSimpleMessage(
-        maxMessages ? messages.slice(0, maxMessages) : messages,
-      );
+      return this._convertToSimpleMessages(messages.slice(0, maxMessages));
     } catch (error) {
       console.error("Error fetching Slack messages:", error);
       throw error;
     }
   }
 
-  // Helper method to get channel ID from channel name
-  async getChannelId(name?: string): Promise<string> {
-    const channelName = name || this.channelName;
-    if (!channelName) {
-      throw new Error(
-        "Channel name not provided in method arguments, or found in client instance.",
-      );
-    }
-
-    try {
-      let cursor: string | undefined;
-
-      do {
-        const result = await this.client.conversations.list({
-          exclude_archived: true,
-          types: "public_channel,private_channel",
-          limit: 100,
-          cursor,
-        });
-
-        const channel = result.channels?.find((c) => c.name === channelName);
-        if (channel?.id) {
-          return channel.id;
-        }
-
-        cursor = (result.response_metadata?.next_cursor as string) || undefined;
-      } while (cursor);
-
-      throw new Error(`Channel ${channelName} not found`);
-    } catch (error) {
-      console.error("Error getting channel ID:", error);
-      throw error;
-    }
+  async getReplies(
+    channelId: string,
+    parentMessageId: string,
+  ): Promise<SimpleSlackMessage[]> {
+    const results = await this.client.conversations.replies({
+      channel: channelId,
+      ts: parentMessageId,
+    });
+    return this._convertToSimpleMessages(results.messages || []);
   }
 
-  async sendMessage(message: string): Promise<void> {
-    await this.client.chat.postMessage({
-      channel: this.channelId,
+  async sendMessage(
+    channelId: string,
+    message: string,
+  ): Promise<ChatPostMessageResponse> {
+    const res = await this.client.chat.postMessage({
+      channel: channelId,
       text: message,
     });
+    return res;
+  }
+
+  async deleteMessage(
+    channelId: string,
+    messageId: string,
+  ): Promise<ChatDeleteResponse> {
+    const res = await this.client.chat.delete({
+      channel: channelId,
+      ts: messageId,
+    });
+    return res;
+  }
+
+  async getPublicFile(fileId: string): Promise<FilesInfoResponse> {
+    const file = await this.client.files.info({
+      file: fileId,
+    });
+    return file;
+  }
+
+  async makeFilePublic(fileId: string): Promise<FilesSharedPublicURLResponse> {
+    const res = await this.client.files.sharedPublicURL({
+      file: fileId,
+      token: process.env.SLACK_BOT_USER_OAUTH_TOKEN,
+    });
+    return res;
   }
 }

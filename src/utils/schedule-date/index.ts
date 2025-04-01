@@ -670,11 +670,11 @@ async function findAvailableBasicDates({
     ) {
       // Send a message to slack
       if (process.env.SLACK_CHANNEL_ID && process.env.SLACK_CHANNEL_ID) {
-        const slackClient = new SlackClient({
-          channelId: process.env.SLACK_CHANNEL_ID,
-        });
+        const slackClient = new SlackClient();
 
-        await slackClient.sendMessage(`**FAILED TO FIND DATE TO SCHEDULE POST**
+        await slackClient.sendMessage(
+          process.env.SLACK_CHANNEL_ID,
+          `**FAILED TO FIND DATE TO SCHEDULE POST**
 
 Error message:
 \`\`\`
@@ -686,7 +686,8 @@ Base date: ${format(baseDate, "MM/dd/yyyy hh:mm a z")}
 
 Thread ID: ${config.configurable?.thread_id || "No thread ID found"}
 Run ID: ${config.configurable?.run_id || "No run ID found"}
-      `);
+      `,
+        );
       }
     }
 
