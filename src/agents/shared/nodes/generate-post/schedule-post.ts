@@ -5,7 +5,7 @@ import {
   getScheduledDateSeconds,
   getFutureDate,
 } from "../../../../utils/schedule-date/index.js";
-import { SlackClient } from "../../../../clients/slack.js";
+import { SlackClient } from "../../../../clients/slack/client.js";
 import { isTextOnly, shouldPostToLinkedInOrg } from "../../../utils.js";
 import {
   POST_TO_LINKEDIN_ORGANIZATION,

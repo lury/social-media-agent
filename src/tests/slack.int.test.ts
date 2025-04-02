@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { SlackClient } from "../clients/slack.js";
+import { SlackClient } from "../clients/slack/client.js";
 
 const TEST_CHANNEL_ID = "C06BU7XF5S7";
 

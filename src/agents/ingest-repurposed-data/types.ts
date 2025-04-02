@@ -1,11 +1,12 @@
 import { Annotation, MessagesAnnotation } from "@langchain/langgraph";
-import { SimpleSlackMessage } from "../../clients/slack.js";
+import { SimpleSlackMessage } from "../../clients/slack/client.js";
 import { POST_TO_LINKEDIN_ORGANIZATION } from "../generate-post/constants.js";
 
 export type RepurposedContent = {
   originalLink: string;
   additionalContextLinks?: string[];
   quantity: number;
+  attachmentUrls: string[] | undefined;
 };
 
 export const IngestRepurposedDataAnnotation = Annotation.Root({

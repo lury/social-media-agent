@@ -22,7 +22,7 @@ import {
   POST_TO_LINKEDIN_ORGANIZATION,
   TEXT_ONLY_MODE,
 } from "../generate-post/constants.js";
-import { SlackClient } from "../../clients/slack.js";
+import { SlackClient } from "../../clients/slack/client.js";
 
 async function getMediaFromImage(image?: {
   imageUrl: string;

@@ -5,6 +5,7 @@ import { isValidUrl } from "../../utils.js";
 import { traceable } from "langsmith/traceable";
 import { DEFAULT_POST_QUANTITY } from "../constants.js";
 import { MessageContentText } from "@langchain/core/messages";
+import { getPublicFileUrls } from "../../../clients/slack/utils.js";
 
 const EXTRACT_CONTENT_PROMPT = `You're a helpful AI assistant, tasked with extracting content from a Slack message.
 
@@ -53,7 +54,7 @@ const extractionSchema = z.object({
 
 async function extractContentsFunc(
   messageText: string,
-): Promise<RepurposedContent | undefined> {
+): Promise<Omit<RepurposedContent, "attachmentUrls"> | undefined> {
   const model = new ChatAnthropic({
     model: "claude-3-7-sonnet-latest",
     temperature: 0,
@@ -100,9 +101,12 @@ export async function extract(
 
   for await (const message of state.slackMessages) {
     const messageText = message.text;
-    const content = await extractContents(messageText);
+    const [content, attachmentUrls] = await Promise.all([
+      extractContents(messageText),
+      getPublicFileUrls(message.fileIds),
+    ]);
     if (content) {
-      extractedContents.push(content);
+      extractedContents.push({ ...content, attachmentUrls });
     }
   }
 
@@ -116,7 +120,8 @@ export async function extract(
             .join(" ");
     const content = await extractContents(messageText);
     if (content) {
-      extractedContents.push(content);
+      // TODO: Update Slack message handler to include fileIds
+      extractedContents.push({ ...content, attachmentUrls: undefined });
     }
   }
 

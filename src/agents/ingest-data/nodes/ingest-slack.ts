@@ -1,6 +1,9 @@
 import { IngestDataAnnotation } from "../ingest-data-state.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import { SimpleSlackMessage, SlackClient } from "../../../clients/slack.js";
+import {
+  SimpleSlackMessage,
+  SlackClient,
+} from "../../../clients/slack/client.js";
 import { extractUrlsFromSlackText } from "../../utils.js";
 import { RunnableLambda } from "@langchain/core/runnables";
 
