@@ -1,7 +1,7 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { SupervisorState } from "../supervisor-state.js";
 import { extractUrls } from "../../utils.js";
-import { SlackClient } from "../../../clients/slack.js";
+import { SlackClient } from "../../../clients/slack/client.js";
 
 export async function generatePosts(
   state: SupervisorState,

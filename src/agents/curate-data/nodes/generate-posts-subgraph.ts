@@ -16,7 +16,7 @@ import {
   putRedditPostIds,
 } from "../utils/stores/reddit-post-ids.js";
 import { getTweetIds, putTweetIds } from "../utils/stores/twitter.js";
-import { SlackClient } from "../../../clients/slack.js";
+import { SlackClient } from "../../../clients/slack/client.js";
 import { ThreadRunId } from "../types.js";
 
 async function saveIngestedData(

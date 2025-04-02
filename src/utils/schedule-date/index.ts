@@ -17,7 +17,7 @@ import {
 } from "./helpers.js";
 import { toZonedTime } from "date-fns-tz";
 import { DateType } from "../../agents/types.js";
-import { SlackClient } from "../../clients/slack.js";
+import { SlackClient } from "../../clients/slack/client.js";
 import {
   FIRST_ALLOWED_P1_HOUR,
   ALLOWED_P2_DAY_AND_TIMES_IN_UTC,

@@ -1,5 +1,5 @@
 import { Annotation } from "@langchain/langgraph";
-import { SimpleSlackMessage } from "../../clients/slack.js";
+import { SimpleSlackMessage } from "../../clients/slack/client.js";
 import {
   POST_TO_LINKEDIN_ORGANIZATION,
   TEXT_ONLY_MODE,

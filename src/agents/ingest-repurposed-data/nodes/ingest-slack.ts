@@ -1,6 +1,9 @@
 import { IngestRepurposedDataState } from "../types.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import { SimpleSlackMessage, SlackClient } from "../../../clients/slack.js";
+import {
+  SimpleSlackMessage,
+  SlackClient,
+} from "../../../clients/slack/client.js";
 import { RunnableLambda } from "@langchain/core/runnables";
 
 const getChannelIdFromConfig = async (
