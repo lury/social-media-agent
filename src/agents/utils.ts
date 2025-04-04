@@ -612,11 +612,10 @@ export function useTwitterApiOnly(): boolean {
 }
 
 function skipContentRelevancyCheckFunc(
-  config?: LangGraphRunnableConfig,
+  configurable?: Record<string, unknown>,
 ): boolean {
-  const skipRelevancyCheck =
-    config?.configurable?.[SKIP_CONTENT_RELEVANCY_CHECK];
-  return (
+  const skipRelevancyCheck = configurable?.[SKIP_CONTENT_RELEVANCY_CHECK];
+  return !!(
     skipRelevancyCheck ?? process.env.SKIP_CONTENT_RELEVANCY_CHECK === "true"
   );
 }
@@ -624,7 +623,7 @@ function skipContentRelevancyCheckFunc(
 /**
  * Returns true if content relevancy verification should be skipped
  *
- * @param config - Optional configuration object
+ * @param configurable - Optional configuration object
  * @returns {Promise<boolean>} True if content relevancy verification should be skipped
  */
 export const skipContentRelevancyCheck = traceable(
@@ -632,15 +631,17 @@ export const skipContentRelevancyCheck = traceable(
   { name: "skipContentRelevancyCheck" },
 );
 
-function skipUsedUrlsCheckFunc(config?: LangGraphRunnableConfig): boolean {
-  const skipUsedUrlsCheck = config?.configurable?.[SKIP_USED_URLS_CHECK];
-  return skipUsedUrlsCheck ?? process.env.SKIP_USED_URLS_CHECK === "true";
+function skipUsedUrlsCheckFunc(
+  configurable?: Record<string, unknown>,
+): boolean {
+  const skipUsedUrlsCheck = configurable?.[SKIP_USED_URLS_CHECK];
+  return !!(skipUsedUrlsCheck ?? process.env.SKIP_USED_URLS_CHECK === "true");
 }
 
 /**
  * Returns true if used URLs check should be skipped
  *
- * @param config - Optional configuration object
+ * @param configurable - Optional configuration object
  * @returns {Promise<boolean>} True if used URLs check should be skipped
  */
 export const skipUsedUrlsCheck = traceable(skipUsedUrlsCheckFunc, {
