@@ -101,13 +101,13 @@ export async function verifyGeneralContentIsRelevant(
  * Verifies if the general content from a provided URL is relevant to your company's products.
  *
  * @param state - The current state containing the link to verify.
- * @param _config - Configuration for the LangGraph runtime (unused in this function).
+ * @param config - Configuration for the LangGraph runtime.
  * @returns An object containing relevant links and page contents if the content is relevant;
  * otherwise, returns empty arrays.
  */
 export async function verifyGeneralContent(
   state: typeof VerifyContentAnnotation.State,
-  _config: LangGraphRunnableConfig,
+  config: LangGraphRunnableConfig,
 ): Promise<Partial<CurateDataState>> {
   const shouldExclude = shouldExcludeGeneralContent(state.link);
   if (shouldExclude) {
@@ -128,7 +128,7 @@ export async function verifyGeneralContent(
       : {}),
   };
 
-  if (await skipContentRelevancyCheck()) {
+  if (await skipContentRelevancyCheck(config)) {
     return returnValue;
   }
 

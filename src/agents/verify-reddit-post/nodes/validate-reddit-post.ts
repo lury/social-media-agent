@@ -109,7 +109,7 @@ export async function validateRedditPost(
     ],
   };
 
-  if (await skipContentRelevancyCheck()) {
+  if (await skipContentRelevancyCheck(config)) {
     return returnValue;
   }
 

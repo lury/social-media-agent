@@ -97,3 +97,5 @@ export const TWITTER_TOKEN_SECRET = "twitterTokenSecret";
 export const INGEST_TWITTER_USERNAME = "ingestTwitterUsername";
 // Simplified text only mode
 export const TEXT_ONLY_MODE = "textOnlyMode";
+
+export const SKIP_CONTENT_RELEVANCY_CHECK = "skipContentRelevancyCheck";

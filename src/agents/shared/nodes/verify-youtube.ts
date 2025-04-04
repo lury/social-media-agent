@@ -71,7 +71,7 @@ async function verifyYouTubeContentIsRelevant(
  */
 export async function verifyYouTubeContent(
   state: typeof VerifyContentAnnotation.State,
-  _config: LangGraphRunnableConfig,
+  config: LangGraphRunnableConfig,
 ): Promise<VerifyYouTubeContentReturn> {
   const { summary, thumbnail } = await getVideoSummary(state.link);
 
@@ -81,7 +81,7 @@ export async function verifyYouTubeContent(
     ...(thumbnail ? { imageOptions: [thumbnail] } : {}),
   };
 
-  if (await skipContentRelevancyCheck()) {
+  if (await skipContentRelevancyCheck(config)) {
     return returnValue;
   }
 

@@ -131,7 +131,7 @@ export async function verifyLumaEvent(
       : {}),
   };
 
-  if (await skipContentRelevancyCheck()) {
+  if (await skipContentRelevancyCheck(config)) {
     return returnValue;
   }
 

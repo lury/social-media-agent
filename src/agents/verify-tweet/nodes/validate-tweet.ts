@@ -3,6 +3,7 @@ import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyTweetAnnotation } from "../verify-tweet-state.js";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { skipContentRelevancyCheck } from "../../utils.js";
+import { LangGraphRunnableConfig } from "@langchain/langgraph";
 
 const RELEVANCY_SCHEMA = z
   .object({
@@ -83,6 +84,7 @@ ${pageContents.map((content, index) => `<webpage-content key="${index}">\n${cont
  */
 export async function validateTweetContent(
   state: typeof VerifyTweetAnnotation.State,
+  config: LangGraphRunnableConfig,
 ): Promise<Partial<typeof VerifyTweetAnnotation.State>> {
   if (!state.pageContents?.length && !state.tweetContent) {
     throw new Error(
@@ -99,7 +101,7 @@ export async function validateTweetContent(
     pageContents: [context],
   };
 
-  if (await skipContentRelevancyCheck()) {
+  if (await skipContentRelevancyCheck(config)) {
     return returnValue;
   }
 
