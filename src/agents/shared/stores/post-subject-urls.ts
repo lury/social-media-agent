@@ -19,7 +19,7 @@ export async function saveUsedUrls(
   config: LangGraphRunnableConfig,
   overwrite = false,
 ): Promise<void> {
-  if (await skipUsedUrlsCheck(config)) {
+  if (await skipUsedUrlsCheck(config.configurable)) {
     return;
   }
 
@@ -48,7 +48,7 @@ export async function saveUsedUrls(
 export async function getSavedUrls(
   config: LangGraphRunnableConfig,
 ): Promise<string[]> {
-  if (await skipUsedUrlsCheck(config)) {
+  if (await skipUsedUrlsCheck(config.configurable)) {
     return [];
   }
 

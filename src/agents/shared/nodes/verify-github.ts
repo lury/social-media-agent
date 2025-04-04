@@ -195,7 +195,7 @@ export async function verifyGitHubContent(
     pageContents: [contentsAndType.contents],
   };
 
-  if (await skipContentRelevancyCheck(config)) {
+  if (await skipContentRelevancyCheck(config.configurable)) {
     return returnValue;
   }
 

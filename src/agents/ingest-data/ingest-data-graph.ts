@@ -35,9 +35,10 @@ async function generatePostFromMessages(
   const linkAndDelay = getAfterSecondsFromLinks(state.links);
   const isTextOnlyMode = isTextOnly(config);
   const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
-  const shouldSkipContentRelevancyCheck =
-    await skipContentRelevancyCheck(config);
-  const shouldSkipUsedUrlsCheck = await skipUsedUrlsCheck(config);
+  const shouldSkipContentRelevancyCheck = await skipContentRelevancyCheck(
+    config?.configurable,
+  );
+  const shouldSkipUsedUrlsCheck = await skipUsedUrlsCheck(config?.configurable);
 
   for await (const { link, afterSeconds } of linkAndDelay) {
     const thread = await client.threads.create();

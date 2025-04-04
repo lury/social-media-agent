@@ -101,7 +101,7 @@ export async function verifyGeneralContent(
       : {}),
   };
 
-  if (await skipContentRelevancyCheck(config)) {
+  if (await skipContentRelevancyCheck(config.configurable)) {
     return returnValue;
   }
 
