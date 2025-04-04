@@ -2,6 +2,7 @@ import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { getGitHubRepoURLs } from "../../utils/stores/github-repos.js";
 import { Octokit } from "@octokit/rest";
 import { sleep } from "../../../utils.js";
+import { traceable } from "langsmith/traceable";
 
 function getOctokit() {
   const token = process.env.GITHUB_TOKEN;
@@ -115,7 +116,7 @@ async function checkPythonDependencies(
   }
 }
 
-export async function langchainDependencyReposLoader(
+async function langchainDependencyReposLoaderFunc(
   config: LangGraphRunnableConfig,
 ) {
   const octokit = getOctokit();
@@ -270,3 +271,8 @@ export async function langchainDependencyReposLoader(
 
   return newRepoURLs.slice(0, 10);
 }
+
+export const langchainDependencyReposLoader = traceable(
+  langchainDependencyReposLoaderFunc,
+  { name: "github-loader-langchain" },
+);

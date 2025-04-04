@@ -5,8 +5,9 @@ import {
 } from "../utils/stores/latent-space-links.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { getUniqueArrayItems } from "../utils/get-unique-array.js";
+import { traceable } from "langsmith/traceable";
 
-export async function latentSpaceLoader(config: LangGraphRunnableConfig) {
+async function latentSpaceLoaderFunc(config: LangGraphRunnableConfig) {
   const siteMapUrl = "https://www.latent.space/sitemap/2025";
 
   const links = await fetch(siteMapUrl)
@@ -29,3 +30,7 @@ export async function latentSpaceLoader(config: LangGraphRunnableConfig) {
 
   return uniqueLinks;
 }
+
+export const latentSpaceLoader = traceable(latentSpaceLoaderFunc, {
+  name: "latent-space-loader",
+});
