@@ -1,22 +1,28 @@
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { skipUsedUrlsCheck } from "../../utils.js";
 
-const NAMESPACE = ["saved_data", "post_subject_urls"];
+const NAMESPACE = ["saved_data", "used_urls"];
 const KEY = "urls";
 const OBJECT_KEY = "data";
 
 /**
- * Save a list of URLs of which are the subject URLs of posts which have been curated.
+ * Save a list of URLs of which have been included in posts already.
+ * 
  * @param urls The list of URLs to save
  * @param config The configuration for the langgraph
  * @param overwrite Whether to overwrite the stored URLs if they already exist.
  *  If true, it will overwrite. If false (default), it will first fetch the current stored URLs and add the new ones.
  * @returns {Promise<void>}
  */
-export async function savePostSubjectUrls(
+export async function saveUsedUrls(
   urls: string[],
   config: LangGraphRunnableConfig,
   overwrite = false,
 ): Promise<void> {
+  if (await skipUsedUrlsCheck(config)) {
+    return;
+  }
+
   const store = config.store;
   if (!store) {
     throw new Error("No store provided");
@@ -24,7 +30,7 @@ export async function savePostSubjectUrls(
 
   const urlsToSaveSet = new Set(urls);
   if (!overwrite) {
-    const existingUrls = await getPostSubjectUrls(config);
+    const existingUrls = await getSavedUrls(config);
     existingUrls.forEach((url) => urlsToSaveSet.add(url));
   }
 
@@ -34,13 +40,18 @@ export async function savePostSubjectUrls(
 }
 
 /**
- * Get the list of URLs of which are the subject URLs of posts which have been curated.
+ * Get the list of URLs of which have been included in posts already.
+ * 
  * @param config The configuration for the langgraph
  * @returns {Promise<string[]>} The list of URLs which have been included in posts already.
  */
-export async function getPostSubjectUrls(
+export async function getSavedUrls(
   config: LangGraphRunnableConfig,
 ): Promise<string[]> {
+  if (await skipUsedUrlsCheck(config)) {
+    return [];
+  }
+
   const store = config.store;
   if (!store) {
     throw new Error("No store provided");

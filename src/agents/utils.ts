@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import {
   POST_TO_LINKEDIN_ORGANIZATION,
   SKIP_CONTENT_RELEVANCY_CHECK,
+  SKIP_USED_URLS_CHECK,
   TEXT_ONLY_MODE,
 } from "./generate-post/constants.js";
 import { Image } from "./types.js";
@@ -629,4 +630,25 @@ function skipContentRelevancyCheckFunc(
 export const skipContentRelevancyCheck = traceable(
   skipContentRelevancyCheckFunc,
   { name: "skipContentRelevancyCheck" },
+);
+
+function skipUsedUrlsCheckFunc(
+  config?: LangGraphRunnableConfig,
+): boolean {
+  const skipUsedUrlsCheck =
+    config?.configurable?.[SKIP_USED_URLS_CHECK];
+  return (
+    skipUsedUrlsCheck ?? process.env.SKIP_USED_URLS_CHECK === "true"
+  );
+}
+
+/**
+ * Returns true if used URLs check should be skipped
+ *
+ * @param config - Optional configuration object
+ * @returns {Promise<boolean>} True if used URLs check should be skipped
+ */
+export const skipUsedUrlsCheck = traceable(
+  skipUsedUrlsCheckFunc,
+  { name: "skipUsedUrlsCheck" },
 );

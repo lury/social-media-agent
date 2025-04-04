@@ -7,7 +7,7 @@ import {
   parseDateResponse,
 } from "../../../../utils/date.js";
 import { routeResponse } from "../../../shared/nodes/route-response.js";
-import { savePostSubjectUrls } from "../../../shared/stores/post-subject-urls.js";
+import { saveUsedUrls } from "../../../shared/stores/post-subject-urls.js";
 import { HumanInterrupt, HumanResponse } from "@langchain/langgraph/prebuilt";
 import { DateType } from "../../../types.js";
 
@@ -161,7 +161,7 @@ export async function humanNode<
   };
 
   // Save ALL links used to generate this post so that they are not used to generate future posts (duplicates).
-  await savePostSubjectUrls(
+  await saveUsedUrls(
     [...(state.relevantLinks ?? []), ...state.links],
     config,
   );

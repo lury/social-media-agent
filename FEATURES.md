@@ -13,15 +13,43 @@ Each feature is nested under the graph it belongs to. If it does not belong to a
 
 ### Key
 
-- [Stored URLs](#stored-urls)
+- [Used URLs](#used-urls)
 
-### Stored URLs
+### Used URLs
 
 Once a run reaches the `humanNode`, all of the URLs inside the `relevantLinks` and `links` state fields will be stored in the LangGraph store. This is then referenced after the `verifyLinksSubGraph` executes, to see if any of the URLs (`relevantLinks` and `links`) have already been used in previous posts.
 
 If _any_ of the URLs exist in the store, it will route the graph to the `END` node, and not generate a post.
 
 This is implemented to ensure duplicated content is not generated.
+
+#### Skipping Saved URLs check
+
+If you are okay with duplicated content being generated, you can set the `SKIP_USED_URLS_CHECK` environment variable to `true`, or pass the `skipUsedUrlsCheck` configurable field ([variable](src/agents/generate-post/constants.ts#L103)) to the graph.
+
+This will prevent the graph from saving any URLs, or reading URLs, ensuring the graph will never prevent a link from being used due to the URLs already being used in previous posts.
+
+```typescript
+import { Client } from "@langchain/langgraph-sdk";
+import { SKIP_USED_URLS_CHECK } from "src/agents/generate-post/constants";
+
+const client = new Client({
+  apiUrl: process.env.LANGGRAPH_API_URL,
+});
+
+const { thread_id } = await client.threads.create();
+const res = await client.runs.create(thread_id, "generate_post", {
+  input: {
+    links: ["https://www.example.com"],
+  },
+  config: {
+    configurable: {
+      // Pass this to the graph to skip used URLs check, or set the environment variable
+      [SKIP_USED_URLS_CHECK]: true,
+    },
+  },
+});
+```
 
 ### Skip Content Verification
 
