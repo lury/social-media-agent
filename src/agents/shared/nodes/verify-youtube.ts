@@ -54,7 +54,7 @@ export async function verifyYouTubeContent(
     ...(thumbnail ? { imageOptions: [thumbnail] } : {}),
   };
 
-  if (await skipContentRelevancyCheck(config)) {
+  if (await skipContentRelevancyCheck(config.configurable)) {
     return returnValue;
   }
 

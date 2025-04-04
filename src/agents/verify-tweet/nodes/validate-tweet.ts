@@ -74,7 +74,7 @@ export async function validateTweetContent(
     pageContents: [context],
   };
 
-  if (await skipContentRelevancyCheck(config)) {
+  if (await skipContentRelevancyCheck(config.configurable)) {
     return returnValue;
   }
 
