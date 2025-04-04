@@ -5,6 +5,7 @@ import { InMemoryStore, MemorySaver } from "@langchain/langgraph";
 import { INPUTS } from "./data/inputs-outputs.js";
 import { verifyRedditPostGraph } from "../verify-reddit-post-graph.js";
 import { VerifyRedditGraphState } from "../types.js";
+import { BASE_VERIFY_REDDIT_CONFIG } from "../verify-reddit-post-state.js";
 
 const checkVerifyPostResult: SimpleEvaluator = ({ expected, actual }) => {
   const { pageContents } = actual as VerifyRedditGraphState;
@@ -35,6 +36,7 @@ ls.describe("SMA - Verify Reddit Post - E2E", () => {
       const threadId = uuidv4();
       const config = {
         configurable: {
+          ...BASE_VERIFY_REDDIT_CONFIG,
           thread_id: threadId,
         },
       };

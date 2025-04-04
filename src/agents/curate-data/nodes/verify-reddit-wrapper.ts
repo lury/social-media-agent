@@ -2,10 +2,11 @@ import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { CurateDataState } from "../state.js";
 import { verifyRedditPostGraph } from "../../verify-reddit-post/verify-reddit-post-graph.js";
 import { RedditPostsWithExternalData } from "../../verify-reddit-post/types.js";
+import { VerifyRedditPostConfigurable } from "../../verify-reddit-post/verify-reddit-post-state.js";
 
 export async function verifyRedditWrapper(
   state: CurateDataState,
-  config: LangGraphRunnableConfig,
+  config: LangGraphRunnableConfig<VerifyRedditPostConfigurable>,
 ): Promise<Partial<CurateDataState>> {
   const verifiedRedditPosts: RedditPostsWithExternalData[] = [];
 
