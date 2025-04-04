@@ -1,6 +1,9 @@
 import { Annotation } from "@langchain/langgraph";
 import { SimpleRedditPostWithComments } from "../../clients/reddit/types.js";
-import { VerifyLinksResultAnnotation } from "../verify-links/verify-links-state.js";
+import {
+  VerifyLinksGraphConfigurableAnnotation,
+  VerifyLinksResultAnnotation,
+} from "../verify-links/verify-links-state.js";
 
 export const VerifyRedditPostAnnotation = Annotation.Root({
   /**
@@ -24,4 +27,8 @@ export const VerifyRedditPostAnnotation = Annotation.Root({
   }),
   // REQUIRED DUE TO USING SHARED NODES
   ...VerifyLinksResultAnnotation.spec,
+});
+
+export const VerifyRedditPostConfigurableAnnotation = Annotation.Root({
+  ...VerifyLinksGraphConfigurableAnnotation.spec,
 });
