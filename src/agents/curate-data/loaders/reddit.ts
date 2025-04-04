@@ -7,8 +7,9 @@ import {
 import { getUniqueArrayItems } from "../utils/get-unique-array.js";
 import { SimpleRedditPostWithComments } from "../../../clients/reddit/types.js";
 import { NUM_POSTS_PER_SUBREDDIT } from "../constants.js";
+import { traceable } from "langsmith/traceable";
 
-export async function getRedditPosts(
+async function getRedditPostsFunc(
   config: LangGraphRunnableConfig,
 ): Promise<SimpleRedditPostWithComments[]> {
   const client = await RedditClient.fromUserless();
@@ -37,7 +38,9 @@ export async function getRedditPosts(
   return data.filter((post) => uniquePostIds.includes(post.post.id));
 }
 
-export async function getLangChainRedditPosts(config: LangGraphRunnableConfig) {
+export const getRedditPosts = traceable(getRedditPostsFunc, { name: "reddit-loader" });
+
+async function getLangChainRedditPostsFunc(config: LangGraphRunnableConfig) {
   const numPostsPerSubreddit =
     config.configurable?.[NUM_POSTS_PER_SUBREDDIT] || 25;
   const client = await RedditClient.fromUserless();
@@ -67,3 +70,5 @@ export async function getLangChainRedditPosts(config: LangGraphRunnableConfig) {
   const uniquePostIds = getUniqueArrayItems(processedPostIds, postIds);
   return data.filter((post) => uniquePostIds.includes(post.post.id));
 }
+
+export const getLangChainRedditPosts = traceable(getLangChainRedditPostsFunc, { name: "reddit-loader-langchain" });

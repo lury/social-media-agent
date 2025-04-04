@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyTweetAnnotation } from "../verify-tweet-state.js";
-import { ChatAnthropic } from "@langchain/anthropic";
 import { skipContentRelevancyCheck } from "../../utils.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { verifyContentIsRelevant } from "../../shared/nodes/verify-content.js";
 
 const RELEVANCY_SCHEMA = z
   .object({
@@ -31,33 +31,6 @@ ${getPrompts().contentValidationPrompt}
 
 Given this context, examine the entire Tweet plus webpage content closely, and determine if the content implements your company's products.
 You should provide reasoning as to why or why not the content implements your company's products, then a simple true or false for whether or not it implements some.`;
-
-async function verifyGeneralContentIsRelevant(
-  content: string,
-): Promise<boolean> {
-  const relevancyModel = new ChatAnthropic({
-    model: "claude-3-5-sonnet-latest",
-    temperature: 0,
-  }).withStructuredOutput(RELEVANCY_SCHEMA, {
-    name: "relevancy",
-  });
-
-  const { relevant } = await relevancyModel
-    .withConfig({
-      runName: "check-general-relevancy-model",
-    })
-    .invoke([
-      {
-        role: "system",
-        content: VERIFY_RELEVANT_CONTENT_PROMPT,
-      },
-      {
-        role: "user",
-        content: content,
-      },
-    ]);
-  return relevant;
-}
 
 function constructContext({
   tweetContent,
@@ -105,7 +78,10 @@ export async function validateTweetContent(
     return returnValue;
   }
 
-  if (await verifyGeneralContentIsRelevant(context)) {
+  if (await verifyContentIsRelevant(context, {
+    systemPrompt: VERIFY_RELEVANT_CONTENT_PROMPT,
+    schema: RELEVANCY_SCHEMA,
+  })) {
     return returnValue;
   }
 

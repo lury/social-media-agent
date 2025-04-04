@@ -5,6 +5,7 @@ import {
 } from "../../utils/stores/github-repos.js";
 import { getUniqueArrayItems } from "../../utils/get-unique-array.js";
 import * as cheerio from "cheerio";
+import { traceable } from "langsmith/traceable";
 
 const TYPESCRIPT_TRENDING_URL =
   "https://github.com/trending/typescript?since=daily";
@@ -12,7 +13,7 @@ const PYTHON_TRENDING_URL = "https://github.com/trending/python?since=daily";
 
 // Check github dependabot for depending on langchain
 // Check for github langchain tags
-export async function githubTrendingLoader(config: LangGraphRunnableConfig) {
+async function githubTrendingLoaderFunc(config: LangGraphRunnableConfig) {
   const fetchRepos = async (url: string) => {
     const response = await fetch(url);
     const html = await response.text();
@@ -43,3 +44,5 @@ export async function githubTrendingLoader(config: LangGraphRunnableConfig) {
 
   return uniqueRepos;
 }
+
+export const githubTrendingLoader = traceable(githubTrendingLoaderFunc, { name: "github-loader" });

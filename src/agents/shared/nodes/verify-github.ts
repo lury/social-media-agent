@@ -1,10 +1,8 @@
 import { z } from "zod";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import { ChatAnthropic } from "@langchain/anthropic";
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyContentAnnotation } from "../shared-state.js";
 import { GeneratePostAnnotation } from "../../generate-post/generate-post-state.js";
-import { RunnableConfig } from "@langchain/core/runnables";
 import {
   getRepoContents,
   getFileContents,
@@ -13,6 +11,7 @@ import {
 import { Octokit } from "@octokit/rest";
 import { shouldExcludeGitHubContent } from "../../should-exclude.js";
 import { skipContentRelevancyCheck } from "../../utils.js";
+import { verifyContentIsRelevant } from "./verify-content.js";
 
 function getOctokit() {
   const token = process.env.GITHUB_TOKEN;
@@ -136,22 +135,13 @@ interface VerifyGitHubContentParams {
   dependencyFiles:
     | Array<{ fileContents: string; fileName: string }>
     | undefined;
-  config: LangGraphRunnableConfig;
 }
 
 async function verifyGitHubContentIsRelevant({
   contents,
   fileType,
   dependencyFiles,
-  config,
 }: VerifyGitHubContentParams): Promise<boolean> {
-  const relevancyModel = new ChatAnthropic({
-    model: "claude-3-5-sonnet-latest",
-    temperature: 0,
-  }).withStructuredOutput(RELEVANCY_SCHEMA, {
-    name: "relevancy",
-  });
-
   let dependenciesPrompt = "";
   if (dependencyFiles) {
     dependencyFiles.forEach((f) => {
@@ -165,27 +155,15 @@ async function verifyGitHubContentIsRelevant({
     );
   }
 
-  const { relevant } = await relevancyModel
-    .withConfig({
-      runName: "check-github-relevancy-model",
-    })
-    .invoke(
-      [
-        {
-          role: "system",
-          content: VERIFY_LANGCHAIN_RELEVANT_CONTENT_PROMPT.replaceAll(
-            "{file_type}",
-            fileType,
-          ).replaceAll("{repoDependenciesPrompt}", dependenciesPrompt),
-        },
-        {
-          role: "user",
-          content: contents,
-        },
-      ],
-      config as RunnableConfig,
-    );
-  return relevant;
+  const systemPrompt = VERIFY_LANGCHAIN_RELEVANT_CONTENT_PROMPT.replaceAll(
+    "{file_type}",
+    fileType,
+  ).replaceAll("{repoDependenciesPrompt}", dependenciesPrompt);
+
+  return verifyContentIsRelevant(contents, {
+    systemPrompt,
+    schema: RELEVANCY_SCHEMA,
+  })
 }
 
 /**
@@ -227,7 +205,6 @@ export async function verifyGitHubContent(
       contents: contentsAndType.contents,
       fileType: contentsAndType.fileType,
       dependencyFiles,
-      config,
     })
   ) {
     return returnValue;

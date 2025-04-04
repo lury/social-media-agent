@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { GeneratePostAnnotation } from "../../generate-post/generate-post-state.js";
-import { ChatAnthropic } from "@langchain/anthropic";
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyContentAnnotation } from "../shared-state.js";
 import { getVideoSummary } from "../youtube/video-summary.js";
 import { skipContentRelevancyCheck } from "../../utils.js";
+import { verifyContentIsRelevant } from "./verify-content.js";
 
 type VerifyYouTubeContentReturn = {
   relevantLinks: (typeof GeneratePostAnnotation.State)["relevantLinks"];
@@ -39,33 +39,6 @@ const RELEVANCY_SCHEMA = z
   })
   .describe("The relevancy of the content to your company's products.");
 
-async function verifyYouTubeContentIsRelevant(
-  summary: string,
-): Promise<boolean> {
-  const relevancyModel = new ChatAnthropic({
-    model: "claude-3-5-sonnet-latest",
-    temperature: 0,
-  }).withStructuredOutput(RELEVANCY_SCHEMA, {
-    name: "relevancy",
-  });
-
-  const { relevant } = await relevancyModel
-    .withConfig({
-      runName: "check-video-relevancy-model",
-    })
-    .invoke([
-      {
-        role: "system",
-        content: VERIFY_RELEVANT_CONTENT_PROMPT,
-      },
-      {
-        role: "user",
-        content: summary,
-      },
-    ]);
-  return relevant;
-}
-
 /**
  * Verifies the content provided is relevant to your company's products.
  */
@@ -85,7 +58,10 @@ export async function verifyYouTubeContent(
     return returnValue;
   }
 
-  if (await verifyYouTubeContentIsRelevant(summary)) {
+  if (await verifyContentIsRelevant(summary, {
+    systemPrompt: VERIFY_RELEVANT_CONTENT_PROMPT,
+    schema: RELEVANCY_SCHEMA,
+  })) {
     return returnValue;
   }
 

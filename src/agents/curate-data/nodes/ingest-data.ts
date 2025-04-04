@@ -11,7 +11,6 @@ import { TweetV2 } from "twitter-api-v2";
 import { latentSpaceLoader } from "../loaders/latent-space.js";
 import { SimpleRedditPostWithComments } from "../../../clients/reddit/types.js";
 import { langchainDependencyReposLoader } from "../loaders/github/langchain.js";
-import { RunnableLambda } from "@langchain/core/runnables";
 import { useLangChainPrompts } from "../../utils.js";
 
 export async function ingestData(
@@ -33,30 +32,15 @@ export async function ingestData(
   let aiNewsPosts: string[] = [];
   let redditPosts: SimpleRedditPostWithComments[] = [];
 
-  // We wrap all of these loaders in RunnableLambda's to ensure proper tracing.
-
   if (useLangChainPrompts()) {
     if (sources.includes("twitter")) {
-      tweets = await RunnableLambda.from<unknown, TweetV2[]>((_, config) =>
-        twitterLoaderWithLangChain(config),
-      )
-        .withConfig({ runName: "twitter-loader-langchain" })
-        .invoke({}, config);
+      tweets = await twitterLoaderWithLangChain(config);
     }
     if (sources.includes("github")) {
-      trendingRepos = await RunnableLambda.from<unknown, string[]>(
-        (_, config) => langchainDependencyReposLoader(config),
-      )
-        .withConfig({ runName: "github-loader-langchain" })
-        .invoke({}, config);
+      trendingRepos = await langchainDependencyReposLoader(config);
     }
     if (sources.includes("reddit")) {
-      redditPosts = await RunnableLambda.from<
-        unknown,
-        SimpleRedditPostWithComments[]
-      >((_, config) => getLangChainRedditPosts(config))
-        .withConfig({ runName: "reddit-loader-langchain" })
-        .invoke({}, config);
+      redditPosts = await getLangChainRedditPosts(config);
     }
 
     // Latent space and AI news are not high signal for LangChain. Return early in this case.
@@ -68,40 +52,19 @@ export async function ingestData(
   }
 
   if (sources.includes("twitter")) {
-    tweets = await RunnableLambda.from<unknown, TweetV2[]>(() =>
-      twitterLoader(),
-    )
-      .withConfig({ runName: "twitter-loader" })
-      .invoke({}, config);
+    tweets = await twitterLoader();
   }
   if (sources.includes("github")) {
-    trendingRepos = await RunnableLambda.from<unknown, string[]>((_, config) =>
-      githubTrendingLoader(config),
-    )
-      .withConfig({ runName: "github-loader" })
-      .invoke({}, config);
+    trendingRepos = await githubTrendingLoader(config);
   }
   if (sources.includes("reddit")) {
-    redditPosts = await RunnableLambda.from<
-      unknown,
-      SimpleRedditPostWithComments[]
-    >((_, config) => getRedditPosts(config))
-      .withConfig({ runName: "reddit-loader" })
-      .invoke({}, config);
+    redditPosts = await getRedditPosts(config);
   }
   if (sources.includes("latent_space")) {
-    latentSpacePosts = await RunnableLambda.from<unknown, string[]>(
-      (_, config) => latentSpaceLoader(config),
-    )
-      .withConfig({ runName: "latent-space-loader" })
-      .invoke({}, config);
+    latentSpacePosts = await latentSpaceLoader(config);
   }
   if (sources.includes("ai_news")) {
-    aiNewsPosts = await RunnableLambda.from<unknown, string[]>(() =>
-      aiNewsBlogLoader(),
-    )
-      .withConfig({ runName: "ai-news-loader" })
-      .invoke({}, config);
+    aiNewsPosts = await aiNewsBlogLoader();
   }
 
   return {
