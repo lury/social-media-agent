@@ -7,7 +7,7 @@ const OBJECT_KEY = "data";
 
 /**
  * Save a list of URLs of which have been included in posts already.
- * 
+ *
  * @param urls The list of URLs to save
  * @param config The configuration for the langgraph
  * @param overwrite Whether to overwrite the stored URLs if they already exist.
@@ -41,7 +41,7 @@ export async function saveUsedUrls(
 
 /**
  * Get the list of URLs of which have been included in posts already.
- * 
+ *
  * @param config The configuration for the langgraph
  * @returns {Promise<string[]>} The list of URLs which have been included in posts already.
  */

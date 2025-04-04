@@ -161,10 +161,7 @@ export async function humanNode<
   };
 
   // Save ALL links used to generate this post so that they are not used to generate future posts (duplicates).
-  await saveUsedUrls(
-    [...(state.relevantLinks ?? []), ...state.links],
-    config,
-  );
+  await saveUsedUrls([...(state.relevantLinks ?? []), ...state.links], config);
 
   const response = interrupt<HumanInterrupt[], HumanResponse[]>([
     interruptValue,

@@ -632,14 +632,9 @@ export const skipContentRelevancyCheck = traceable(
   { name: "skipContentRelevancyCheck" },
 );
 
-function skipUsedUrlsCheckFunc(
-  config?: LangGraphRunnableConfig,
-): boolean {
-  const skipUsedUrlsCheck =
-    config?.configurable?.[SKIP_USED_URLS_CHECK];
-  return (
-    skipUsedUrlsCheck ?? process.env.SKIP_USED_URLS_CHECK === "true"
-  );
+function skipUsedUrlsCheckFunc(config?: LangGraphRunnableConfig): boolean {
+  const skipUsedUrlsCheck = config?.configurable?.[SKIP_USED_URLS_CHECK];
+  return skipUsedUrlsCheck ?? process.env.SKIP_USED_URLS_CHECK === "true";
 }
 
 /**
@@ -648,7 +643,6 @@ function skipUsedUrlsCheckFunc(
  * @param config - Optional configuration object
  * @returns {Promise<boolean>} True if used URLs check should be skipped
  */
-export const skipUsedUrlsCheck = traceable(
-  skipUsedUrlsCheckFunc,
-  { name: "skipUsedUrlsCheck" },
-);
+export const skipUsedUrlsCheck = traceable(skipUsedUrlsCheckFunc, {
+  name: "skipUsedUrlsCheck",
+});
