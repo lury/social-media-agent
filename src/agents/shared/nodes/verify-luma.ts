@@ -110,7 +110,7 @@ export async function verifyGeneralContentIsRelevant(
  */
 export async function verifyLumaEvent(
   state: typeof VerifyContentAnnotation.State,
-  _config: LangGraphRunnableConfig,
+  config: LangGraphRunnableConfig,
 ): Promise<Partial<CurateDataState>> {
   const shouldExclude = shouldExcludeGeneralContent(state.link);
   if (shouldExclude) {

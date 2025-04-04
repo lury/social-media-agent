@@ -5,6 +5,7 @@ import { z } from "zod";
 import { convertPostToString, formatComments } from "../utils.js";
 import { skipContentRelevancyCheck } from "../../utils.js";
 import { traceable } from "langsmith/traceable";
+import { LangGraphRunnableConfig } from "@langchain/langgraph";
 
 const VALIDATE_REDDIT_POST_PROMPT = `You are a highly regarded marketing employee.
 You're provided with a Reddit post, and some of the comments (not guaranteed, some Reddit posts don't have comments).
@@ -101,6 +102,7 @@ const verifyRedditContent = traceable(verifyRedditContentFunc, {
 
 export async function validateRedditPost(
   state: VerifyRedditGraphState,
+  config: LangGraphRunnableConfig,
 ): Promise<Partial<VerifyRedditGraphState>> {
   const returnValue = {
     relevantLinks: [...state.externalURLs],

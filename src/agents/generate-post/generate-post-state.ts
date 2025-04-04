@@ -1,6 +1,10 @@
 import { Annotation, END } from "@langchain/langgraph";
 import { IngestDataAnnotation } from "../ingest-data/ingest-data-state.js";
-import { POST_TO_LINKEDIN_ORGANIZATION, TEXT_ONLY_MODE } from "./constants.js";
+import {
+  POST_TO_LINKEDIN_ORGANIZATION,
+  SKIP_CONTENT_RELEVANCY_CHECK,
+  TEXT_ONLY_MODE,
+} from "./constants.js";
 import { DateType } from "../types.js";
 import { VerifyLinksResultAnnotation } from "../verify-links/verify-links-state.js";
 
@@ -103,4 +107,16 @@ export const GeneratePostConfigurableAnnotation = Annotation.Root({
    * run. Undefined if the graph was started directly.
    */
   origin: Annotation<string | undefined>,
+  /**
+   * Whether or not to skip the content relevancy check.
+   */
+  [SKIP_CONTENT_RELEVANCY_CHECK]: Annotation<boolean | undefined>(),
 });
+
+export const BASE_GENERATE_POST_CONFIG: typeof GeneratePostConfigurableAnnotation.State =
+  {
+    [POST_TO_LINKEDIN_ORGANIZATION]: undefined,
+    [TEXT_ONLY_MODE]: false,
+    origin: undefined,
+    [SKIP_CONTENT_RELEVANCY_CHECK]: undefined,
+  };
