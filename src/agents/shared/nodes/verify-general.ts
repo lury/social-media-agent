@@ -5,7 +5,7 @@ import { FireCrawlLoader } from "@langchain/community/document_loaders/web/firec
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyContentAnnotation } from "../shared-state.js";
 import { RunnableLambda } from "@langchain/core/runnables";
-import { getPageText } from "../../utils.js";
+import { getPageText, skipContentRelevancyCheck } from "../../utils.js";
 import { getImagesFromFireCrawlMetadata } from "../../../utils/firecrawl.js";
 import { CurateDataState } from "../../curate-data/state.js";
 import { shouldExcludeGeneralContent } from "../../should-exclude.js";
@@ -119,16 +119,21 @@ export async function verifyGeneralContent(
   })
     .withConfig({ runName: "get-url-contents" })
     .invoke(state.link);
-  const relevant = await verifyGeneralContentIsRelevant(urlContents.content);
 
-  if (relevant) {
-    return {
-      relevantLinks: [state.link],
-      pageContents: [urlContents.content],
-      ...(urlContents.imageUrls?.length
-        ? { imageOptions: urlContents.imageUrls }
-        : {}),
-    };
+  const returnValue = {
+    relevantLinks: [state.link],
+    pageContents: [urlContents.content],
+    ...(urlContents.imageUrls?.length
+      ? { imageOptions: urlContents.imageUrls }
+      : {}),
+  };
+
+  if (await skipContentRelevancyCheck()) {
+    return returnValue;
+  }
+
+  if (await verifyGeneralContentIsRelevant(urlContents.content)) {
+    return returnValue;
   }
 
   // Not relevant, return empty arrays so this URL is not included.

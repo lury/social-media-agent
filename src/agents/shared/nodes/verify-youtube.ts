@@ -5,6 +5,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyContentAnnotation } from "../shared-state.js";
 import { getVideoSummary } from "../youtube/video-summary.js";
+import { skipContentRelevancyCheck } from "../../utils.js";
 
 type VerifyYouTubeContentReturn = {
   relevantLinks: (typeof GeneratePostAnnotation.State)["relevantLinks"];
@@ -73,14 +74,19 @@ export async function verifyYouTubeContent(
   _config: LangGraphRunnableConfig,
 ): Promise<VerifyYouTubeContentReturn> {
   const { summary, thumbnail } = await getVideoSummary(state.link);
-  const relevant = await verifyYouTubeContentIsRelevant(summary);
 
-  if (relevant) {
-    return {
-      relevantLinks: [state.link],
-      pageContents: [summary as string],
-      ...(thumbnail ? { imageOptions: [thumbnail] } : {}),
-    };
+  const returnValue = {
+    relevantLinks: [state.link],
+    pageContents: [summary as string],
+    ...(thumbnail ? { imageOptions: [thumbnail] } : {}),
+  };
+
+  if (await skipContentRelevancyCheck()) {
+    return returnValue;
+  }
+
+  if (await verifyYouTubeContentIsRelevant(summary)) {
+    return returnValue;
   }
 
   // Not relevant, return empty arrays so this URL is not included.

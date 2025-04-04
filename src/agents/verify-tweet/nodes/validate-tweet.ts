@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyTweetAnnotation } from "../verify-tweet-state.js";
 import { ChatAnthropic } from "@langchain/anthropic";
+import { skipContentRelevancyCheck } from "../../utils.js";
 
 const RELEVANCY_SCHEMA = z
   .object({
@@ -93,18 +94,22 @@ export async function validateTweetContent(
     pageContents: state.pageContents || [],
   });
 
-  const relevant = await verifyGeneralContentIsRelevant(context);
+  const returnValue = {
+    relevantLinks: [state.link, ...state.tweetContentUrls],
+    pageContents: [context],
+  };
 
-  if (!relevant) {
-    return {
-      relevantLinks: [],
-      pageContents: [],
-      imageOptions: [],
-    };
+  if (await skipContentRelevancyCheck()) {
+    return returnValue;
+  }
+
+  if (await verifyGeneralContentIsRelevant(context)) {
+    return returnValue;
   }
 
   return {
-    relevantLinks: [state.link, ...state.tweetContentUrls],
-    pageContents: [context],
+    relevantLinks: [],
+    pageContents: [],
+    imageOptions: [],
   };
 }

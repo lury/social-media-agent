@@ -5,6 +5,7 @@ import {
   TEXT_ONLY_MODE,
 } from "./generate-post/constants.js";
 import { Image } from "./types.js";
+import { traceable } from "langsmith/traceable";
 
 export const BLACKLISTED_MIME_TYPES = [
   "image/svg+xml",
@@ -607,3 +608,17 @@ export function useArcadeAuth(): boolean {
 export function useTwitterApiOnly(): boolean {
   return process.env.USE_TWITTER_API_ONLY === "true";
 }
+
+function skipContentRelevancyCheckFunc(): boolean {
+  return process.env.SKIP_CONTENT_RELEVANCY_CHECK === "true";
+}
+
+/**
+ * Returns true if content relevancy verification should be skipped
+ *
+ * @returns {Promise<boolean>} True if content relevancy verification should be skipped
+ */
+export const skipContentRelevancyCheck = traceable(
+  skipContentRelevancyCheckFunc,
+  { name: "skipContentRelevancyCheck" },
+);
