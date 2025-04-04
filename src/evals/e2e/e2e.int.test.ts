@@ -5,12 +5,11 @@ import { INPUTS } from "./inputs.js";
 import { generatePostGraph } from "../../agents/generate-post/generate-post-graph.js";
 import { InMemoryStore, MemorySaver } from "@langchain/langgraph";
 import { HumanInterrupt } from "@langchain/langgraph/prebuilt";
-import {
-  POST_TO_LINKEDIN_ORGANIZATION,
-  TEXT_ONLY_MODE,
-} from "../../agents/generate-post/constants.js";
 import { removeUrls } from "../../agents/utils.js";
-import { GeneratePostAnnotation } from "../../agents/generate-post/generate-post-state.js";
+import {
+  BASE_GENERATE_POST_CONFIG,
+  GeneratePostAnnotation,
+} from "../../agents/generate-post/generate-post-state.js";
 
 const checkGeneratePostResult: SimpleEvaluator = ({ expected, actual }) => {
   // Check the following:
@@ -99,12 +98,6 @@ const checkGeneratePostResult: SimpleEvaluator = ({ expected, actual }) => {
   };
 };
 
-const BASE_CONFIG = {
-  [POST_TO_LINKEDIN_ORGANIZATION]: undefined,
-  [TEXT_ONLY_MODE]: false,
-  origin: undefined,
-};
-
 ls.describe("SMA - E2E", () => {
   ls.test.each(INPUTS)(
     "Should validate the end to end flow of the generate post agent",
@@ -117,7 +110,7 @@ ls.describe("SMA - E2E", () => {
       const config = {
         configurable: {
           thread_id: threadId,
-          ...BASE_CONFIG,
+          ...BASE_GENERATE_POST_CONFIG,
         },
       };
 

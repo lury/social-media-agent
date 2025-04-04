@@ -4,7 +4,10 @@ import { verifyYouTubeContent } from "../shared/nodes/verify-youtube.js";
 import { verifyGeneralContent } from "../shared/nodes/verify-general.js";
 import { verifyGitHubContent } from "../shared/nodes/verify-github.js";
 import { verifyTweetGraph } from "../verify-tweet/verify-tweet-graph.js";
-import { VerifyLinksGraphAnnotation } from "./verify-links-state.js";
+import {
+  VerifyLinksGraphAnnotation,
+  VerifyLinksGraphConfigurableAnnotation,
+} from "./verify-links-state.js";
 import { getUrlType } from "../utils.js";
 import { verifyRedditPostGraph } from "../verify-reddit-post/verify-reddit-post-graph.js";
 import { VerifyRedditPostAnnotation } from "../verify-reddit-post/verify-reddit-post-state.js";
@@ -44,7 +47,10 @@ function routeLinkTypes(state: typeof VerifyLinksGraphAnnotation.State) {
   });
 }
 
-const verifyLinksWorkflow = new StateGraph(VerifyLinksGraphAnnotation)
+const verifyLinksWorkflow = new StateGraph(
+  VerifyLinksGraphAnnotation,
+  VerifyLinksGraphConfigurableAnnotation,
+)
   .addNode("verifyYouTubeContent", verifyYouTubeContent, {
     input: VerifyContentAnnotation,
   })

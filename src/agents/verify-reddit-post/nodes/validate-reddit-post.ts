@@ -3,6 +3,9 @@ import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyRedditGraphState } from "../types.js";
 import { z } from "zod";
 import { convertPostToString, formatComments } from "../utils.js";
+import { skipContentRelevancyCheck } from "../../utils.js";
+import { traceable } from "langsmith/traceable";
+import { LangGraphRunnableConfig } from "@langchain/langgraph";
 
 const VALIDATE_REDDIT_POST_PROMPT = `You are a highly regarded marketing employee.
 You're provided with a Reddit post, and some of the comments (not guaranteed, some Reddit posts don't have comments).
@@ -64,9 +67,12 @@ ${c}
   return fullPrompt;
 }
 
-export async function validateRedditPost(
+/**
+ * Verifies the content provided is relevant.
+ */
+async function verifyRedditContentFunc(
   state: VerifyRedditGraphState,
-): Promise<Partial<VerifyRedditGraphState>> {
+): Promise<boolean> {
   const model = new ChatAnthropic({
     model: "claude-3-5-sonnet-latest",
     temperature: 0,
@@ -87,14 +93,31 @@ export async function validateRedditPost(
     },
   ]);
 
-  if (result.relevant) {
+  return result.relevant;
+}
+
+const verifyRedditContent = traceable(verifyRedditContentFunc, {
+  name: "verifyRedditContent",
+});
+
+export async function validateRedditPost(
+  state: VerifyRedditGraphState,
+  config: LangGraphRunnableConfig,
+): Promise<Partial<VerifyRedditGraphState>> {
+  const returnValue = {
+    relevantLinks: [...state.externalURLs],
+    pageContents: [
+      ...(state.redditPost ? [convertPostToString(state.redditPost)] : []),
+    ],
+  };
+
+  if (await skipContentRelevancyCheck(config)) {
+    return returnValue;
+  }
+
+  if (await verifyRedditContent(state)) {
     // If true, return nothing so the state is not effected.
-    return {
-      relevantLinks: [...state.externalURLs],
-      pageContents: [
-        ...(state.redditPost ? [convertPostToString(state.redditPost)] : []),
-      ],
-    };
+    return returnValue;
   }
 
   // If the content is not relevant, reset the state so it contains empty values

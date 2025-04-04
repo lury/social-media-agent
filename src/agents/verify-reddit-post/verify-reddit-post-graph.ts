@@ -9,7 +9,10 @@ import { verifyYouTubeContent } from "../shared/nodes/verify-youtube.js";
 import { verifyGeneralContent } from "../shared/nodes/verify-general.js";
 import { verifyGitHubContent } from "../shared/nodes/verify-github.js";
 import { VerifyContentAnnotation } from "../shared/shared-state.js";
-import { VerifyRedditPostAnnotation } from "./verify-reddit-post-state.js";
+import {
+  VerifyRedditPostAnnotation,
+  VerifyRedditPostConfigurableAnnotation,
+} from "./verify-reddit-post-state.js";
 import { validateRedditPost } from "./nodes/validate-reddit-post.js";
 import { getExternalUrls } from "./nodes/get-external-urls.js";
 import { getUrlType } from "../utils.js";
@@ -42,7 +45,10 @@ function routePostUrls(state: typeof VerifyRedditPostAnnotation.State) {
   });
 }
 
-const verifyRedditPostBuilder = new StateGraph(VerifyRedditPostAnnotation)
+const verifyRedditPostBuilder = new StateGraph(
+  VerifyRedditPostAnnotation,
+  VerifyRedditPostConfigurableAnnotation,
+)
   .addNode("getPost", getPost)
   .addNode("getExternalUrls", getExternalUrls)
 

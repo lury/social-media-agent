@@ -5,7 +5,7 @@ import { FireCrawlLoader } from "@langchain/community/document_loaders/web/firec
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyContentAnnotation } from "../shared-state.js";
 import { RunnableLambda } from "@langchain/core/runnables";
-import { getPageText } from "../../utils.js";
+import { getPageText, skipContentRelevancyCheck } from "../../utils.js";
 import { getImagesFromFireCrawlMetadata } from "../../../utils/firecrawl.js";
 import { CurateDataState } from "../../curate-data/state.js";
 import { shouldExcludeGeneralContent } from "../../should-exclude.js";
@@ -101,13 +101,13 @@ export async function verifyGeneralContentIsRelevant(
  * Verifies if the general content from a provided URL is relevant to your company's products.
  *
  * @param state - The current state containing the link to verify.
- * @param _config - Configuration for the LangGraph runtime (unused in this function).
+ * @param config - Configuration for the LangGraph runtime.
  * @returns An object containing relevant links and page contents if the content is relevant;
  * otherwise, returns empty arrays.
  */
 export async function verifyGeneralContent(
   state: typeof VerifyContentAnnotation.State,
-  _config: LangGraphRunnableConfig,
+  config: LangGraphRunnableConfig,
 ): Promise<Partial<CurateDataState>> {
   const shouldExclude = shouldExcludeGeneralContent(state.link);
   if (shouldExclude) {
@@ -119,16 +119,21 @@ export async function verifyGeneralContent(
   })
     .withConfig({ runName: "get-url-contents" })
     .invoke(state.link);
-  const relevant = await verifyGeneralContentIsRelevant(urlContents.content);
 
-  if (relevant) {
-    return {
-      relevantLinks: [state.link],
-      pageContents: [urlContents.content],
-      ...(urlContents.imageUrls?.length
-        ? { imageOptions: urlContents.imageUrls }
-        : {}),
-    };
+  const returnValue = {
+    relevantLinks: [state.link],
+    pageContents: [urlContents.content],
+    ...(urlContents.imageUrls?.length
+      ? { imageOptions: urlContents.imageUrls }
+      : {}),
+  };
+
+  if (await skipContentRelevancyCheck(config)) {
+    return returnValue;
+  }
+
+  if (await verifyGeneralContentIsRelevant(urlContents.content)) {
+    return returnValue;
   }
 
   // Not relevant, return empty arrays so this URL is not included.

@@ -1,6 +1,9 @@
 import { Annotation } from "@langchain/langgraph";
 import { VerifyContentAnnotation } from "../shared/shared-state.js";
-import { VerifyLinksResultAnnotation } from "../verify-links/verify-links-state.js";
+import {
+  VerifyLinksGraphConfigurableAnnotation,
+  VerifyLinksResultAnnotation,
+} from "../verify-links/verify-links-state.js";
 
 export const VerifyTweetAnnotation = Annotation.Root({
   /**
@@ -40,4 +43,8 @@ export const VerifyTweetAnnotation = Annotation.Root({
     },
     default: () => [],
   }),
+});
+
+export const VerifyTweetConfigurableAnnotation = Annotation.Root({
+  ...VerifyLinksGraphConfigurableAnnotation.spec,
 });

@@ -12,6 +12,7 @@ import {
 } from "../../../utils/github-repo-contents.js";
 import { Octokit } from "@octokit/rest";
 import { shouldExcludeGitHubContent } from "../../should-exclude.js";
+import { skipContentRelevancyCheck } from "../../utils.js";
 
 function getOctokit() {
   const token = process.env.GITHUB_TOKEN;
@@ -211,18 +212,25 @@ export async function verifyGitHubContent(
     };
   }
 
+  const returnValue = {
+    relevantLinks: [state.link],
+    pageContents: [contentsAndType.contents],
+  };
+
+  if (await skipContentRelevancyCheck(config)) {
+    return returnValue;
+  }
+
   const dependencyFiles = await getDependencies(state.link);
-  const relevant = await verifyGitHubContentIsRelevant({
-    contents: contentsAndType.contents,
-    fileType: contentsAndType.fileType,
-    dependencyFiles,
-    config,
-  });
-  if (relevant) {
-    return {
-      relevantLinks: [state.link],
-      pageContents: [contentsAndType.contents],
-    };
+  if (
+    await verifyGitHubContentIsRelevant({
+      contents: contentsAndType.contents,
+      fileType: contentsAndType.fileType,
+      dependencyFiles,
+      config,
+    })
+  ) {
+    return returnValue;
   }
 
   // Not relevant, return empty arrays so this URL is not included.

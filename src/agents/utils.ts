@@ -2,9 +2,11 @@ import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import * as cheerio from "cheerio";
 import {
   POST_TO_LINKEDIN_ORGANIZATION,
+  SKIP_CONTENT_RELEVANCY_CHECK,
   TEXT_ONLY_MODE,
 } from "./generate-post/constants.js";
 import { Image } from "./types.js";
+import { traceable } from "langsmith/traceable";
 
 export const BLACKLISTED_MIME_TYPES = [
   "image/svg+xml",
@@ -607,3 +609,24 @@ export function useArcadeAuth(): boolean {
 export function useTwitterApiOnly(): boolean {
   return process.env.USE_TWITTER_API_ONLY === "true";
 }
+
+function skipContentRelevancyCheckFunc(
+  config?: LangGraphRunnableConfig,
+): boolean {
+  const skipRelevancyCheck =
+    config?.configurable?.[SKIP_CONTENT_RELEVANCY_CHECK];
+  return (
+    skipRelevancyCheck ?? process.env.SKIP_CONTENT_RELEVANCY_CHECK === "true"
+  );
+}
+
+/**
+ * Returns true if content relevancy verification should be skipped
+ *
+ * @param config - Optional configuration object
+ * @returns {Promise<boolean>} True if content relevancy verification should be skipped
+ */
+export const skipContentRelevancyCheck = traceable(
+  skipContentRelevancyCheckFunc,
+  { name: "skipContentRelevancyCheck" },
+);

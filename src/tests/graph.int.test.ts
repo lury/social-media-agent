@@ -13,17 +13,8 @@ import { getGitHubContentsAndTypeFromUrl } from "../agents/shared/nodes/verify-g
 import { verifyYouTubeContent } from "../agents/shared/nodes/verify-youtube.js";
 import { Command, MemorySaver } from "@langchain/langgraph";
 import { verifyTweetGraph } from "../agents/verify-tweet/verify-tweet-graph.js";
-import {
-  POST_TO_LINKEDIN_ORGANIZATION,
-  TEXT_ONLY_MODE,
-} from "../agents/generate-post/constants.js";
 import { resolveTwitterUrl } from "../clients/twitter/utils.js";
-
-const BASE_CONFIG = {
-  [POST_TO_LINKEDIN_ORGANIZATION]: undefined,
-  [TEXT_ONLY_MODE]: false,
-  origin: undefined,
-};
+import { BASE_GENERATE_POST_CONFIG } from "../agents/generate-post/generate-post-state.js";
 
 describe("GeneratePostGraph", () => {
   it("Should be able to generate posts from a GitHub URL slack message", async () => {
@@ -163,9 +154,7 @@ test("can generate post", async () => {
       links: ["https://x.com/eitanblumin/status/1861001933294653890"],
     },
     {
-      configurable: {
-        ...BASE_CONFIG,
-      },
+      configurable: BASE_GENERATE_POST_CONFIG,
     },
   );
   console.log(result);
@@ -186,7 +175,7 @@ test("can interrupt and resume", async () => {
   generatePostGraph.checkpointer = new MemorySaver();
   const config = {
     configurable: {
-      ...BASE_CONFIG,
+      ...BASE_GENERATE_POST_CONFIG,
       thread_id: "123",
     },
   };

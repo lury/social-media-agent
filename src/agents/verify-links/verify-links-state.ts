@@ -1,5 +1,6 @@
 import { Annotation } from "@langchain/langgraph";
 import { filterUnwantedImageUrls } from "../utils.js";
+import { SKIP_CONTENT_RELEVANCY_CHECK } from "../generate-post/constants.js";
 
 export const VerifyLinksGraphSharedAnnotation = Annotation.Root({
   /**
@@ -53,4 +54,11 @@ export const VerifyLinksGraphAnnotation = Annotation.Root({
    */
   links: VerifyLinksGraphSharedAnnotation.spec.links,
   ...VerifyLinksResultAnnotation.spec,
+});
+
+export const VerifyLinksGraphConfigurableAnnotation = Annotation.Root({
+  /**
+   * Whether or not to skip the content relevancy check.
+   */
+  [SKIP_CONTENT_RELEVANCY_CHECK]: Annotation<boolean | undefined>(),
 });
