@@ -355,7 +355,7 @@ const BLACKLISTED_IMAGE_URLS = ["img.shields.io", "contrib.rocks"];
 export function filterUnwantedImageUrls(urls: string[]): string[] {
   return urls.filter(
     (url) =>
-      !BLACKLISTED_IMAGE_URL_ENDINGS.find((ending) => url.endsWith(ending)) &&
+      !BLACKLISTED_IMAGE_URL_ENDINGS.find((ending) => url?.endsWith(ending)) &&
       !BLACKLISTED_IMAGE_URLS.find((blacklistedUrl) =>
         url.includes(blacklistedUrl),
       ) &&

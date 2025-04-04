@@ -15,7 +15,7 @@ const sharedLinksReducer = (
   if (update === undefined) return undefined;
   // Use a set to ensure no duplicate links are added.
   const stateSet = new Set(state || []);
-  update.forEach((link) => stateSet.add(link));
+  update.filter((u): u is string => !!u).forEach((link) => stateSet.add(link));
   return filterUnwantedImageUrls(Array.from(stateSet));
 };
 
