@@ -1,8 +1,6 @@
 import { IngestDataAnnotation } from "../ingest-data-state.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import {
-  SlackClient,
-} from "../../../clients/slack/client.js";
+import { SlackClient } from "../../../clients/slack/client.js";
 import { extractUrlsFromSlackText } from "../../utils.js";
 
 const getChannelIdFromConfig = async (

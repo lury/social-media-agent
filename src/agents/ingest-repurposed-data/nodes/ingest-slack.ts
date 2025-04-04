@@ -1,8 +1,6 @@
 import { IngestRepurposedDataState } from "../types.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import {
-  SlackClient,
-} from "../../../clients/slack/client.js";
+import { SlackClient } from "../../../clients/slack/client.js";
 
 const getChannelIdFromConfig = async (
   config: LangGraphRunnableConfig,
