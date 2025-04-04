@@ -58,10 +58,12 @@ export async function verifyYouTubeContent(
     return returnValue;
   }
 
-  if (await verifyContentIsRelevant(summary, {
-    systemPrompt: VERIFY_RELEVANT_CONTENT_PROMPT,
-    schema: RELEVANCY_SCHEMA,
-  })) {
+  if (
+    await verifyContentIsRelevant(summary, {
+      systemPrompt: VERIFY_RELEVANT_CONTENT_PROMPT,
+      schema: RELEVANCY_SCHEMA,
+    })
+  ) {
     return returnValue;
   }
 

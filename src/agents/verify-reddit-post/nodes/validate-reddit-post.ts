@@ -81,10 +81,12 @@ export async function validateRedditPost(
     return returnValue;
   }
 
-  if (await verifyContentIsRelevant(formatUserPrompt(state), {
-    systemPrompt: VALIDATE_REDDIT_POST_PROMPT,
-    schema: RELEVANCY_SCHEMA,
-  })) {
+  if (
+    await verifyContentIsRelevant(formatUserPrompt(state), {
+      systemPrompt: VALIDATE_REDDIT_POST_PROMPT,
+      schema: RELEVANCY_SCHEMA,
+    })
+  ) {
     return returnValue;
   }
 

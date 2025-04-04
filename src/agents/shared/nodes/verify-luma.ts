@@ -73,7 +73,9 @@ async function getUrlContentsFunc(url: string): Promise<UrlContents> {
   throw new Error(`Failed to fetch content from ${url}.`);
 }
 
-export const getUrlContents = traceable(getUrlContentsFunc, { name: "get-url-contents" });
+export const getUrlContents = traceable(getUrlContentsFunc, {
+  name: "get-url-contents",
+});
 
 /**
  * Verifies if the Luma event is relevant to your company's products.
@@ -106,10 +108,12 @@ export async function verifyLumaEvent(
     return returnValue;
   }
 
-  if (await verifyContentIsRelevant(urlContents.content, {
-    systemPrompt: VERIFY_LUMA_RELEVANT_CONTENT_PROMPT,
-    schema: RELEVANCY_SCHEMA,
-  })) {
+  if (
+    await verifyContentIsRelevant(urlContents.content, {
+      systemPrompt: VERIFY_LUMA_RELEVANT_CONTENT_PROMPT,
+      schema: RELEVANCY_SCHEMA,
+    })
+  ) {
     return returnValue;
   }
 

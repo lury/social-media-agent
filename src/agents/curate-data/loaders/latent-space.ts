@@ -31,4 +31,6 @@ async function latentSpaceLoaderFunc(config: LangGraphRunnableConfig) {
   return uniqueLinks;
 }
 
-export const latentSpaceLoader = traceable(latentSpaceLoaderFunc, { name: "latent-space-loader" });
+export const latentSpaceLoader = traceable(latentSpaceLoaderFunc, {
+  name: "latent-space-loader",
+});

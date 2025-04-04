@@ -78,11 +78,11 @@ async function twitterLoaderFunc(): Promise<TweetV2[]> {
   return allTweets;
 }
 
-export const twitterLoader = traceable(twitterLoaderFunc, { name: "twitter-loader" });
+export const twitterLoader = traceable(twitterLoaderFunc, {
+  name: "twitter-loader",
+});
 
-async function twitterLoaderWithLangChainFunc(
-  config: LangGraphRunnableConfig,
-) {
+async function twitterLoaderWithLangChainFunc(config: LangGraphRunnableConfig) {
   const lastIngestedTweetId = await getLastIngestedTweetId(config);
   const client = TwitterClient.fromBasicTwitterAuth();
   // Don't return tweets from the LangChain account, or active LangChain employees since these
@@ -118,4 +118,7 @@ async function twitterLoaderWithLangChainFunc(
   return tweets;
 }
 
-export const twitterLoaderWithLangChain = traceable(twitterLoaderWithLangChainFunc, { name: "twitter-loader-langchain" });
+export const twitterLoaderWithLangChain = traceable(
+  twitterLoaderWithLangChainFunc,
+  { name: "twitter-loader-langchain" },
+);

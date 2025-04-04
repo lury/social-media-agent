@@ -31,28 +31,29 @@ async function verifyContentIsRelevantFunc(
     name: "relevancy",
   });
 
-  const { relevant } = await relevancyModel
-    .invoke([
-      {
-        role: "system",
-        content: args.systemPrompt,
-      },
-      {
-        role: "user",
-        content: content,
-      },
-    ]);
+  const { relevant } = await relevancyModel.invoke([
+    {
+      role: "system",
+      content: args.systemPrompt,
+    },
+    {
+      role: "user",
+      content: content,
+    },
+  ]);
   return relevant;
 }
 
 /**
  * Verifies if the content provided is relevant based on the provided system prompt,
  * using the provided relevancy schema.
- * 
+ *
  * @param {string} content - The content to verify.
  * @param {object} args - The arguments containing the system prompt and relevancy schema.
  * @param {string} args.systemPrompt - The system prompt to use for verification.
  * @param {z.ZodType<z.infer<typeof RELEVANCY_SCHEMA>>} args.schema - The relevancy schema to use for verification.
  * @returns {Promise<boolean>} A promise that resolves to a boolean indicating whether the content is relevant.
  */
-export const verifyContentIsRelevant = traceable(verifyContentIsRelevantFunc, { name: "verify-content-relevancy" });
+export const verifyContentIsRelevant = traceable(verifyContentIsRelevantFunc, {
+  name: "verify-content-relevancy",
+});

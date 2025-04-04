@@ -57,4 +57,6 @@ async function aiNewsBlogLoaderFunc(): Promise<string[]> {
   }
 }
 
-export const aiNewsBlogLoader = traceable(aiNewsBlogLoaderFunc, { name: "ai-news-loader" });
+export const aiNewsBlogLoader = traceable(aiNewsBlogLoaderFunc, {
+  name: "ai-news-loader",
+});

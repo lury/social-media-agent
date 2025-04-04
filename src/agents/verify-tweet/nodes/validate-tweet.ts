@@ -78,10 +78,12 @@ export async function validateTweetContent(
     return returnValue;
   }
 
-  if (await verifyContentIsRelevant(context, {
-    systemPrompt: VERIFY_RELEVANT_CONTENT_PROMPT,
-    schema: RELEVANCY_SCHEMA,
-  })) {
+  if (
+    await verifyContentIsRelevant(context, {
+      systemPrompt: VERIFY_RELEVANT_CONTENT_PROMPT,
+      schema: RELEVANCY_SCHEMA,
+    })
+  ) {
     return returnValue;
   }
 

@@ -38,7 +38,9 @@ async function getRedditPostsFunc(
   return data.filter((post) => uniquePostIds.includes(post.post.id));
 }
 
-export const getRedditPosts = traceable(getRedditPostsFunc, { name: "reddit-loader" });
+export const getRedditPosts = traceable(getRedditPostsFunc, {
+  name: "reddit-loader",
+});
 
 async function getLangChainRedditPostsFunc(config: LangGraphRunnableConfig) {
   const numPostsPerSubreddit =
@@ -71,4 +73,6 @@ async function getLangChainRedditPostsFunc(config: LangGraphRunnableConfig) {
   return data.filter((post) => uniquePostIds.includes(post.post.id));
 }
 
-export const getLangChainRedditPosts = traceable(getLangChainRedditPostsFunc, { name: "reddit-loader-langchain" });
+export const getLangChainRedditPosts = traceable(getLangChainRedditPostsFunc, {
+  name: "reddit-loader-langchain",
+});

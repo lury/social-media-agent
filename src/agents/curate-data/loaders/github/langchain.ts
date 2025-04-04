@@ -272,4 +272,7 @@ async function langchainDependencyReposLoaderFunc(
   return newRepoURLs.slice(0, 10);
 }
 
-export const langchainDependencyReposLoader = traceable(langchainDependencyReposLoaderFunc, { name: "github-loader-langchain" });
+export const langchainDependencyReposLoader = traceable(
+  langchainDependencyReposLoaderFunc,
+  { name: "github-loader-langchain" },
+);

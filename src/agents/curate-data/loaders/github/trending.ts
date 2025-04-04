@@ -45,4 +45,6 @@ async function githubTrendingLoaderFunc(config: LangGraphRunnableConfig) {
   return uniqueRepos;
 }
 
-export const githubTrendingLoader = traceable(githubTrendingLoaderFunc, { name: "github-loader" });
+export const githubTrendingLoader = traceable(githubTrendingLoaderFunc, {
+  name: "github-loader",
+});

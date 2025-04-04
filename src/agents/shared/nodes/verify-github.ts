@@ -163,7 +163,7 @@ async function verifyGitHubContentIsRelevant({
   return verifyContentIsRelevant(contents, {
     systemPrompt,
     schema: RELEVANCY_SCHEMA,
-  })
+  });
 }
 
 /**
