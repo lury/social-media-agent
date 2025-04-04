@@ -6,16 +6,8 @@ import {
 } from "@langchain/langgraph";
 import { ingestSlackMessages } from "./nodes/ingest-slack.js";
 import { Client } from "@langchain/langgraph-sdk";
-import {
-  POST_TO_LINKEDIN_ORGANIZATION,
-  SKIP_CONTENT_RELEVANCY_CHECK,
-  SKIP_USED_URLS_CHECK,
-} from "../generate-post/constants.js";
-import {
-  shouldPostToLinkedInOrg,
-  skipContentRelevancyCheck,
-  skipUsedUrlsCheck,
-} from "../utils.js";
+import { POST_TO_LINKEDIN_ORGANIZATION } from "../generate-post/constants.js";
+import { shouldPostToLinkedInOrg } from "../utils.js";
 import {
   IngestRepurposedDataAnnotation,
   IngestRepurposedDataConfigurableAnnotation,
@@ -32,10 +24,6 @@ async function generatePostsFromMessages(
   });
 
   const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
-  const shouldSkipContentRelevancyCheck = await skipContentRelevancyCheck(
-    config?.configurable,
-  );
-  const shouldSkipUsedUrlsCheck = await skipUsedUrlsCheck(config?.configurable);
 
   for await (const content of state.contents) {
     const thread = await client.threads.create();
@@ -48,8 +36,6 @@ async function generatePostsFromMessages(
       config: {
         configurable: {
           [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
-          [SKIP_CONTENT_RELEVANCY_CHECK]: shouldSkipContentRelevancyCheck,
-          [SKIP_USED_URLS_CHECK]: shouldSkipUsedUrlsCheck,
         },
       },
     });

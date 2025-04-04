@@ -1,10 +1,6 @@
 import { Annotation, MessagesAnnotation } from "@langchain/langgraph";
 import { SimpleSlackMessage } from "../../clients/slack/client.js";
-import {
-  POST_TO_LINKEDIN_ORGANIZATION,
-  SKIP_CONTENT_RELEVANCY_CHECK,
-  SKIP_USED_URLS_CHECK,
-} from "../generate-post/constants.js";
+import { POST_TO_LINKEDIN_ORGANIZATION } from "../generate-post/constants.js";
 
 export type RepurposedContent = {
   originalLink: string;
@@ -50,15 +46,4 @@ export const IngestRepurposedDataConfigurableAnnotation = Annotation.Root({
    * If true, [LINKEDIN_ORGANIZATION_ID] is required.
    */
   [POST_TO_LINKEDIN_ORGANIZATION]: Annotation<boolean | undefined>,
-  /**
-   * Whether or not to skip content verification.
-   * If true, it will not attempt to verify the content from the link provided.
-   * @default undefined
-   */
-  [SKIP_CONTENT_RELEVANCY_CHECK]: Annotation<boolean | undefined>(),
-  /**
-   * Whether or not to skip the used URLs check. This will also
-   * skip saving the URLs in the store.
-   */
-  [SKIP_USED_URLS_CHECK]: Annotation<boolean | undefined>(),
 });
