@@ -1,11 +1,7 @@
 import { IngestDataAnnotation } from "../ingest-data-state.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import {
-  SimpleSlackMessage,
-  SlackClient,
-} from "../../../clients/slack/client.js";
+import { SlackClient } from "../../../clients/slack/client.js";
 import { extractUrlsFromSlackText } from "../../utils.js";
-import { RunnableLambda } from "@langchain/core/runnables";
 
 const getChannelIdFromConfig = async (
   config: LangGraphRunnableConfig,
@@ -30,19 +26,12 @@ export async function ingestSlackData(
   }
 
   const client = new SlackClient();
-  const recentMessages = await RunnableLambda.from<
-    unknown,
-    SimpleSlackMessage[]
-  >(() =>
-    client.getChannelMessages(channelId, {
-      maxMessages: config.configurable?.maxMessages,
-      maxHoursHistory: config.configurable?.maxDaysHistory
-        ? 24 * config.configurable?.maxDaysHistory
-        : undefined,
-    }),
-  )
-    .withConfig({ runName: "fetch-slack-messages" })
-    .invoke({}, config);
+  const recentMessages = await client.getChannelMessages(channelId, {
+    maxMessages: config.configurable?.maxMessages,
+    maxHoursHistory: config.configurable?.maxDaysHistory
+      ? 24 * config.configurable?.maxDaysHistory
+      : undefined,
+  });
 
   const links = recentMessages.flatMap((msg) => {
     const links = extractUrlsFromSlackText(msg.text);
