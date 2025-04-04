@@ -3,6 +3,7 @@ import { SimpleSlackMessage } from "../../clients/slack/client.js";
 import {
   POST_TO_LINKEDIN_ORGANIZATION,
   SKIP_CONTENT_RELEVANCY_CHECK,
+  SKIP_USED_URLS_CHECK,
   TEXT_ONLY_MODE,
 } from "../generate-post/constants.js";
 
@@ -69,4 +70,9 @@ export const IngestDataConfigurableAnnotation = Annotation.Root({
    * @default undefined
    */
   [SKIP_CONTENT_RELEVANCY_CHECK]: Annotation<boolean | undefined>(),
+  /**
+   * Whether or not to skip the used URLs check. This will also
+   * skip saving the URLs in the store.
+   */
+  [SKIP_USED_URLS_CHECK]: Annotation<boolean | undefined>(),
 });

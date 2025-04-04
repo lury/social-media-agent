@@ -99,3 +99,5 @@ export const INGEST_TWITTER_USERNAME = "ingestTwitterUsername";
 export const TEXT_ONLY_MODE = "textOnlyMode";
 
 export const SKIP_CONTENT_RELEVANCY_CHECK = "skipContentRelevancyCheck";
+
+export const SKIP_USED_URLS_CHECK = "skipUsedUrlsCheck";

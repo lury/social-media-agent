@@ -2,7 +2,7 @@ import * as snoowrap from "snoowrap";
 
 declare module "snoowrap" {
   // @ts-expect-error Yeah yeah yeah I know
-  interface RedditContent<T> {
+  interface RedditContent {
     then: undefined;
     catch: undefined;
     finally: undefined;

@@ -19,7 +19,7 @@ import { verifyLinksGraph } from "../verify-links/verify-links-graph.js";
 import { authSocialsPassthrough } from "./nodes/auth-socials.js";
 import { findImagesGraph } from "../find-images/find-images-graph.js";
 import { updateScheduledDate } from "../shared/nodes/update-scheduled-date.js";
-import { getPostSubjectUrls } from "../shared/stores/post-subject-urls.js";
+import { getSavedUrls } from "../shared/stores/post-subject-urls.js";
 import { humanNode } from "../shared/nodes/generate-post/human-node.js";
 import { schedulePost } from "../shared/nodes/generate-post/schedule-post.js";
 import { rewritePost } from "../shared/nodes/generate-post/rewrite-post.js";
@@ -80,7 +80,7 @@ async function checkIfUrlsArePreviouslyUsed(
   urls: string[],
   config: LangGraphRunnableConfig,
 ) {
-  const existingUrls = await getPostSubjectUrls(config);
+  const existingUrls = await getSavedUrls(config);
   return urls.some((url) =>
     existingUrls.some((existingUrl) => url === existingUrl),
   );

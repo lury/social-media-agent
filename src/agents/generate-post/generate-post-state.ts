@@ -3,6 +3,7 @@ import { IngestDataAnnotation } from "../ingest-data/ingest-data-state.js";
 import {
   POST_TO_LINKEDIN_ORGANIZATION,
   SKIP_CONTENT_RELEVANCY_CHECK,
+  SKIP_USED_URLS_CHECK,
   TEXT_ONLY_MODE,
 } from "./constants.js";
 import { DateType } from "../types.js";
@@ -111,6 +112,11 @@ export const GeneratePostConfigurableAnnotation = Annotation.Root({
    * Whether or not to skip the content relevancy check.
    */
   [SKIP_CONTENT_RELEVANCY_CHECK]: Annotation<boolean | undefined>(),
+  /**
+   * Whether or not to skip the used URLs check. This will also
+   * skip saving the URLs in the store.
+   */
+  [SKIP_USED_URLS_CHECK]: Annotation<boolean | undefined>(),
 });
 
 export const BASE_GENERATE_POST_CONFIG: typeof GeneratePostConfigurableAnnotation.State =
@@ -119,4 +125,5 @@ export const BASE_GENERATE_POST_CONFIG: typeof GeneratePostConfigurableAnnotatio
     [TEXT_ONLY_MODE]: false,
     origin: undefined,
     [SKIP_CONTENT_RELEVANCY_CHECK]: undefined,
+    [SKIP_USED_URLS_CHECK]: undefined,
   };
