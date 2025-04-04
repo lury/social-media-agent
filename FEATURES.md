@@ -23,6 +23,32 @@ If _any_ of the URLs exist in the store, it will route the graph to the `END` no
 
 This is implemented to ensure duplicated content is not generated.
 
+### Skip Content Verification
+
+The `generate_post` graph by default always attempts to "verify" the content from the link provided is relevant to your [business context](src/agents/generate-post/prompts/index.ts#L60). If you want to bypass this step, and assume all input links are relevant, you can set the `SKIP_CONTENT_RELEVANCY_CHECK` environment variable to `true`, or pass the `skipContentRelevancyCheck` configurable field ([variable](src/agents/generate-post/constants.ts#L101)) to the graph.
+
+```typescript
+import { Client } from "@langchain/langgraph-sdk";
+import { SKIP_CONTENT_RELEVANCY_CHECK } from "src/agents/generate-post/constants";
+
+const client = new Client({
+  apiUrl: process.env.LANGGRAPH_API_URL,
+});
+
+const { thread_id } = await client.threads.create();
+const res = await client.runs.create(thread_id, "generate_post", {
+  input: {
+    links: ["https://www.example.com"],
+  },
+  config: {
+    configurable: {
+      // Pass this to the graph to skip content verification, or set the environment variable
+      [SKIP_CONTENT_RELEVANCY_CHECK]: true,
+    },
+  },
+});
+```
+
 ## Shared
 
 ### Key

@@ -2,6 +2,7 @@ import { Annotation } from "@langchain/langgraph";
 import { SimpleSlackMessage } from "../../clients/slack/client.js";
 import {
   POST_TO_LINKEDIN_ORGANIZATION,
+  SKIP_CONTENT_RELEVANCY_CHECK,
   TEXT_ONLY_MODE,
 } from "../generate-post/constants.js";
 
@@ -62,4 +63,10 @@ export const IngestDataConfigurableAnnotation = Annotation.Root({
     reducer: (_state, update) => update,
     default: () => false,
   }),
+  /**
+   * Whether or not to skip content verification.
+   * If true, it will not attempt to verify the content from the link provided.
+   * @default undefined
+   */
+  [SKIP_CONTENT_RELEVANCY_CHECK]: Annotation<boolean | undefined>(),
 });

@@ -12,12 +12,14 @@ import { ingestSlackData } from "./nodes/ingest-slack.js";
 import { Client } from "@langchain/langgraph-sdk";
 import {
   POST_TO_LINKEDIN_ORGANIZATION,
+  SKIP_CONTENT_RELEVANCY_CHECK,
   TEXT_ONLY_MODE,
 } from "../generate-post/constants.js";
 import {
   getAfterSecondsFromLinks,
   isTextOnly,
   shouldPostToLinkedInOrg,
+  skipContentRelevancyCheck,
 } from "../utils.js";
 
 async function generatePostFromMessages(
@@ -31,6 +33,7 @@ async function generatePostFromMessages(
   const linkAndDelay = getAfterSecondsFromLinks(state.links);
   const isTextOnlyMode = isTextOnly(config);
   const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
+  const shouldSkipContentRelevancyCheck = skipContentRelevancyCheck(config);
 
   for await (const { link, afterSeconds } of linkAndDelay) {
     const thread = await client.threads.create();
@@ -42,6 +45,7 @@ async function generatePostFromMessages(
         configurable: {
           [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
           [TEXT_ONLY_MODE]: isTextOnlyMode,
+          [SKIP_CONTENT_RELEVANCY_CHECK]: shouldSkipContentRelevancyCheck,
         },
       },
       afterSeconds,
