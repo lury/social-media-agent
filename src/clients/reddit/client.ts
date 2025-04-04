@@ -154,7 +154,7 @@ export class RedditClient {
     const limitWithDefaults = options?.limit ?? 10;
     const depthWithDefaults = options?.depth ?? 3;
 
-    const submission = await this.snoowrapClient.getSubmission(postId);
+    const submission = this.snoowrapClient.getSubmission(postId);
     const comments = (await (submission.comments.fetchAll({
       // @ts-expect-error - Weird snoowrap types. Can ignore.
       limit: limitWithDefaults,
