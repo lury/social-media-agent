@@ -160,7 +160,7 @@ export class SlackClient {
 
       do {
         // Adjust limit based on remaining messages needed
-        const limit = Math.min(100, maxMessages - messages.length);
+        const limit = Math.min(100, (maxMessages ?? 0) - messages.length);
 
         const result = await this.client.conversations.history({
           channel: channelId,
