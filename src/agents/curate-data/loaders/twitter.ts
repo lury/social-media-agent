@@ -6,6 +6,7 @@ import {
   getLastIngestedTweetId,
   putLastIngestedTweetId,
 } from "../utils/stores/twitter.js";
+import { traceable } from "langsmith/traceable";
 
 const LIST_ID = "1585430245762441216";
 
@@ -31,7 +32,7 @@ async function fetchListTweetsWrapper(
   }
 }
 
-export async function twitterLoader(): Promise<TweetV2[]> {
+async function twitterLoaderFunc(): Promise<TweetV2[]> {
   const client = TwitterClient.fromBasicTwitterAuth();
 
   // Initialize variables for pagination
@@ -77,9 +78,11 @@ export async function twitterLoader(): Promise<TweetV2[]> {
   return allTweets;
 }
 
-export async function twitterLoaderWithLangChain(
-  config: LangGraphRunnableConfig,
-) {
+export const twitterLoader = traceable(twitterLoaderFunc, {
+  name: "twitter-loader",
+});
+
+async function twitterLoaderWithLangChainFunc(config: LangGraphRunnableConfig) {
   const lastIngestedTweetId = await getLastIngestedTweetId(config);
   const client = TwitterClient.fromBasicTwitterAuth();
   // Don't return tweets from the LangChain account, or active LangChain employees since these
@@ -114,3 +117,8 @@ export async function twitterLoaderWithLangChain(
 
   return tweets;
 }
+
+export const twitterLoaderWithLangChain = traceable(
+  twitterLoaderWithLangChainFunc,
+  { name: "twitter-loader-langchain" },
+);

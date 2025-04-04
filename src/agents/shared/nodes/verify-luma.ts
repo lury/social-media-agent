@@ -1,14 +1,14 @@
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { z } from "zod";
-import { ChatAnthropic } from "@langchain/anthropic";
 import { FireCrawlLoader } from "@langchain/community/document_loaders/web/firecrawl";
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyContentAnnotation } from "../shared-state.js";
-import { RunnableLambda } from "@langchain/core/runnables";
 import { getPageText, skipContentRelevancyCheck } from "../../utils.js";
 import { getImagesFromFireCrawlMetadata } from "../../../utils/firecrawl.js";
 import { CurateDataState } from "../../curate-data/state.js";
 import { shouldExcludeGeneralContent } from "../../should-exclude.js";
+import { traceable } from "langsmith/traceable";
+import { verifyContentIsRelevant } from "./verify-content.js";
 
 const RELEVANCY_SCHEMA = z
   .object({
@@ -40,7 +40,7 @@ type UrlContents = {
   imageUrls?: string[];
 };
 
-export async function getUrlContents(url: string): Promise<UrlContents> {
+async function getUrlContentsFunc(url: string): Promise<UrlContents> {
   try {
     const loader = new FireCrawlLoader({
       url,
@@ -73,32 +73,9 @@ export async function getUrlContents(url: string): Promise<UrlContents> {
   throw new Error(`Failed to fetch content from ${url}.`);
 }
 
-export async function verifyGeneralContentIsRelevant(
-  content: string,
-): Promise<boolean> {
-  const relevancyModel = new ChatAnthropic({
-    model: "claude-3-5-sonnet-latest",
-    temperature: 0,
-  }).withStructuredOutput(RELEVANCY_SCHEMA, {
-    name: "relevancy",
-  });
-
-  const { relevant } = await relevancyModel
-    .withConfig({
-      runName: "check-general-relevancy-model",
-    })
-    .invoke([
-      {
-        role: "system",
-        content: VERIFY_LUMA_RELEVANT_CONTENT_PROMPT,
-      },
-      {
-        role: "user",
-        content: content,
-      },
-    ]);
-  return relevant;
-}
+export const getUrlContents = traceable(getUrlContentsFunc, {
+  name: "get-url-contents",
+});
 
 /**
  * Verifies if the Luma event is relevant to your company's products.
@@ -117,11 +94,7 @@ export async function verifyLumaEvent(
     return {};
   }
 
-  const urlContents = await new RunnableLambda<string, UrlContents>({
-    func: getUrlContents,
-  })
-    .withConfig({ runName: "get-luma-event-contents" })
-    .invoke(state.link);
+  const urlContents = await getUrlContents(state.link);
 
   const returnValue = {
     relevantLinks: [state.link],
@@ -135,7 +108,12 @@ export async function verifyLumaEvent(
     return returnValue;
   }
 
-  if (await verifyGeneralContentIsRelevant(urlContents.content)) {
+  if (
+    await verifyContentIsRelevant(urlContents.content, {
+      systemPrompt: VERIFY_LUMA_RELEVANT_CONTENT_PROMPT,
+      schema: RELEVANCY_SCHEMA,
+    })
+  ) {
     return returnValue;
   }
 
