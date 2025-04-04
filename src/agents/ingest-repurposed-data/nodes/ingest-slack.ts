@@ -1,10 +1,8 @@
 import { IngestRepurposedDataState } from "../types.js";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import {
-  SimpleSlackMessage,
   SlackClient,
 } from "../../../clients/slack/client.js";
-import { RunnableLambda } from "@langchain/core/runnables";
 
 const getChannelIdFromConfig = async (
   config: LangGraphRunnableConfig,
@@ -33,12 +31,7 @@ export async function ingestSlackMessages(
   }
 
   const client = new SlackClient();
-  const recentMessages = await RunnableLambda.from<
-    unknown,
-    SimpleSlackMessage[]
-  >(() => client.getChannelMessages(channelId))
-    .withConfig({ runName: "fetch_slack_messages" })
-    .invoke({}, config);
+  const recentMessages = await client.getChannelMessages(channelId);
 
   return {
     slackMessages: recentMessages,
