@@ -1,5 +1,9 @@
 import "dotenv/config";
 import { Client } from "@langchain/langgraph-sdk";
+import {
+  SKIP_CONTENT_RELEVANCY_CHECK,
+  SKIP_USED_URLS_CHECK,
+} from "../src/agents/generate-post/constants.js";
 
 /**
  * Performs a manual data backfill operation using LangGraph.
@@ -17,7 +21,7 @@ import { Client } from "@langchain/langgraph-sdk";
  *
  * @example
  * ```bash
- * yarn cron:backfill
+ * yarn graph:backfill
  * ```
  */
 export async function backfill() {
@@ -29,8 +33,10 @@ export async function backfill() {
   const res = await client.runs.create(thread.thread_id, "ingest_data", {
     config: {
       configurable: {
-        slackChannelId: "ADD_SLACK_CHANNEL_ID_HERE",
-        maxDaysHistory: 10, // Or change to desired number of days
+        slackChannelId: "C06BU7XF5S7",
+        maxDaysHistory: 50, // Or change to desired number of days
+        [SKIP_CONTENT_RELEVANCY_CHECK]: true,
+        [SKIP_USED_URLS_CHECK]: true,
       },
     },
     input: {},

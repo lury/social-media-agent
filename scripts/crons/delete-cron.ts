@@ -31,10 +31,10 @@ async function deleteCron() {
   });
 
   await client.crons.delete(cronId);
-  console.log("Deleted cron");
+  console.log("\n\nDeleted cron\n\n");
   const crons = await client.crons.search();
-  console.log("Crons");
-  console.log(crons);
+  console.log("\n\nAll Crons\n\n");
+  console.dir(crons, { depth: null });
 }
 
 deleteCron().catch(console.error);

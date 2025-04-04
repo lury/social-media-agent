@@ -1,5 +1,9 @@
 import "dotenv/config";
 import { Client } from "@langchain/langgraph-sdk";
+import {
+  SKIP_CONTENT_RELEVANCY_CHECK,
+  SKIP_USED_URLS_CHECK,
+} from "../../src/agents/generate-post/constants.js";
 
 /**
  * Creates a new cron job in LangGraph for data ingestion.
@@ -24,21 +28,23 @@ async function createCron() {
   });
 
   const res = await client.crons.create("ingest_data", {
-    schedule: "0 0 * * *",
+    schedule: "0 8 * * *", // Runs at 8:00 AM UTC every day (1AM PST)
     config: {
       configurable: {
         slackChannelId: "ADD_SLACK_CHANNEL_ID_HERE",
         maxDaysHistory: 1,
+        [SKIP_CONTENT_RELEVANCY_CHECK]: true,
+        [SKIP_USED_URLS_CHECK]: true,
       },
     },
     input: {},
   });
-  console.log("Created cron");
-  console.log(res);
+  console.log("\n\nCreated cron\n\n");
+  console.dir(res, { depth: null });
 
   const crons = await client.crons.search();
-  console.log("Crons");
-  console.log(crons);
+  console.log("\n\nAll Crons\n\n");
+  console.dir(crons, { depth: null });
 }
 
 createCron().catch(console.error);
