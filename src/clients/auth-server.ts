@@ -139,11 +139,13 @@ export class SocialAuthServer {
         "https://www.linkedin.com/oauth/v2/authorization",
       );
       authUrl.searchParams.append("response_type", "code");
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       authUrl.searchParams.append("client_id", process.env.LINKEDIN_CLIENT_ID!);
       authUrl.searchParams.append(
         "redirect_uri",
         "http://localhost:3000/auth/linkedin/callback",
       );
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       authUrl.searchParams.append("state", process.env.SESSION_SECRET!);
       authUrl.searchParams.append(
         "scope",
@@ -182,7 +184,9 @@ export class SocialAuthServer {
               body: new URLSearchParams({
                 grant_type: "authorization_code",
                 code: code as string,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 client_id: process.env.LINKEDIN_CLIENT_ID!,
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
                 redirect_uri: "http://localhost:3000/auth/linkedin/callback",
               }),
