@@ -1,6 +1,7 @@
 import { Annotation, END } from "@langchain/langgraph";
 import { AdditionalContext, DateType, RepurposedPost } from "../types.js";
 import { DEFAULT_POST_QUANTITY } from "../ingest-repurposed-data/constants.js";
+import { POST_TO_LINKEDIN_ORGANIZATION } from "../generate-post/constants.js";
 
 export type Image = { imageUrl: string; mimeType: string; index: number };
 
@@ -107,4 +108,12 @@ export const RepurposerInputAnnotation = Annotation.Root({
    * The quantity of posts to generate.
    */
   quantity: Annotation<number>,
+});
+
+export const RepurposerConfigurableAnnotation = Annotation.Root({
+  /**
+   * Whether to post to the LinkedIn organization or the user's profile.
+   * If true, [LINKEDIN_ORGANIZATION_ID] is required.
+   */
+  [POST_TO_LINKEDIN_ORGANIZATION]: Annotation<boolean | undefined>,
 });

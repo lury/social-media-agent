@@ -2,6 +2,7 @@ import { END, START, StateGraph } from "@langchain/langgraph";
 import {
   RepurposerGraphAnnotation,
   RepurposerInputAnnotation,
+  RepurposerConfigurableAnnotation,
 } from "./types.js";
 import { extractContent } from "./nodes/extract-content/index.js";
 import { generateCampaignPlan } from "./nodes/generate-campaign-plan.js";
@@ -10,10 +11,13 @@ import { generateReportGraph } from "../generate-report/index.js";
 import { validateImages } from "./nodes/validate-images.js";
 import { startInterruptGraphRuns } from "./nodes/start-interrupt-graph.js";
 
-const repurposerBuilder = new StateGraph({
-  stateSchema: RepurposerGraphAnnotation,
-  input: RepurposerInputAnnotation,
-})
+const repurposerBuilder = new StateGraph(
+  {
+    stateSchema: RepurposerGraphAnnotation,
+    input: RepurposerInputAnnotation,
+  },
+  RepurposerConfigurableAnnotation,
+)
   .addNode("extractContent", extractContent)
   .addNode("validateImages", validateImages)
   .addNode("generateReport", generateReportGraph)
