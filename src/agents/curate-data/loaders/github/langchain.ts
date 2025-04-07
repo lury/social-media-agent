@@ -1,4 +1,4 @@
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore } from "@langchain/langgraph";
 import { getGitHubRepoURLs } from "../../utils/stores/github-repos.js";
 import { Octokit } from "@octokit/rest";
 import { sleep } from "../../../utils.js";
@@ -117,10 +117,10 @@ async function checkPythonDependencies(
 }
 
 async function langchainDependencyReposLoaderFunc(
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ) {
   const octokit = getOctokit();
-  const processedRepos = await getGitHubRepoURLs(config);
+  const processedRepos = await getGitHubRepoURLs(store);
   const newRepoURLs: string[] = [];
   let page = 0;
   const maxAttempts = 1;

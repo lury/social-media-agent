@@ -1,4 +1,4 @@
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore } from "@langchain/langgraph";
 
 export const NAMESPACE = ["saved_data", "twitter"];
 export const IDS_KEY = "ids";
@@ -9,9 +9,8 @@ export const LAST_INGESTED_ID_OBJECT_KEY = "data";
 
 export async function putTweetIds(
   tweetIds: string[],
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ) {
-  const store = config.store;
   if (!store) {
     throw new Error("No store provided");
   }
@@ -21,9 +20,8 @@ export async function putTweetIds(
 }
 
 export async function getTweetIds(
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ): Promise<string[]> {
-  const store = config.store;
   if (!store) {
     throw new Error("No store provided");
   }
@@ -36,9 +34,8 @@ export async function getTweetIds(
 
 export async function putLastIngestedTweetId(
   id: string,
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ) {
-  const store = config.store;
   if (!store) {
     throw new Error("No store provided");
   }
@@ -48,9 +45,8 @@ export async function putLastIngestedTweetId(
 }
 
 export async function getLastIngestedTweetId(
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ): Promise<string> {
-  const store = config.store;
   if (!store) {
     throw new Error("No store provided");
   }

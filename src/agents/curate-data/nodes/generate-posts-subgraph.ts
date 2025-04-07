@@ -6,7 +6,7 @@ import {
   getAfterSecondsFromLinks,
   shouldPostToLinkedInOrg,
 } from "../../utils.js";
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore, LangGraphRunnableConfig } from "@langchain/langgraph";
 import {
   getGitHubRepoURLs,
   putGitHubRepoURLs,
@@ -21,13 +21,13 @@ import { ThreadRunId } from "../types.js";
 
 async function saveIngestedData(
   state: CurateDataState,
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ) {
   const [existingGitHubRepoURLs, redditPostIds, existingTweetIds] =
     await Promise.all([
-      getGitHubRepoURLs(config),
-      getRedditPostIds(config),
-      getTweetIds(config),
+      getGitHubRepoURLs(store),
+      getRedditPostIds(store),
+      getTweetIds(store),
     ]);
 
   const newGitHubRepoURLs = new Set([
@@ -44,9 +44,9 @@ async function saveIngestedData(
   ]);
 
   await Promise.all([
-    putGitHubRepoURLs(Array.from(newGitHubRepoURLs), config),
-    putRedditPostIds(Array.from(newRedditPostIds), config),
-    putTweetIds(Array.from(newTweetIds), config),
+    putGitHubRepoURLs(Array.from(newGitHubRepoURLs), store),
+    putRedditPostIds(Array.from(newRedditPostIds), store),
+    putTweetIds(Array.from(newTweetIds), store),
   ]);
 }
 
@@ -63,7 +63,7 @@ async function sendSlackNotification(
   });
 
   try {
-    await saveIngestedData(state, config);
+    await saveIngestedData(state, config.store);
     if (slackClient) {
       await slackClient.sendMessage(
         process.env.SLACK_CHANNEL_ID,

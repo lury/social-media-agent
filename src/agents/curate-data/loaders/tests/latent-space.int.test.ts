@@ -15,8 +15,8 @@ test("Latent space loader", async () => {
       "https://www.latent.space/p/o1-skill-issue",
       "https://www.latent.space/p/exa",
     ],
-    config,
+    config.store,
   );
-  const data = await latentSpaceLoader(config);
+  const data = await latentSpaceLoader(config.store);
   expect(data.length).toBeGreaterThan(1);
 });

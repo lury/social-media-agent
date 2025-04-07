@@ -7,7 +7,7 @@ test("getRedditPosts", async () => {
   const config = {
     store,
   };
-  const results = await getRedditPosts(config);
+  const results = await getRedditPosts(config.store);
   console.log("\n\nTEST COMPLETED\n\n");
   console.log("results.length", results.length);
   expect(results.length).toBeGreaterThan(0);

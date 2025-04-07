@@ -8,13 +8,13 @@ test("githubTrendingLoader", async () => {
   const config = {
     store,
   };
-  const results = await githubTrendingLoader(config);
+  const results = await githubTrendingLoader(config.store);
   console.log("\n\nTEST COMPLETED\n\n");
   console.log("results.length", results);
   expect(results.length).toBeGreaterThan(0);
 
   // This should return 0 results due to all the links being in the store
-  const results2 = await githubTrendingLoader(config);
+  const results2 = await githubTrendingLoader(config.store);
   console.log("\n\nTEST COMPLETED\n\n");
   console.log("results2.length", results2);
   expect(results2.length).toBe(0);
@@ -25,7 +25,7 @@ test("langchainDependencyReposLoader", async () => {
   const config = {
     store,
   };
-  const results = await langchainDependencyReposLoader(config);
+  const results = await langchainDependencyReposLoader(config.store);
   console.log("\n\nTEST COMPLETED\n\n");
   console.log("results.length", results.length);
   console.log(results);
