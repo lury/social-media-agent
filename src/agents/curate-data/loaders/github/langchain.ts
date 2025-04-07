@@ -146,8 +146,9 @@ async function langchainDependencyReposLoaderFunc(
       const filteredResults = results
         .filter((result) => result.status === "fulfilled")
         .map((result) => result.value);
-      console.log(`Found ${filteredResults.length} Python repos`);
+
       for (const { data } of filteredResults) {
+        console.log(`Found ${data.total_count} Python repos`);
         // Only set to true. This is to prevent one query setting it to false when another one returns incomplete results
         if (data.incomplete_results) {
           incompleteResults = data.incomplete_results;
@@ -219,8 +220,8 @@ async function langchainDependencyReposLoaderFunc(
         .filter((result) => result.status === "fulfilled")
         .map((result) => result.value);
 
-      console.log(`Found ${filteredResults.length} JS repos`);
       for (const { data } of filteredResults) {
+        console.log(`Found ${data.total_count} JS repos`);
         // Only set to true. This is to prevent one query setting it to false when another one returns incomplete results
         if (data.incomplete_results) {
           incompleteResults = data.incomplete_results;
@@ -262,14 +263,14 @@ async function langchainDependencyReposLoaderFunc(
         }
       }
 
-      if (newRepoURLs.length >= 5 || !incompleteResults) break;
+      if (newRepoURLs.length >= 25 || !incompleteResults) break;
     } catch (error) {
       console.error("Failed to fetch repos:", error);
       break;
     }
   }
 
-  return newRepoURLs.slice(0, 10);
+  return newRepoURLs.slice(0, 25);
 }
 
 export const langchainDependencyReposLoader = traceable(
