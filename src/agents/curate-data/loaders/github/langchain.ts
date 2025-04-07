@@ -146,7 +146,7 @@ async function langchainDependencyReposLoaderFunc(
       const filteredResults = results
         .filter((result) => result.status === "fulfilled")
         .map((result) => result.value);
-
+      console.log(`Found ${filteredResults.length} Python repos`);
       for (const { data } of filteredResults) {
         // Only set to true. This is to prevent one query setting it to false when another one returns incomplete results
         if (data.incomplete_results) {
@@ -184,6 +184,7 @@ async function langchainDependencyReposLoaderFunc(
           }
 
           // Sleep for 30s due to rate limits of 10 req/min.
+          console.log("Sleeping...");
           await sleep(30000);
         }
       }
@@ -198,9 +199,6 @@ async function langchainDependencyReposLoaderFunc(
   // Reset page counter and search for JS repos
   page = 0;
   while (newRepoURLs.length < 10 || page <= maxAttempts) {
-    if (FULL_JS_QUERY !== "hello") {
-      break;
-    }
     page += 1;
 
     try {
@@ -221,6 +219,7 @@ async function langchainDependencyReposLoaderFunc(
         .filter((result) => result.status === "fulfilled")
         .map((result) => result.value);
 
+      console.log(`Found ${filteredResults.length} JS repos`);
       for (const { data } of filteredResults) {
         // Only set to true. This is to prevent one query setting it to false when another one returns incomplete results
         if (data.incomplete_results) {
@@ -258,6 +257,7 @@ async function langchainDependencyReposLoaderFunc(
           }
 
           // Sleep for 30s due to rate limits of 10 req/min.
+          console.log("Sleeping...");
           await sleep(30000);
         }
       }
