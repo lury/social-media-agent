@@ -148,6 +148,7 @@ async function langchainDependencyReposLoaderFunc(
         .map((result) => result.value);
 
       for (const { data } of filteredResults) {
+        console.log(`Found ${data.total_count} Python repos`);
         // Only set to true. This is to prevent one query setting it to false when another one returns incomplete results
         if (data.incomplete_results) {
           incompleteResults = data.incomplete_results;
@@ -184,6 +185,7 @@ async function langchainDependencyReposLoaderFunc(
           }
 
           // Sleep for 30s due to rate limits of 10 req/min.
+          console.log("Sleeping...");
           await sleep(30000);
         }
       }
@@ -198,9 +200,6 @@ async function langchainDependencyReposLoaderFunc(
   // Reset page counter and search for JS repos
   page = 0;
   while (newRepoURLs.length < 10 || page <= maxAttempts) {
-    if (FULL_JS_QUERY !== "hello") {
-      break;
-    }
     page += 1;
 
     try {
@@ -222,6 +221,7 @@ async function langchainDependencyReposLoaderFunc(
         .map((result) => result.value);
 
       for (const { data } of filteredResults) {
+        console.log(`Found ${data.total_count} JS repos`);
         // Only set to true. This is to prevent one query setting it to false when another one returns incomplete results
         if (data.incomplete_results) {
           incompleteResults = data.incomplete_results;
@@ -258,18 +258,19 @@ async function langchainDependencyReposLoaderFunc(
           }
 
           // Sleep for 30s due to rate limits of 10 req/min.
+          console.log("Sleeping...");
           await sleep(30000);
         }
       }
 
-      if (newRepoURLs.length >= 5 || !incompleteResults) break;
+      if (newRepoURLs.length >= 25 || !incompleteResults) break;
     } catch (error) {
       console.error("Failed to fetch repos:", error);
       break;
     }
   }
 
-  return newRepoURLs.slice(0, 10);
+  return newRepoURLs.slice(0, 25);
 }
 
 export const langchainDependencyReposLoader = traceable(
