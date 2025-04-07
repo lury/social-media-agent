@@ -1,4 +1,4 @@
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore } from "@langchain/langgraph";
 import { RedditClient } from "../../../clients/reddit/client.js";
 import {
   getRedditPostIds,
@@ -6,11 +6,10 @@ import {
 } from "../utils/stores/reddit-post-ids.js";
 import { getUniqueArrayItems } from "../utils/get-unique-array.js";
 import { SimpleRedditPostWithComments } from "../../../clients/reddit/types.js";
-import { NUM_POSTS_PER_SUBREDDIT } from "../constants.js";
 import { traceable } from "langsmith/traceable";
 
 async function getRedditPostsFunc(
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ): Promise<SimpleRedditPostWithComments[]> {
   const client = await RedditClient.fromUserless();
   const topPosts = await client.getTopPosts("LocalLLaMA", { limit: 15 });
@@ -26,14 +25,14 @@ async function getRedditPostsFunc(
     });
   }
 
-  const processedPostIds = await getRedditPostIds(config);
+  const processedPostIds = await getRedditPostIds(store);
   const postIds = data.map((post) => post.post.id);
   const uniquePostIds = getUniqueArrayItems(processedPostIds, postIds);
   const allPostIds = Array.from(
     new Set([...processedPostIds, ...uniquePostIds]),
   );
 
-  await putRedditPostIds(allPostIds, config);
+  await putRedditPostIds(allPostIds, store);
 
   return data.filter((post) => uniquePostIds.includes(post.post.id));
 }
@@ -42,9 +41,10 @@ export const getRedditPosts = traceable(getRedditPostsFunc, {
   name: "reddit-loader",
 });
 
-async function getLangChainRedditPostsFunc(config: LangGraphRunnableConfig) {
-  const numPostsPerSubreddit =
-    config.configurable?.[NUM_POSTS_PER_SUBREDDIT] || 25;
+async function getLangChainRedditPostsFunc(
+  store: BaseStore | undefined,
+  numPostsPerSubreddit = 25,
+) {
   const client = await RedditClient.fromUserless();
   const newPostsLangChain = await client.getNewPosts("LangChain", {
     limit: numPostsPerSubreddit,
@@ -67,7 +67,7 @@ async function getLangChainRedditPostsFunc(config: LangGraphRunnableConfig) {
     });
   }
 
-  const processedPostIds = await getRedditPostIds(config);
+  const processedPostIds = await getRedditPostIds(store);
   const postIds = data.map((post) => post.post.id);
   const uniquePostIds = getUniqueArrayItems(processedPostIds, postIds);
   return data.filter((post) => uniquePostIds.includes(post.post.id));

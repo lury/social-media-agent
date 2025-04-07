@@ -1,4 +1,4 @@
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore } from "@langchain/langgraph";
 
 export const NAMESPACE = ["saved_data", "reddit"];
 export const KEY = "post_ids";
@@ -6,9 +6,8 @@ export const OBJECT_KEY = "data";
 
 export async function putRedditPostIds(
   postIds: string[],
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ) {
-  const store = config.store;
   if (!store) {
     throw new Error("No store provided");
   }
@@ -18,9 +17,8 @@ export async function putRedditPostIds(
 }
 
 export async function getRedditPostIds(
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ): Promise<string[]> {
-  const store = config.store;
   if (!store) {
     throw new Error("No store provided");
   }

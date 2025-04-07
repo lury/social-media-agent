@@ -12,6 +12,7 @@ import { latentSpaceLoader } from "../loaders/latent-space.js";
 import { SimpleRedditPostWithComments } from "../../../clients/reddit/types.js";
 import { langchainDependencyReposLoader } from "../loaders/github/langchain.js";
 import { useLangChainPrompts } from "../../utils.js";
+import { NUM_POSTS_PER_SUBREDDIT } from "../constants.js";
 
 export async function ingestData(
   _state: CurateDataState,
@@ -34,13 +35,16 @@ export async function ingestData(
 
   if (useLangChainPrompts()) {
     if (sources.includes("twitter")) {
-      tweets = await twitterLoaderWithLangChain(config);
+      tweets = await twitterLoaderWithLangChain(config.store);
     }
     if (sources.includes("github")) {
-      trendingRepos = await langchainDependencyReposLoader(config);
+      trendingRepos = await langchainDependencyReposLoader(config.store);
     }
     if (sources.includes("reddit")) {
-      redditPosts = await getLangChainRedditPosts(config);
+      redditPosts = await getLangChainRedditPosts(
+        config.store,
+        config.configurable?.[NUM_POSTS_PER_SUBREDDIT],
+      );
     }
 
     // Latent space and AI news are not high signal for LangChain. Return early in this case.
@@ -55,13 +59,13 @@ export async function ingestData(
     tweets = await twitterLoader();
   }
   if (sources.includes("github")) {
-    trendingRepos = await githubTrendingLoader(config);
+    trendingRepos = await githubTrendingLoader(config.store);
   }
   if (sources.includes("reddit")) {
-    redditPosts = await getRedditPosts(config);
+    redditPosts = await getRedditPosts(config.store);
   }
   if (sources.includes("latent_space")) {
-    latentSpacePosts = await latentSpaceLoader(config);
+    latentSpacePosts = await latentSpaceLoader(config.store);
   }
   if (sources.includes("ai_news")) {
     aiNewsPosts = await aiNewsBlogLoader();

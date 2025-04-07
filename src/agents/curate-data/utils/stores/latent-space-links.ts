@@ -1,4 +1,4 @@
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore } from "@langchain/langgraph";
 
 export const NAMESPACE = ["saved_data", "latent_space"];
 export const KEY = "links";
@@ -6,9 +6,8 @@ export const OBJECT_KEY = "data";
 
 export async function putLatentSpaceLinks(
   links: string[],
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ) {
-  const store = config.store;
   if (!store) {
     throw new Error("No store provided");
   }
@@ -18,9 +17,8 @@ export async function putLatentSpaceLinks(
 }
 
 export async function getLatentSpaceLinks(
-  config: LangGraphRunnableConfig,
+  store: BaseStore | undefined,
 ): Promise<string[]> {
-  const store = config.store;
   if (!store) {
     throw new Error("No store provided");
   }

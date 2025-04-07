@@ -3,11 +3,11 @@ import {
   getLatentSpaceLinks,
   putLatentSpaceLinks,
 } from "../utils/stores/latent-space-links.js";
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore } from "@langchain/langgraph";
 import { getUniqueArrayItems } from "../utils/get-unique-array.js";
 import { traceable } from "langsmith/traceable";
 
-async function latentSpaceLoaderFunc(config: LangGraphRunnableConfig) {
+async function latentSpaceLoaderFunc(store: BaseStore | undefined) {
   const siteMapUrl = "https://www.latent.space/sitemap/2025";
 
   const links = await fetch(siteMapUrl)
@@ -22,11 +22,11 @@ async function latentSpaceLoaderFunc(config: LangGraphRunnableConfig) {
       return links;
     });
 
-  const processedLinks = await getLatentSpaceLinks(config);
+  const processedLinks = await getLatentSpaceLinks(store);
   const uniqueLinks = getUniqueArrayItems(processedLinks, links);
   const allLinks = Array.from(new Set([...processedLinks, ...uniqueLinks]));
 
-  await putLatentSpaceLinks(allLinks, config);
+  await putLatentSpaceLinks(allLinks, store);
 
   return uniqueLinks;
 }

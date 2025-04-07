@@ -1,7 +1,7 @@
 import { TweetV2, TweetV2ListTweetsPaginator } from "twitter-api-v2";
 import { TwitterClient } from "../../../clients/twitter/client.js";
 import { createdAtAfter } from "../utils/created-at-after.js";
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore } from "@langchain/langgraph";
 import {
   getLastIngestedTweetId,
   putLastIngestedTweetId,
@@ -82,8 +82,8 @@ export const twitterLoader = traceable(twitterLoaderFunc, {
   name: "twitter-loader",
 });
 
-async function twitterLoaderWithLangChainFunc(config: LangGraphRunnableConfig) {
-  const lastIngestedTweetId = await getLastIngestedTweetId(config);
+async function twitterLoaderWithLangChainFunc(store: BaseStore | undefined) {
+  const lastIngestedTweetId = await getLastIngestedTweetId(store);
   const client = TwitterClient.fromBasicTwitterAuth();
   // Don't return tweets from the LangChain account, or active LangChain employees since these
   // are likely to have already been sent to the agent/are duplicates.
@@ -112,7 +112,7 @@ async function twitterLoaderWithLangChainFunc(config: LangGraphRunnableConfig) {
     .map((tweet) => tweet.id)[0];
 
   if (mostRecentTweetId) {
-    await putLastIngestedTweetId(mostRecentTweetId, config);
+    await putLastIngestedTweetId(mostRecentTweetId, store);
   }
 
   return tweets;

@@ -1,4 +1,4 @@
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { BaseStore } from "@langchain/langgraph";
 import {
   getGitHubRepoURLs,
   putGitHubRepoURLs,
@@ -13,7 +13,7 @@ const PYTHON_TRENDING_URL = "https://github.com/trending/python?since=daily";
 
 // Check github dependabot for depending on langchain
 // Check for github langchain tags
-async function githubTrendingLoaderFunc(config: LangGraphRunnableConfig) {
+async function githubTrendingLoaderFunc(store: BaseStore | undefined) {
   const fetchRepos = async (url: string) => {
     const response = await fetch(url);
     const html = await response.text();
@@ -33,14 +33,14 @@ async function githubTrendingLoaderFunc(config: LangGraphRunnableConfig) {
     fetchRepos(TYPESCRIPT_TRENDING_URL),
   ]);
 
-  const processedRepos = await getGitHubRepoURLs(config);
+  const processedRepos = await getGitHubRepoURLs(store);
   const uniqueRepos = getUniqueArrayItems(processedRepos, [
     ...pythonRepos,
     ...typescriptRepos,
   ]);
   const allRepos = Array.from(new Set([...processedRepos, ...uniqueRepos]));
 
-  await putGitHubRepoURLs(allRepos, config);
+  await putGitHubRepoURLs(allRepos, store);
 
   return uniqueRepos;
 }
