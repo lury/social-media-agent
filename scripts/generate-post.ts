@@ -1,6 +1,10 @@
 import "dotenv/config";
 import { Client } from "@langchain/langgraph-sdk";
-import { TEXT_ONLY_MODE } from "../src/agents/generate-post/constants.js";
+import {
+  SKIP_CONTENT_RELEVANCY_CHECK,
+  SKIP_USED_URLS_CHECK,
+  TEXT_ONLY_MODE,
+} from "../src/agents/generate-post/constants.js";
 
 /**
  * Generate a post based on a LangChain blog post.
@@ -25,7 +29,10 @@ async function invokeGraph() {
         // [LINKEDIN_USER_ID]: process.env.LINKEDIN_USER_ID,
         // This ensures the graph runs in a basic text only mode.
         // If you followed the full setup instructions, you may remove this line.
-        [TEXT_ONLY_MODE]: true,
+        [TEXT_ONLY_MODE]: false,
+        // These will skip content relevancy checks and used URLs checks
+        [SKIP_CONTENT_RELEVANCY_CHECK]: true,
+        [SKIP_USED_URLS_CHECK]: true,
       },
     },
   });
