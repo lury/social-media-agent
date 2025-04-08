@@ -7,6 +7,7 @@ import {
 import { getUniqueArrayItems } from "../utils/get-unique-array.js";
 import { SimpleRedditPostWithComments } from "../../../clients/reddit/types.js";
 import { traceable } from "langsmith/traceable";
+import { isValidUrl } from "../../utils.js";
 
 async function getRedditPostsFunc(
   store: BaseStore | undefined,
@@ -41,6 +42,20 @@ export const getRedditPosts = traceable(getRedditPostsFunc, {
   name: "reddit-loader",
 });
 
+const filterRedditPosts = (
+  post: SimpleRedditPostWithComments,
+  uniquePostIds: string[],
+) => {
+  return (
+    uniquePostIds.includes(post.post.id) &&
+    isValidUrl(post.post.url) &&
+    !post.post.url.endsWith(".png") &&
+    !post.post.url.endsWith(".jpg") &&
+    !post.post.url.endsWith(".jpeg") &&
+    !post.post.url.endsWith(".gif")
+  );
+};
+
 async function getLangChainRedditPostsFunc(
   store: BaseStore | undefined,
   numPostsPerSubreddit = 25,
@@ -70,7 +85,7 @@ async function getLangChainRedditPostsFunc(
   const processedPostIds = await getRedditPostIds(store);
   const postIds = data.map((post) => post.post.id);
   const uniquePostIds = getUniqueArrayItems(processedPostIds, postIds);
-  return data.filter((post) => uniquePostIds.includes(post.post.id));
+  return data.filter((post) => filterRedditPosts(post, uniquePostIds));
 }
 
 export const getLangChainRedditPosts = traceable(getLangChainRedditPostsFunc, {

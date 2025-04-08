@@ -24,7 +24,8 @@ import { getPost } from "./nodes/get-post.js";
  */
 function routePostUrls(state: typeof VerifyRedditPostAnnotation.State) {
   if (!state.externalURLs.length) {
-    return "validateRedditPost";
+    // No external URLs found in the post, end the graph
+    return END;
   }
 
   return state.externalURLs.map((link) => {
@@ -76,7 +77,7 @@ const verifyRedditPostBuilder = new StateGraph(
     "verifyYouTubeContent",
     "verifyGeneralContent",
     "verifyGitHubContent",
-    "validateRedditPost",
+    END,
   ])
 
   // After verifying the different content types, we should validate them in combination with the Reddit post content.
