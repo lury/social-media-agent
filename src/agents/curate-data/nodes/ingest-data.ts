@@ -45,7 +45,10 @@ export async function ingestData(
       try {
         trendingRepos = await langchainDependencyReposLoader(config.store);
       } catch (e) {
-        console.error("Failed to load trending repos with LangChain prompts", e);
+        console.error(
+          "Failed to load trending repos with LangChain prompts",
+          e,
+        );
       }
     }
     if (sources.includes("reddit")) {
