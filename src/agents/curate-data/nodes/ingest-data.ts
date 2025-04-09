@@ -35,16 +35,28 @@ export async function ingestData(
 
   if (useLangChainPrompts()) {
     if (sources.includes("twitter")) {
-      tweets = await twitterLoaderWithLangChain(config.store);
+      try {
+        tweets = await twitterLoaderWithLangChain(config.store);
+      } catch (e) {
+        console.error("Failed to load tweets with LangChain prompts", e);
+      }
     }
     if (sources.includes("github")) {
-      trendingRepos = await langchainDependencyReposLoader(config.store);
+      try {
+        trendingRepos = await langchainDependencyReposLoader(config.store);
+      } catch (e) {
+        console.error("Failed to load trending repos with LangChain prompts", e);
+      }
     }
     if (sources.includes("reddit")) {
-      redditPosts = await getLangChainRedditPosts(
-        config.store,
-        config.configurable?.[NUM_POSTS_PER_SUBREDDIT],
-      );
+      try {
+        redditPosts = await getLangChainRedditPosts(
+          config.store,
+          config.configurable?.[NUM_POSTS_PER_SUBREDDIT],
+        );
+      } catch (e) {
+        console.error("Failed to load Reddit posts with LangChain prompts", e);
+      }
     }
 
     // Latent space and AI news are not high signal for LangChain. Return early in this case.
@@ -56,13 +68,25 @@ export async function ingestData(
   }
 
   if (sources.includes("twitter")) {
-    tweets = await twitterLoader();
+    try {
+      tweets = await twitterLoader();
+    } catch (e) {
+      console.error("Failed to load tweets", e);
+    }
   }
   if (sources.includes("github")) {
-    trendingRepos = await githubTrendingLoader(config.store);
+    try {
+      trendingRepos = await githubTrendingLoader(config.store);
+    } catch (e) {
+      console.error("Failed to load trending repos", e);
+    }
   }
   if (sources.includes("reddit")) {
-    redditPosts = await getRedditPosts(config.store);
+    try {
+      redditPosts = await getRedditPosts(config.store);
+    } catch (e) {
+      console.error("Failed to load Reddit posts", e);
+    }
   }
   if (sources.includes("latent_space")) {
     latentSpacePosts = await latentSpaceLoader(config.store);
