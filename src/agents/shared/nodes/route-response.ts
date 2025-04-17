@@ -80,7 +80,12 @@ export async function routeResponse({
   });
 
   const routeSchema = z.object({
-    route: z.enum(["rewrite_post", "update_date", "unknown_response"]),
+    route: z.enum([
+      "rewrite_post",
+      "update_date",
+      "unknown_response",
+      "rewrite_with_split_url",
+    ]),
   });
   const modelWithSchema = model.withStructuredOutput(routeSchema, {
     name: "route",

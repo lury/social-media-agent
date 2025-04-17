@@ -13,7 +13,10 @@ import {
   useArcadeAuth,
   useTwitterApiOnly,
 } from "../utils.js";
-import { CreateMediaRequest } from "../../clients/twitter/types.js";
+import {
+  CreateMediaRequest,
+  CreateTweetRequest,
+} from "../../clients/twitter/types.js";
 import { LinkedInClient } from "../../clients/linkedin.js";
 import {
   LINKEDIN_ACCESS_TOKEN,
@@ -23,6 +26,7 @@ import {
   TEXT_ONLY_MODE,
 } from "../generate-post/constants.js";
 import { SlackClient } from "../../clients/slack/client.js";
+import { ComplexPost } from "../shared/nodes/generate-post/types.js";
 
 async function getMediaFromImage(image?: {
   imageUrl: string;
@@ -38,6 +42,10 @@ async function getMediaFromImage(image?: {
 
 const UploadPostAnnotation = Annotation.Root({
   post: Annotation<string>,
+  /**
+   * The complex post, if the user decides to split the URL from the main body.
+   */
+  complexPost: Annotation<ComplexPost | undefined>,
   image: Annotation<
     | {
         imageUrl: string;
@@ -149,10 +157,23 @@ export async function uploadPost(
       mediaBuffer = await getMediaFromImage(state.image);
     }
 
-    await twitterClient.uploadTweet({
-      text: state.post,
-      ...(mediaBuffer && { media: mediaBuffer }),
-    });
+    if (state.complexPost) {
+      await twitterClient.uploadThread([
+        {
+          text: state.complexPost.main_post,
+          ...(mediaBuffer && { media: mediaBuffer }),
+        },
+        {
+          text: state.complexPost.reply_post,
+        },
+      ]);
+    } else {
+      await twitterClient.uploadTweet({
+        text: state.post,
+        ...(mediaBuffer && { media: mediaBuffer }),
+      });
+    }
+
     console.log("✅ Successfully uploaded Tweet ✅");
   } catch (e: any) {
     console.error("Failed to upload post:", e);

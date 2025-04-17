@@ -3,11 +3,26 @@ import { DateType } from "../../../types.js";
 import { IngestDataAnnotation } from "../../../ingest-data/ingest-data-state.js";
 import { VerifyLinksResultAnnotation } from "../../../verify-links/verify-links-state.js";
 
+export type ComplexPost = {
+  /**
+   * The main post content.
+   */
+  main_post: string;
+  /**
+   * The reply post content.
+   */
+  reply_post: string;
+};
+
 const BaseGeneratePostAnnotation = Annotation.Root({
   /**
    * The generated post for LinkedIn/Twitter.
    */
   post: Annotation<string>,
+  /**
+   * The complex post, if the user decides to split the URL from the main body.
+   */
+  complexPost: Annotation<ComplexPost | undefined>,
   /**
    * The date to schedule the post for.
    */

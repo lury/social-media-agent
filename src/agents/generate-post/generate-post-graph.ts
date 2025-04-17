@@ -209,6 +209,7 @@ const generatePostBuilder = new StateGraph(
   // Always route back to `humanNode` if the post was re-written or date was updated.
   .addEdge("rewritePost", "humanNode")
   .addEdge("updateScheduleDate", "humanNode")
+  .addEdge("rewriteWithSplitUrl", "humanNode")
 
   // If the schedule post is successful, end the graph.
   .addConditionalEdges("humanNode", rewriteOrEndConditionalEdge, [

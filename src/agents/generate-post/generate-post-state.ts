@@ -8,6 +8,7 @@ import {
 } from "./constants.js";
 import { DateType } from "../types.js";
 import { VerifyLinksResultAnnotation } from "../verify-links/verify-links-state.js";
+import { ComplexPost } from "../shared/nodes/generate-post/types.js";
 
 export type LangChainProduct = "langchain" | "langgraph" | "langsmith";
 
@@ -20,17 +21,6 @@ export type YouTubeVideoSummary = {
    * The summary of the video.
    */
   summary: string;
-};
-
-export type ComplexPost = {
-  /**
-   * The main post content.
-   */
-  main_post: string;
-  /**
-   * The reply post content.
-   */
-  reply_post: string;
 };
 
 export const GeneratePostAnnotation = Annotation.Root({

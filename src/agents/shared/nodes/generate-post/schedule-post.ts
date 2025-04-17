@@ -88,6 +88,7 @@ export async function schedulePost<
   const run = await client.runs.create(thread.thread_id, "upload_post", {
     input: {
       post: state.post,
+      complexPost: state.complexPost,
       image: state.image,
     },
     config: {
