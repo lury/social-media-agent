@@ -20,10 +20,11 @@ const postSchema = z.object({
 
 const REWRITE_WITH_SPLIT_URL_PROMPT = `You're an advanced AI marketer who has been tasked with splitting a social media post into two unique posts:
 1. The first is the main body of the post. You should NOT make any changes to the input, EXCEPT for replacing the callout URL at the bottom, with a message indicating the URL is in the reply.
+You may include an emoji to indicate the URL is in the reply.
 Example:
-"Repo link in reply"
+"Repo link in reply 👇"
 or
-"Video link in reply"
+"Video link in reply 🧵"
 2. The second is the reply post. This should contain a very concise callout (e.g. 'Check out the repo here:'), and the URL.
 Example:
 "Checkout the repo here: https://github.com/bracesproul/langchain-ai"

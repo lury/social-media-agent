@@ -70,7 +70,7 @@ interface PostUploadFailureToSlackArgs {
   uploadDestination: "twitter" | "linkedin";
   error: any;
   threadId: string;
-  postContent: string;
+  postContent: string | ComplexPost;
   image?: {
     imageUrl: string;
     mimeType: string;
@@ -91,6 +91,22 @@ async function postUploadFailureToSlack({
     return;
   }
   const slackClient = new SlackClient();
+
+  const postStr =
+    typeof postContent === "string"
+      ? `Post:
+\`\`\`
+${postContent}
+\`\`\``
+      : `Main post:
+\`\`\`
+${postContent.main_post}
+\`\`\`
+Reply post:
+\`\`\`
+${postContent.reply_post}
+\`\`\``;
+
   const slackMessageContent = `❌ FAILED TO UPLOAD POST TO ${uploadDestination.toUpperCase()} ❌
 
 Error message:
@@ -100,10 +116,7 @@ ${error}
 
 Thread ID: *${threadId}*
 
-Post:
-\`\`\`
-${postContent}
-\`\`\`
+${postStr}
 
 ${image ? `Image:\nURL: ${image.imageUrl}\nMIME type: ${image.mimeType}` : ""}
 `;
@@ -185,7 +198,7 @@ export async function uploadPost(
       error: errorString,
       threadId:
         config.configurable?.thread_id || "no thread id found in configurable",
-      postContent: state.post,
+      postContent: state.complexPost || state.post,
       image: state.image,
     });
   }
@@ -255,7 +268,7 @@ export async function uploadPost(
       error: errorString,
       threadId:
         config.configurable?.thread_id || "no thread id found in configurable",
-      postContent: state.post,
+      postContent: state.complexPost || state.post,
       image: state.image,
     });
   }
