@@ -1,4 +1,4 @@
-import { Annotation, END } from "@langchain/langgraph";
+import { Annotation } from "@langchain/langgraph";
 import { DateType } from "../../../types.js";
 import { IngestDataAnnotation } from "../../../ingest-data/ingest-data-state.js";
 import { VerifyLinksResultAnnotation } from "../../../verify-links/verify-links-state.js";
@@ -35,14 +35,7 @@ const BaseGeneratePostAnnotation = Annotation.Root({
   /**
    * The node to execute next.
    */
-  next: Annotation<
-    | "schedulePost"
-    | "rewritePost"
-    | "unknownResponse"
-    | "updateScheduleDate"
-    | typeof END
-    | undefined
-  >,
+  next: Annotation<string | undefined>,
   /**
    * Response from the user for the post. Typically used to request
    * changes to be made to the post.

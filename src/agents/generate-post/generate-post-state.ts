@@ -22,6 +22,17 @@ export type YouTubeVideoSummary = {
   summary: string;
 };
 
+export type ComplexPost = {
+  /**
+   * The main post content.
+   */
+  main_post: string;
+  /**
+   * The reply post content.
+   */
+  reply_post: string;
+};
+
 export const GeneratePostAnnotation = Annotation.Root({
   /**
    * The links to use to generate a post.
@@ -37,6 +48,10 @@ export const GeneratePostAnnotation = Annotation.Root({
    * The generated post for LinkedIn/Twitter.
    */
   post: Annotation<string>,
+  /**
+   * The complex post, if the user decides to split the URL from the main body.
+   */
+  complexPost: Annotation<ComplexPost | undefined>,
   /**
    * The date to schedule the post for.
    */
@@ -54,6 +69,7 @@ export const GeneratePostAnnotation = Annotation.Root({
     | "rewritePost"
     | "updateScheduleDate"
     | "unknownResponse"
+    | "rewriteWithSplitUrl"
     | typeof END
     | undefined
   >,
