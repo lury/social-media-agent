@@ -5,7 +5,7 @@ const ROUTE_RESPONSE_PROMPT = `You are an AI assistant tasked with routing a use
 
 1. Rewrite post - The user's response indicates they want to rewrite the generated post.
 2. Update scheduled date - The user wants to update the scheduled date for the post. This can either be a new date or a priority level (P1, P2, P3).
-3. Split the call to action URL in the post into a reply.
+3. Rewrite with split URL - Split the call to action URL in the post into a reply.
 
 Here is the generated post:
 <post>

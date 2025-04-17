@@ -41,6 +41,10 @@ const UploadPostAnnotation = Annotation.Root({
   post: Annotation<string>,
   /**
    * The complex post, if the user decides to split the URL from the main body.
+   *
+   * TODO: Refactor the post/complexPost state interfaces to use a single shared interface
+   * which includes images too.
+   * Tracking issue: https://github.com/langchain-ai/social-media-agent/issues/144
    */
   complexPost: Annotation<ComplexPost | undefined>,
   image: Annotation<
