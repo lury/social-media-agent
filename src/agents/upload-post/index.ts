@@ -13,10 +13,7 @@ import {
   useArcadeAuth,
   useTwitterApiOnly,
 } from "../utils.js";
-import {
-  CreateMediaRequest,
-  CreateTweetRequest,
-} from "../../clients/twitter/types.js";
+import { CreateMediaRequest } from "../../clients/twitter/types.js";
 import { LinkedInClient } from "../../clients/linkedin.js";
 import {
   LINKEDIN_ACCESS_TOKEN,
