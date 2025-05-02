@@ -37,7 +37,10 @@ export const GeneratePostAnnotation = Annotation.Root({
   /**
    * The generated post for LinkedIn/Twitter.
    */
-  post: Annotation<string>,
+  post: Annotation<string>({
+    reducer: (_state, update) => update,
+    default: () => "",
+  }),
   /**
    * The complex post, if the user decides to split the URL from the main body.
    *
