@@ -27,7 +27,10 @@ export const GeneratePostAnnotation = Annotation.Root({
   /**
    * The links to use to generate a post.
    */
-  links: Annotation<string[]>,
+  links: Annotation<string[]>({
+    reducer: (_state, update) => update,
+    default: () => [],
+  }),
   /**
    * The report generated on the content of the message. Used
    * as context for generating the post.
@@ -48,16 +51,24 @@ export const GeneratePostAnnotation = Annotation.Root({
    * which includes images too.
    * Tracking issue: https://github.com/langchain-ai/social-media-agent/issues/144
    */
-  complexPost: Annotation<ComplexPost | undefined>,
+  complexPost: Annotation<ComplexPost | undefined>({
+    reducer: (_state, update) => update,
+    default: () => undefined,
+  }),
   /**
    * The date to schedule the post for.
    */
-  scheduleDate: Annotation<DateType>,
+  scheduleDate: Annotation<DateType>({
+    reducer: (_state, update) => update,
+  }),
   /**
    * Response from the user for the post. Typically used to request
    * changes to be made to the post.
    */
-  userResponse: Annotation<string | undefined>,
+  userResponse: Annotation<string | undefined>({
+    reducer: (_state, update) => update,
+    default: () => undefined,
+  }),
   /**
    * The node to execute next.
    */
@@ -69,7 +80,10 @@ export const GeneratePostAnnotation = Annotation.Root({
     | "rewriteWithSplitUrl"
     | typeof END
     | undefined
-  >,
+  >({
+    reducer: (_state, update) => update,
+    default: () => undefined,
+  }),
   /**
    * The image to attach to the post, and the MIME type.
    */
@@ -79,7 +93,10 @@ export const GeneratePostAnnotation = Annotation.Root({
         mimeType: string;
       }
     | undefined
-  >,
+  >({
+    reducer: (_state, update) => update,
+    default: () => undefined,
+  }),
   /**
    * The number of times the post has been condensed. We should stop condensing after
    * 3 times to prevent an infinite loop.

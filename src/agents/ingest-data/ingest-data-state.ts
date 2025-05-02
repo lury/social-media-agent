@@ -16,20 +16,32 @@ export const IngestDataAnnotation = Annotation.Root({
   /**
    * The links to content to use for generating posts.
    */
-  links: Annotation<string[]>,
+  links: Annotation<string[]>({
+    reducer: (_state, update) => update,
+    default: () => [],
+  }),
   /**
    * A report generated on the content. Will be used in the main
    * graph when generating the post about this content.
    */
-  report: Annotation<string>,
+  report: Annotation<string>({
+    reducer: (_state, update) => update,
+    default: () => "",
+  }),
   /**
    * The content of the linkedin post.
    */
-  linkedinPost: Annotation<string>,
+  linkedinPost: Annotation<string>({
+    reducer: (_state, update) => update,
+    default: () => "",
+  }),
   /**
    * The content of the tweet.
    */
-  twitterPost: Annotation<string>,
+  twitterPost: Annotation<string>({
+    reducer: (_state, update) => update,
+    default: () => "",
+  }),
 });
 
 export const IngestDataConfigurableAnnotation = Annotation.Root({
