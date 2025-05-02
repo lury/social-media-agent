@@ -70,7 +70,7 @@ export async function takeScreenshotAndUpload(
       throw error;
     }
 
-    const expiresIn = 60 * 60 * 24 * 90; // 90 days
+    const expiresIn = 60 * 60 * 24 * 180; // 180 days
     const { data: signedUrlData } = await supabase.storage
       .from("images")
       .createSignedUrl(data.path, expiresIn);
