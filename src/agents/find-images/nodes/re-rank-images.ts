@@ -1,6 +1,6 @@
 import { ChatVertexAI } from "@langchain/google-vertexai-web";
 import { FindImagesAnnotation } from "../find-images-graph.js";
-import { chunkArray } from "../../utils.js";
+import { chunkArray, getMimeTypeFromUrl } from "../../utils.js";
 import { getImageMessageContents } from "../../../utils/image-message.js";
 
 const RE_RANK_IMAGES_PROMPT = `You're a highly regarded marketing employee, working on crafting thoughtful and engaging content for your company's LinkedIn and Twitter pages.
@@ -62,6 +62,12 @@ export async function reRankImages(state: typeof FindImagesAnnotation.State) {
   if (state.imageOptions && state.imageOptions.length < 2) {
     return {
       imageOptions: state.imageOptions,
+      image: state.imageOptions?.[0]
+        ? {
+            imageUrl: state.imageOptions[0],
+            mimeType: getMimeTypeFromUrl(state.imageOptions[0]),
+          }
+        : undefined,
     };
   }
 
@@ -129,6 +135,12 @@ export async function reRankImages(state: typeof FindImagesAnnotation.State) {
     );
     return {
       imageOptions: state.imageOptions,
+      image: state.imageOptions?.[0]
+        ? {
+            imageUrl: state.imageOptions[0],
+            mimeType: getMimeTypeFromUrl(state.imageOptions[0]),
+          }
+        : undefined,
     };
   }
 
@@ -138,5 +150,11 @@ export async function reRankImages(state: typeof FindImagesAnnotation.State) {
 
   return {
     imageOptions: imageOptionsInOrder,
+    image: imageOptionsInOrder[0]
+      ? {
+          imageUrl: imageOptionsInOrder[0],
+          mimeType: getMimeTypeFromUrl(imageOptionsInOrder[0]),
+        }
+      : undefined,
   };
 }

@@ -3,6 +3,7 @@ import { findImages } from "./nodes/find-images.js";
 import { validateImages } from "./nodes/validate-images.js";
 import { reRankImages } from "./nodes/re-rank-images.js";
 import { VerifyLinksResultAnnotation } from "../verify-links/verify-links-state.js";
+import { Image } from "../types.js";
 
 export const FindImagesAnnotation = Annotation.Root({
   ...VerifyLinksResultAnnotation.spec,
@@ -15,6 +16,10 @@ export const FindImagesAnnotation = Annotation.Root({
    * The generated post for LinkedIn/Twitter.
    */
   post: Annotation<string>,
+  /**
+   * The main image for the post
+   */
+  image: Annotation<Image | undefined>,
 });
 
 function validateImagesOrEnd(state: typeof FindImagesAnnotation.State) {

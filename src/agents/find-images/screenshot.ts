@@ -70,11 +70,16 @@ export async function takeScreenshotAndUpload(
       throw error;
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("images").getPublicUrl(data.path);
+    const expiresIn = 60 * 60 * 24 * 180; // 180 days
+    const { data: signedUrlData } = await supabase.storage
+      .from("images")
+      .createSignedUrl(data.path, expiresIn);
 
-    return publicUrl;
+    if (!signedUrlData?.signedUrl) {
+      throw new Error("Failed to create signed URL");
+    }
+
+    return signedUrlData.signedUrl;
   } catch (error) {
     console.error("Error taking and uploading screenshot:", error);
     throw error;
