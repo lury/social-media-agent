@@ -19,7 +19,7 @@ export const FindImagesAnnotation = Annotation.Root({
   /**
    * The main image for the post
    */
-  image: Annotation<Image>,
+  image: Annotation<Image | undefined>,
 });
 
 function validateImagesOrEnd(state: typeof FindImagesAnnotation.State) {

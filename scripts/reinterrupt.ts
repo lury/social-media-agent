@@ -78,7 +78,7 @@ export async function redoInterrupts() {
   });
 
   const allInterrupts = await getInterrupts(client);
-  const interrupts = [allInterrupts[4]];
+  const interrupts = [allInterrupts[9]];
 
   for await (const item of interrupts) {
     const values = item.values as Record<string, any>;
