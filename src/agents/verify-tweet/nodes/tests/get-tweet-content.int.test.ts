@@ -67,13 +67,13 @@
 //     },
 //     expected: {
 //       tweetContent: `Just casually sipping coffee with 4 Gen AI legends solving multi-agent systems 🤖☕️
-    
-// @assaf_elovic Head of AI @mondaydotcom creator of GPT Researcher🔎 
+
+// @assaf_elovic Head of AI @mondaydotcom creator of GPT Researcher🔎
 // https://t.co/vEhroGRmWa
 // @ulidabess @ataiiam co founders of @CopilotKit 🪁
-// @NirDiamantAI founder of DiamantAI and creator of 
+// @NirDiamantAI founder of DiamantAI and creator of
 // https://t.co/cKNjHuTG9V
-// and 
+// and
 // https://t.co/D8wpEN4LJa
 
 // Still pinching myself - did this actually happen? 🤖

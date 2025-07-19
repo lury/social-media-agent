@@ -81,10 +81,10 @@ export async function determinePostType(
   }[] = [];
 
   for await (const report of state.groupedReports) {
-    const result = await model.invoke([
+    const result = (await model.invoke([
       ["system", DETERMINE_POST_TYPE_PROMPT],
       ["user", formatReportUserPrompt(report)],
-    ]) as z.infer<typeof postTypeSchema>;
+    ])) as z.infer<typeof postTypeSchema>;
 
     reportAndPostType.push({
       ...result,

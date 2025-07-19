@@ -121,7 +121,7 @@ export async function schedulePost<
     });
     runId = run.run_id;
   } catch (e) {
-    console.error("Failed to create upload_post run", e)
+    console.error("Failed to create upload_post run", e);
     throw e;
   }
 
