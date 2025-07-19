@@ -84,7 +84,7 @@ export async function determinePostType(
     const result = await model.invoke([
       ["system", DETERMINE_POST_TYPE_PROMPT],
       ["user", formatReportUserPrompt(report)],
-    ]);
+    ]) as z.infer<typeof postTypeSchema>;
 
     reportAndPostType.push({
       ...result,
