@@ -14,7 +14,12 @@ import {
 import { generateContentReport } from "./nodes/generate-report/index.js";
 import { generatePost } from "./nodes/generate-post/index.js";
 import { condensePost } from "./nodes/condense-post.js";
-import { isTextOnly, removeUrls, shouldPostToLinkedInOrg } from "../utils.js";
+import {
+  isTextOnly,
+  removeUrls,
+  shouldPostToLinkedInOrg,
+  skipUsedUrlsCheck,
+} from "../utils.js";
 import { verifyLinksGraph } from "../verify-links/verify-links-graph.js";
 import { authSocialsPassthrough } from "./nodes/auth-socials.js";
 import { findImagesGraph } from "../find-images/find-images-graph.js";
@@ -82,6 +87,9 @@ async function checkIfUrlsArePreviouslyUsed(
   urls: string[],
   config: LangGraphRunnableConfig,
 ) {
+  if (await skipUsedUrlsCheck(config.configurable)) {
+    return false;
+  }
   const existingUrls = await getSavedUrls(config);
   return urls.some((url) =>
     existingUrls.some((existingUrl) => url === existingUrl),
@@ -100,6 +108,13 @@ async function generateReportOrEndConditionalEdge(
   // End early if the URLs have already been used, or if there are no
   // page contents extracted from any of the URLs.
   if (urlsAlreadyUsed || !state.pageContents?.length) {
+    console.log(
+      "Skipping post generation. URLs have already been used or there are no page contents.",
+      {
+        urlsAlreadyUsed,
+        pageContentsLength: state.pageContents?.length,
+      },
+    );
     return END;
   }
 
