@@ -196,6 +196,14 @@ export async function verifyGitHubContent(
   };
 
   if (await skipContentRelevancyCheck(config.configurable)) {
+    console.log(
+      "Skipping content relevancy check. Returning relevant links and page content",
+      {
+        relevantLinks: returnValue.relevantLinks,
+        pageContentsLength: returnValue.pageContents.length,
+        pageContentsItemsLength: returnValue.pageContents[0].length,
+      },
+    );
     return returnValue;
   }
 
