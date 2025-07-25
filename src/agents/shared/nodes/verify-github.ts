@@ -175,7 +175,6 @@ export async function verifyGitHubContent(
 ): Promise<VerifyGitHubContentReturn> {
   const shouldExclude = shouldExcludeGitHubContent(state.link);
   if (shouldExclude) {
-    console.log("Should exclude github content returned true.");
     return {
       relevantLinks: [],
       pageContents: [],
@@ -190,9 +189,6 @@ export async function verifyGitHubContent(
       pageContents: [],
     };
   }
-  console.log("got contents from link", {
-    contentsLength: contentsAndType.contents.length,
-  });
 
   const returnValue = {
     relevantLinks: [state.link],
@@ -219,11 +215,9 @@ export async function verifyGitHubContent(
       dependencyFiles,
     })
   ) {
-    console.log("Content relevancy check returned true.");
     return returnValue;
   }
 
-  console.log("Content relevancy check returned false.");
   // Not relevant, return empty arrays so this URL is not included.
   return {
     relevantLinks: [],

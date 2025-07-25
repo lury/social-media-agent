@@ -110,13 +110,6 @@ export const GeneratePostAnnotation = Annotation.Root({
 export type GeneratePostState = typeof GeneratePostAnnotation.State;
 export type GeneratePostUpdate = typeof GeneratePostAnnotation.Update;
 
-export const GeneratePostInputAnnotation = Annotation.Root({
-  /**
-   * The links to use to generate a post.
-   */
-  links: Annotation<string[]>,
-});
-
 export const GeneratePostConfigurableAnnotation = Annotation.Root({
   /**
    * Whether to post to the LinkedIn organization or the user's profile.

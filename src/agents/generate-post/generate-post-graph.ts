@@ -7,7 +7,6 @@ import {
 import {
   GeneratePostAnnotation,
   GeneratePostConfigurableAnnotation,
-  GeneratePostInputAnnotation,
   GeneratePostState,
   GeneratePostUpdate,
 } from "./generate-post-state.js";
@@ -153,7 +152,7 @@ async function routeToCuratedInterruptOrContinue(
 }
 
 const generatePostBuilder = new StateGraph(
-  { stateSchema: GeneratePostAnnotation, input: GeneratePostInputAnnotation },
+  GeneratePostAnnotation,
   GeneratePostConfigurableAnnotation,
 )
   .addNode("authSocialsPassthrough", authSocialsPassthrough)

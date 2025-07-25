@@ -100,23 +100,32 @@ export async function schedulePost<
     });
   }
 
-  const thread = await client.threads.create();
-  const run = await client.runs.create(thread.thread_id, "upload_post", {
-    input: {
-      post: state.post,
-      complexPost: state.complexPost,
-      image: state.image,
-    },
-    config: {
-      configurable: {
-        [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
-        [TEXT_ONLY_MODE]: isTextOnlyMode,
+  let runId: string | undefined;
+  let threadId: string | undefined;
+  try {
+    const thread = await client.threads.create();
+    threadId = thread.thread_id;
+    const run = await client.runs.create(thread.thread_id, "upload_post", {
+      input: {
+        post: state.post,
+        complexPost: state.complexPost,
+        image: state.image,
+      },
+      config: {
+        configurable: {
+          [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
+          [TEXT_ONLY_MODE]: isTextOnlyMode,
+        },
       },
       ...(afterSeconds ? { afterSeconds } : {}),
-    },
-  });
+    });
+    runId = run.run_id;
+  } catch (e) {
+    console.error("Failed to create upload_post run", e);
+    throw e;
+  }
 
-  if (!run.run_id || !thread.thread_id) {
+  if (!runId || !threadId) {
     throw new Error("Failed to create upload_post run");
   }
 
@@ -124,8 +133,8 @@ export async function schedulePost<
     await sendSlackMessage({
       isTextOnlyMode,
       afterSeconds,
-      threadId: thread.thread_id,
-      runId: run.run_id,
+      threadId,
+      runId,
       postContent: state.complexPost || state.post,
       image: state.image,
     });
