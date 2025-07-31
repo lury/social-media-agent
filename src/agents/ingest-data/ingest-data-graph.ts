@@ -29,7 +29,8 @@ async function generatePostFromMessages(
   config: LangGraphRunnableConfig,
 ) {
   const client = new Client({
-    apiUrl: `http://localhost:${process.env.PORT}`,
+    apiUrl: process.env.LANGGRAPH_API_URL,
+    apiKey: process.env.INTERNAL_LANGCHAIN_API_KEY,
   });
 
   const linkAndDelay = getAfterSecondsFromLinks(state.links);
