@@ -89,7 +89,8 @@ export async function schedulePost<
   const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
 
   const client = new Client({
-    apiUrl: `http://localhost:${process.env.PORT}`,
+    apiUrl: process.env.LANGGRAPH_API_URL,
+    apiKey: process.env.LANGCHAIN_API_KEY,
   });
 
   let afterSeconds: number | undefined;

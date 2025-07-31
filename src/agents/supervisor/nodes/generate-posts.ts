@@ -7,7 +7,8 @@ export async function generatePosts(
   state: SupervisorState,
 ): Promise<Partial<SupervisorState>> {
   const client = new Client({
-    apiUrl: `http://localhost:${process.env.PORT}`,
+    apiUrl: process.env.LANGGRAPH_API_URL,
+    apiKey: process.env.LANGCHAIN_API_KEY,
   });
 
   const idsAndTypes: Array<{

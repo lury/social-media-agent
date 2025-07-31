@@ -35,7 +35,8 @@ async function runReflections({
   userResponse,
 }: RunReflectionsArgs) {
   const client = new Client({
-    apiUrl: `http://localhost:${process.env.PORT}`,
+    apiUrl: process.env.LANGGRAPH_API_URL,
+    apiKey: process.env.LANGCHAIN_API_KEY,
   });
 
   const thread = await client.threads.create();
