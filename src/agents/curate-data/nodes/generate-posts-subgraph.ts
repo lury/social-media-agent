@@ -117,7 +117,7 @@ export async function generatePostsSubgraph(
 
   const client = new Client({
     apiUrl: process.env.LANGGRAPH_API_URL,
-    apiKey: process.env.INTERNAL_LANGCHAIN_API_KEY,
+    apiKey: process.env.LANGCHAIN_API_KEY,
   });
 
   const afterSecondsList = getAfterSeconds(state);

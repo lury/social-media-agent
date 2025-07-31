@@ -133,7 +133,7 @@ async function routeToCuratedInterruptOrContinue(
     const postToLinkedInOrg = shouldPostToLinkedInOrg(config);
     const client = new Client({
       apiUrl: process.env.LANGGRAPH_API_URL,
-      apiKey: process.env.INTERNAL_LANGCHAIN_API_KEY,
+      apiKey: process.env.LANGCHAIN_API_KEY,
     });
 
     const { thread_id } = await client.threads.create();
