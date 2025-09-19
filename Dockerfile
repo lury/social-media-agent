@@ -1,31 +1,29 @@
-FROM node:18-slim
+# Użyj image który ma już LangGraph
+FROM python:3.11-slim
 
-# Install system dependencies
+# Install Node.js
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
+    curl \
     git \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g yarn \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Install LangGraph CLI first
+RUN pip install langgraph-cli
 
-# Use npm instead of yarn (sometimes more reliable in Docker)
-RUN npm install --production=false
+# Clone repo i install dependencies w jednym kroku (lepsze cache'owanie)
+RUN git clone https://github.com/langchain-ai/social-media-agent.git . \
+    && yarn install
 
-# Install LangGraph CLI
-RUN pip3 install langgraph-cli
-
-# Copy application code
-COPY . .
-
-# Expose the port
+# Expose port
 EXPOSE 54367
 
-# Create a volume for persistent data
+# Create volume
 VOLUME ["/app/data"]
 
-# Start the LangGraph server
-CMD ["npm", "run", "langgraph:in_mem:up"]
+# Start command
+CMD ["yarn", "langgraph:in_mem:up"]
