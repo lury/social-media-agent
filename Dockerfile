@@ -13,8 +13,12 @@ WORKDIR /app
 COPY package*.json ./
 COPY yarn.lock* ./
 
-# Install Node dependencies
-RUN yarn install
+# Configure yarn for better network handling
+RUN yarn config set network-timeout 300000
+RUN yarn config set registry https://registry.npmjs.org/
+
+# Install Node dependencies with retries
+RUN yarn install --network-timeout 300000 --frozen-lockfile
 
 # Install LangGraph CLI
 RUN pip3 install langgraph-cli
