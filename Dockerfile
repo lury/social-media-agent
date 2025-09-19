@@ -11,14 +11,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY yarn.lock* ./
 
-# Configure yarn for better network handling
-RUN yarn config set network-timeout 300000
-RUN yarn config set registry https://registry.npmjs.org/
-
-# Install Node dependencies with retries
-RUN yarn install --network-timeout 300000 --frozen-lockfile
+# Use npm instead of yarn (sometimes more reliable in Docker)
+RUN npm install --production=false
 
 # Install LangGraph CLI
 RUN pip3 install langgraph-cli
@@ -33,4 +28,4 @@ EXPOSE 54367
 VOLUME ["/app/data"]
 
 # Start the LangGraph server
-CMD ["yarn", "langgraph:in_mem:up"]
+CMD ["npm", "run", "langgraph:in_mem:up"]
