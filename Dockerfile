@@ -6,6 +6,7 @@ RUN pip3 install --break-system-packages langgraph-cli
 WORKDIR /app
 COPY . .
 
+RUN npm config set strict-ssl false
 RUN npm config set registry https://registry.npmjs.org/
 RUN npm install --verbose --no-optional
 
